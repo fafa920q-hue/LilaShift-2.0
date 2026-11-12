@@ -52,6 +52,62 @@ import Foundation
         try expect(!stillUnverified.ownershipVerified, "Later edits cannot regain the discarded ownership")
         let identical = try await store.commit(verified.document, expected: verified, restoring: record)
         try expect(!identical.ownershipVerified, "A backup replacement requires fresh verification even when its values happen to match")
-        print("PASS: local edits preserve provenance; backup replacement clears it and cannot restore the device.")
+
+        // --- P0-2 backup provenance ---
+        let provenanceDir = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try fm.createDirectory(at: provenanceDir, withIntermediateDirectories: true)
+        let provenanceDevice = provenanceDir.appendingPathComponent("device.plist")
+        try initialBytes.write(to: provenanceDevice)
+        let writingStore = GestaltFileStore(deviceURL: provenanceDevice,
+                                            backupDirectory: provenanceDir.appendingPathComponent("backups"),
+                                            deviceID: "provenance-writing", acquire: { 1 }, release: { _ in },
+                                            writeData: { data, url in try data.write(to: url) })
+        let liveSnapshot = try await writingStore.loadDevice()
+        try expect(liveSnapshot.provenance == .firstRead,
+                   "A live device snapshot is first-read state, not factory state")
+        let importedSnapshot = try await writingStore.loadLocal(data: initialBytes, name: "imported.plist")
+        try expect(importedSnapshot.provenance == .importedHistory,
+                   "A locally opened file is imported history, not factory state")
+
+        // A pre-write backup records pre-modification provenance, and it
+        // survives the JSON round-trip through the backup listing.
+        var deviceEdit = liveSnapshot.document
+        deviceEdit.set("edited", for: "setting")
+        _ = try await writingStore.commit(deviceEdit, expected: liveSnapshot)
+        let writtenBackups = try await writingStore.backups()
+        try expect(writtenBackups.first { $0.reason == "Before applying" }?.provenance == .preModification,
+                   "A backup taken before applying records pre-modification provenance")
+        try expect(writtenBackups.first { $0.reason == "Initial backup" }?.provenance == .firstRead,
+                   "The initial backup keeps first-read provenance after later writes")
+
+        // Manual backups record what they read: live device reads are
+        // first-read state; local snapshots are imported history.
+        try await writingStore.backup(liveSnapshot)
+        let manualDevice = try await writingStore.backups().first { $0.reason == "Manual backup" && $0.source == .device }
+        try expect(manualDevice?.provenance == .firstRead,
+                   "A manual backup of the live device is first-read state")
+        let localSnapshot = try await writingStore.loadLocal(data: initialBytes, name: "manual-local.plist")
+        try await writingStore.backup(localSnapshot)
+        let manualLocal = try await writingStore.backups().first { $0.reason == "Manual backup" && $0.source == .local }
+        try expect(manualLocal?.provenance == .importedHistory,
+                   "A manual backup of a local file is imported history")
+
+        // A verified import is saved as imported history even though it is
+        // stored as a device backup for the restore mechanics, and the
+        // restored snapshot carries that provenance.
+        let changedBytes = try fixture("current-device", "imported-change")
+        var imported = try await writingStore.loadLocal(data: changedBytes, name: "verified-import.plist")
+        imported.ownershipVerified = true
+        let currentLive = try await writingStore.loadDevice()
+        let restoredVerified = try await writingStore.restoreVerifiedImport(imported, expected: currentLive)
+        try expect(restoredVerified.provenance == .importedHistory,
+                   "A restored verified import carries imported-history provenance")
+        let verifiedRecord = try await writingStore.backups().first { $0.reason == "Verified import" }
+        try expect(verifiedRecord?.provenance == .importedHistory && verifiedRecord?.source == .device,
+                   "A verified import is recorded as imported history, not as a device-origin backup")
+        try expect(try await writingStore.backups().first { $0.reason == "Before restoring" }?.provenance == .preModification,
+                   "Restoring first records the pre-restoration state")
+
+        print("PASS: local edits preserve provenance; backup replacement clears it and cannot restore the device; first-read, pre-modification and imported-history backups are recorded and distinguishable.")
     }
 }

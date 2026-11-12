@@ -41,6 +41,23 @@ import Foundation
         return (strings, address, [descriptors])
     }
 
+    /// A document on the offline profile's layout, unless a different
+    /// UUID or CacheData is supplied. Mirrors the RegionModeTests fixture.
+    static func fixtureDocument(cacheUUID: String? = nil, cacheData: Data? = nil) throws -> GestaltDocument {
+        let layout = MobileGestaltCacheLayout.originalProfile
+        var cache = cacheData ?? Data(count: layout.byteCount)
+        if cache.count == layout.byteCount {
+            cache[layout.greenTeaOffset] = 1
+            cache[layout.validityOffset(for: layout.greenTeaIndex)] = 1
+            cache[layout.validityOffset(for: layout.notGreenTeaIndex)] = 1
+        }
+        return try GestaltDocument(data: PropertyListSerialization.data(fromPropertyList: [
+            "CacheVersion": "24C5037i", "CacheUUID": cacheUUID ?? layout.uuid,
+            "CacheData": cache,
+            "CacheExtra": [GestaltKeys.productType: "iPhone18,1", GestaltKeys.regionCode: "CH"],
+        ], format: .binary, options: 0))
+    }
+
     static func main() throws {
         let uuid = "A4A4A4A4-1111-2222-3333-123456789ABC"
         let keys = ["AAAAAAAAAAAAAAAAAAAAAA", DeviceCacheOptions.greenTeaKey,
@@ -97,6 +114,38 @@ import Foundation
             _ = try MobileGestaltCacheLayout.scan(strings: full.strings, stringAddress: full.address, constants: [colliding])
         }
 
-        print("PASS: 47-bit PAC mask, cfUUIDs rescue, dynamic AI slot resolution, ambiguous AdvAI isolation, and wapi ambiguity failing the scan.")
+        // Layout-scan failure locks with a reason instead of falling back.
+        // An empty scan input fails outright, never resolving a layout.
+        try expectThrows("An empty scan fails rather than resolving a layout") {
+            _ = try MobileGestaltCacheLayout.scan(strings: Data(), stringAddress: 0x180100000, constants: [])
+        }
+
+        // A document on the offline profile resolves and has no lock reason.
+        let matching = try fixtureDocument()
+        try expect(MobileGestaltCacheLayout.lockReason(in: matching) == nil,
+                   "A document matching the resolved layout has no lock reason")
+
+        // A document whose UUID matches no layout throws on resolve and
+        // carries a lock reason — the eSIM/WAPI switches stay locked and
+        // show why, instead of silently borrowing the offline profile.
+        // (On a device build the same throw comes from the failed runtime
+        // scan; the hardcoded profile is never substituted there.)
+        let wrongUUID = try fixtureDocument(cacheUUID: "00000000-0000-0000-0000-000000000000")
+        try expectThrows("A document with an unknown CacheUUID fails to resolve") {
+            _ = try MobileGestaltCacheLayout.resolve(in: wrongUUID)
+        }
+        let uuidReason = MobileGestaltCacheLayout.lockReason(in: wrongUUID)
+        try expect(uuidReason != nil && uuidReason!.contains("Unable to resolve"),
+                   "An unresolvable layout locks with a reason naming the failure")
+
+        // A document with the wrong CacheData length fails the same way.
+        let wrongLength = try fixtureDocument(cacheData: Data(count: 10))
+        try expectThrows("A document with the wrong CacheData length fails to resolve") {
+            _ = try MobileGestaltCacheLayout.resolve(in: wrongLength)
+        }
+        try expect(MobileGestaltCacheLayout.lockReason(in: wrongLength) != nil,
+                   "A wrong-length CacheData locks with a reason")
+
+        print("PASS: 47-bit PAC mask, cfUUIDs rescue, dynamic AI slot resolution, ambiguous AdvAI isolation, wapi ambiguity failing the scan, and layout-scan failure locking with a reason.")
     }
 }

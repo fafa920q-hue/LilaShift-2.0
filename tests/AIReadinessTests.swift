@@ -2,8 +2,12 @@ import Foundation
 
 /// Offline tests for the item-4 AI checkup and slot-only guards: the
 /// eligibility table, the native-baseline override, the 4-factor
-/// evaluation, and the AdvAI slot read/write machinery on a synthetic
-/// scanned layout. The live MGCopyAnswer probe is device-tested only.
+/// evaluation, the AdvAI slot read/write machinery on a synthetic
+/// scanned layout, the CacheExtra-key vs CacheData-slot distinction, and
+/// the `AIStagingGuard` decisions (conflicting combinations blocked with
+/// a reason, unverified combinations warned, unknown baselines failed
+/// closed) on native vs non-native hardware. The live MGCopyAnswer probe
+/// is device-tested only.
 @main struct AIReadinessTests {
     struct Failure: Error { let message: String }
     static func expect(_ condition: Bool, _ message: String) throws {
@@ -22,13 +26,15 @@ import Foundation
                          aiEnabledCount: Int = 6, aiTotal: Int = 6,
                          productType: String = "iPhone16,2",
                          liveRegionCode: String? = nil, liveRegModel: String? = nil,
-                         liveAIEnabled: Bool? = nil) -> AIReadinessCheckup {
+                         liveAIEnabled: Bool? = nil,
+                         stagingDecision: AIStagingDecision? = nil) -> AIReadinessCheckup {
         AIReadinessCheckup.evaluate(
             regionCode: regionCode, sysconfig: sysconfig, regModel: regModel,
             regionMode: regionMode, expectedUSModel: expectedUSModel,
             esimEnabled: esimEnabled, conflicts: conflicts,
             aiEnabledCount: aiEnabledCount, aiTotal: aiTotal, productType: productType,
-            liveRegionCode: liveRegionCode, liveRegModel: liveRegModel, liveAIEnabled: liveAIEnabled)
+            liveRegionCode: liveRegionCode, liveRegModel: liveRegModel, liveAIEnabled: liveAIEnabled,
+            stagingDecision: stagingDecision)
     }
 
     @MainActor
@@ -41,13 +47,19 @@ import Foundation
         try expect(!DeviceAIEligibility.isNativeAppleIntelligence(productType: "iPhone15,4"),
                    "iPhone15,4 (15) is not native-AI hardware")
         try expect(DeviceAIEligibility.isNativeAppleIntelligence(productType: "iPhone19,7"),
-                   "iPhone19,7 is native via the iPhone19, prefix catch-all")
+                   "iPhone19,7 is native (explicitly listed, no prefix catch-all)")
+        try expect(!DeviceAIEligibility.isNativeAppleIntelligence(productType: "iPhone19,9"),
+                   "iPhone19,9 is unlisted, so it defaults to not native")
         try expect(!DeviceAIEligibility.isNativeAppleIntelligence(productType: "iPhone99,9"),
                    "Unknown future models default to not native")
 
         // Native baselines: a polluted backup cannot downgrade them.
         try expect(DeviceAIEligibility.nativeAdvAISlotValue(key: DeviceCacheOptions.audioIntelligenceKey, productType: "iPhone16,2") == false,
                    "Audio Intelligence baseline is false on iPhone")
+        try expect(DeviceAIEligibility.nativeAdvAISlotValue(key: DeviceCacheOptions.audioIntelligenceKey, productType: "iPhone15,4") == nil,
+                   "Audio Intelligence has no baseline on non-native hardware (exact membership only, no iPhone prefix)")
+        try expect(DeviceAIEligibility.nativeAdvAISlotValue(key: DeviceCacheOptions.audioIntelligenceKey, productType: "iPhone99,9") == nil,
+                   "Audio Intelligence has no baseline on unlisted hardware")
         try expect(DeviceAIEligibility.nativeAdvAISlotValue(key: DeviceCacheOptions.personalTranslatorKey, productType: "iPhone16,2") == true,
                    "Personal Translator baseline is true on a native-AI iPhone")
         try expect(DeviceAIEligibility.nativeAdvAISlotValue(key: DeviceCacheOptions.personalTranslatorKey, productType: "iPhone15,4") == nil,
@@ -77,13 +89,56 @@ import Foundation
         try expect(!fullUSWrong.factors[1].isReady, "Full US fails when the model is not the mapped US model")
 
         // A slot conflict fails the eSIM/conflict factor and names itself.
-        let conflict = AIConflict.personalTranslatorDisabled(slot: 266)
+        let conflict = AIConflict.personalTranslatorSlotDisabled(slot: 266)
         let conflicted = evaluate(conflicts: [conflict])
         try expect(!conflicted.factors[2].isReady && conflicted.factors[2].detail == conflict.detail,
                    "A conflict fails factor 3 and its detail names the conflict")
         let locked = evaluate(regionCode: "CH", esimEnabled: false, aiEnabledCount: 0,
                               productType: "iPhone15,4")
         try expect(locked.readyCount == 1, "Locked non-native device is 1/4 ready (regulatory model only)")
+
+        // Conflict details name the layer: a CacheData slot reading is
+        // never presented as a CacheExtra key value, and an unresolved
+        // slot number is never guessed. The Personal Translator triggers
+        // are separate cases, one per layer.
+        try expect(AIConflict.personalTranslatorSlotDisabled(slot: 266).detail.contains("CacheData slot #266"),
+                   "Personal Translator slot conflict names its CacheData slot number")
+        try expect(AIConflict.personalTranslatorKeyDisabled.detail.contains("CacheExtra key")
+                   && !AIConflict.personalTranslatorKeyDisabled.detail.contains("CacheData slot #"),
+                   "Personal Translator key conflict names the CacheExtra-key trigger, never a slot number")
+        try expect(AIConflict.audioIntelligenceEnabled(slot: 178).detail.contains("CacheData slot #178"),
+                   "Audio Intelligence conflict names its CacheData slot number")
+        try expect(AIConflict.audioIntelligenceEnabled(slot: nil).detail.contains("CacheData slot")
+                   && !AIConflict.audioIntelligenceEnabled(slot: nil).detail.contains("#"),
+                   "Unresolved slot number is reported without a guessed number")
+        try expect(AIConflict.personalTranslatorSlotDisabled(slot: nil).detail.contains("CacheData slot reads 0")
+                   && !AIConflict.personalTranslatorSlotDisabled(slot: nil).detail.contains("CacheExtra key"),
+                   "Personal Translator slot conflict without a number names the slot layer only")
+        try expect(AIConflict.audioIntelligenceEnabled(slot: 178).layer == .cacheDataSlot
+                   && AIConflict.personalTranslatorSlotDisabled(slot: 266).layer == .cacheDataSlot
+                   && AIConflict.personalTranslatorKeyDisabled.layer == .cacheExtraKey,
+                   "Conflict cases report which layer they fire on")
+
+        // A guard decision flows into the checkup: block/warn fail factor
+        // 3 with the decision's specific reason; allow leaves it ready.
+        let blocked = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", audioIntelligenceExtra: true,
+            audioIntelligenceSlot: true, audioIntelligenceSlotIndex: 178))
+        let blockedCheckup = evaluate(stagingDecision: blocked)
+        try expect(!blockedCheckup.factors[2].isReady && blockedCheckup.factors[2].detail == blocked.reason,
+                   "A blocked staging decision fails factor 3 with its specific reason")
+        let warned = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", audioIntelligenceExtra: true,
+            personalTranslatorExtra: true, audioIntelligenceSlot: false,
+            personalTranslatorSlot: true, audioIntelligenceSlotIndex: 178,
+            personalTranslatorSlotIndex: 266))
+        let warnedCheckup = evaluate(stagingDecision: warned)
+        try expect(!warnedCheckup.factors[2].isReady && warnedCheckup.factors[2].detail == warned.reason,
+                   "A warned (#178 unverified) decision fails factor 3 with its reason instead of silently staging")
+        let allowed = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", personalTranslatorExtra: true, personalTranslatorSlot: true))
+        let allowedCheckup = evaluate(stagingDecision: allowed)
+        try expect(allowedCheckup.factors[2].isReady, "An allowed staging decision leaves factor 3 ready")
 
         // AdvAI slot machinery on a synthetic scanned layout.
         let uuid = "A4A4A4A4-1111-2222-3333-123456789ABC"
@@ -106,6 +161,27 @@ import Foundation
         let layout = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [descriptors])
         try expect(layout.audioIntellIndex == 4 && layout.personalTranslatorIndex == 5,
                    "Synthetic layout resolves both AdvAI slots")
+        // Builds a document on the synthetic layout with chosen CacheData
+        // slot values and chosen CacheExtra key values, so the two layers
+        // can be varied independently. Slot indices 4/5 are the resolved
+        // layout positions, not the per-device #178/#266 observations.
+        func docWithSlots(audioSlot: Bool, translatorSlot: Bool, extraAudio: Int?, extraTranslator: Int?) throws -> GestaltDocument {
+            var slotCache = Data(count: layout.byteCount)
+            slotCache[layout.audioIntellOffset!] = audioSlot ? 1 : 0
+            slotCache[layout.personalTranslatorOffset!] = translatorSlot ? 1 : 0
+            slotCache[layout.validityOffset(for: 4)] = 1
+            slotCache[layout.validityOffset(for: 5)] = 1
+            slotCache[layout.greenTeaOffset] = 1
+            slotCache[layout.validityOffset(for: layout.greenTeaIndex)] = 1
+            slotCache[layout.validityOffset(for: layout.notGreenTeaIndex)] = 1
+            var extra: [String: Any] = [GestaltKeys.productType: "iPhone16,2", GestaltKeys.regionCode: "CH"]
+            if let extraAudio { extra[DeviceCacheOptions.audioIntelligenceKey] = NSNumber(value: extraAudio) }
+            if let extraTranslator { extra[DeviceCacheOptions.personalTranslatorKey] = NSNumber(value: extraTranslator) }
+            return try GestaltDocument(data: PropertyListSerialization.data(fromPropertyList: [
+                "CacheVersion": "24C5037i", "CacheUUID": uuid,
+                "CacheData": slotCache, "CacheExtra": extra,
+            ], format: .binary, options: 0))
+        }
         var cache = Data(count: layout.byteCount)
         cache[layout.audioIntellOffset!] = 1
         cache[layout.personalTranslatorOffset!] = 0
@@ -132,6 +208,132 @@ import Foundation
         try untouched.setAdvAISlot(DeviceCacheOptions.greenTeaKey, value: false, using: layout)
         try expect(untouched.matches(original), "setAdvAISlot ignores non-AdvAI keys")
 
+        // CacheExtra key vs CacheData slot: the two layers share one
+        // obfuscated key string as a lookup name only, and each layer's
+        // value is independent of the other's.
+        try expect(Capability.all.first { $0.id == "audioIntelligence" }?.keys == [DeviceCacheOptions.audioIntelligenceKey]
+                   && Capability.all.first { $0.id == "personalTranslator" }?.keys == [DeviceCacheOptions.personalTranslatorKey],
+                   "The AI Capabilities and the CacheData slots share one obfuscated key string as a lookup name only")
+        let slotOneKeyAbsent = try docWithSlots(audioSlot: true, translatorSlot: false, extraAudio: nil, extraTranslator: nil)
+        try expect(DeviceCacheOptions.advAISlotValue(DeviceCacheOptions.audioIntelligenceKey, in: slotOneKeyAbsent, using: layout) == true,
+                   "CacheData slot reads 1 even when the CacheExtra key is absent")
+        let slotZeroKeyOne = try docWithSlots(audioSlot: false, translatorSlot: true, extraAudio: 1, extraTranslator: 1)
+        try expect(DeviceCacheOptions.advAISlotValue(DeviceCacheOptions.audioIntelligenceKey, in: slotZeroKeyOne, using: layout) == false,
+                   "CacheExtra audioIntelligence = 1 does not move the CacheData slot, which still reads 0")
+        try expect(DeviceCacheOptions.advAISlotValue(DeviceCacheOptions.personalTranslatorKey, in: slotZeroKeyOne, using: layout) == true,
+                   "CacheExtra personalTranslator = 1 and a slot reading 1 agree, but the slot reading is independent of the key")
+        try expect(DeviceCacheOptions.advAISlotValue(DeviceCacheOptions.personalTranslatorKey, in: slotOneKeyAbsent, using: layout) == false,
+                   "CacheData slot reads 0 even when the CacheExtra key is absent")
+
+        // Staging guard on native-AI hardware (iPhone16,2): conflicting
+        // combinations block with a reason, the unverified #178
+        // combination warns, unknown baselines fail closed.
+        let verifiedSafe = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", personalTranslatorExtra: true,
+            audioIntelligenceSlot: false, personalTranslatorSlot: true))
+        try expect(verifiedSafe.outcome == .allow && verifiedSafe.allowsAutoStage,
+                   "Native hardware with slots at their baselines and no staged audio key allows auto-staging")
+        let unverified178 = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", audioIntelligenceExtra: true,
+            personalTranslatorExtra: true, audioIntelligenceSlot: false,
+            personalTranslatorSlot: true, audioIntelligenceSlotIndex: 178,
+            personalTranslatorSlotIndex: 266))
+        try expect(unverified178.outcome == .warn && !unverified178.allowsAutoStage
+                   && unverified178.requiresExplicitConfirmation
+                   && unverified178.reason.contains("CacheExtra audioIntelligence")
+                   && unverified178.reason.contains("CacheData slot #178"),
+                   "Staging CacheExtra audioIntelligence = 1 on native hardware while CacheData slot #178 reads its native 0 warns with a specific reason, not silently")
+        var confirmed178 = AIStagingRequest(
+            productType: "iPhone16,2", audioIntelligenceExtra: true,
+            personalTranslatorExtra: true, audioIntelligenceSlot: false,
+            personalTranslatorSlot: true, audioIntelligenceSlotIndex: 178,
+            personalTranslatorSlotIndex: 266)
+        confirmed178.userConfirmedUnverifiedCombination = true
+        try expect(AIStagingGuard.decide(confirmed178).outcome == .allow,
+                   "Explicit user confirmation is the only way through the #178 warning")
+        let audioSlotConflict = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", audioIntelligenceSlot: true,
+            audioIntelligenceSlotIndex: 178))
+        try expect(audioSlotConflict.outcome == .block && audioSlotConflict.requiresSlotRepair
+                   && audioSlotConflict.reason.contains("native baseline is 0"),
+                   "Audio Intelligence CacheData slot reading 1 on native hardware blocks with a reason")
+        let translatorSlotConflict = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", personalTranslatorSlot: false,
+            personalTranslatorSlotIndex: 266))
+        try expect(translatorSlotConflict.outcome == .block
+                   && translatorSlotConflict.reason.contains("native baseline on a native-AI iPhone is 1"),
+                   "Personal Translator CacheData slot reading 0 on native hardware blocks with a reason")
+        let translatorKeyDisabled = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", personalTranslatorExtra: false,
+            personalTranslatorSlot: true))
+        try expect(translatorKeyDisabled.outcome == .block
+                   && translatorKeyDisabled.reason.contains("CacheExtra key is explicitly 0"),
+                   "Personal Translator CacheExtra key explicitly 0 on native hardware blocks with a reason naming the key layer")
+        let unknownAudioBaseline = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", audioIntelligenceExtra: true))
+        try expect(unknownAudioBaseline.outcome == .block && !unknownAudioBaseline.allowsAutoStage
+                   && unknownAudioBaseline.reason.contains("did not resolve"),
+                   "Staging audioIntelligence with an unresolvable CacheData slot fails closed: no live probe data, no auto-stage")
+        let unknownTranslatorBaseline = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", personalTranslatorExtra: true))
+        try expect(unknownTranslatorBaseline.outcome == .block
+                   && unknownTranslatorBaseline.reason.contains("did not resolve"),
+                   "Staging personalTranslator with an unresolvable CacheData slot fails closed")
+        let liveProbeConflict = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone16,2", personalTranslatorExtra: true,
+            personalTranslatorSlot: true, liveAIEnabled: false))
+        try expect(liveProbeConflict.outcome == .warn
+                   && liveProbeConflict.reason.contains("live probe"),
+                   "A live probe reporting AI off on native hardware while AI keys are staged warns with a reason")
+
+        // Staging guard on non-native hardware: no native baseline
+        // applies, so staging is allowed — except a slot reading against
+        // the recorded iPhone/iPad baseline, which warns.
+        let nonNativeStaging = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone15,4", audioIntelligenceExtra: true))
+        try expect(nonNativeStaging.outcome == .allow,
+                   "Non-native hardware allows staging without a native baseline to verify")
+        let nonNativeSlotOne = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone15,4", audioIntelligenceSlot: true,
+            audioIntelligenceSlotIndex: 178))
+        try expect(nonNativeSlotOne.outcome == .warn && !nonNativeSlotOne.requiresSlotRepair,
+                   "Non-native hardware with an Audio Intelligence slot reading 1 warns instead of blocking")
+        let nonNativeTranslatorZero = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone15,4", personalTranslatorSlot: false))
+        try expect(nonNativeTranslatorZero.outcome == .allow,
+                   "Non-native hardware has no Personal Translator baseline, so a slot reading 0 does not block")
+        let unknownModel = AIStagingGuard.decide(AIStagingRequest(
+            productType: "iPhone99,9", audioIntelligenceExtra: true))
+        try expect(unknownModel.outcome == .allow,
+                   "Unknown future models default to not native, so the guard does not block staging on them")
+
+        // Manager-level request building on the synthetic scanned layout:
+        // the manager builds the guard request from a real document +
+        // layout (current staged keys, resolved slot values), so the
+        // wiring itself — not just the pure guard — is covered.
+        let stagedBaseline = try docWithSlots(audioSlot: false, translatorSlot: true, extraAudio: 1, extraTranslator: 1)
+        let stagedDecision = GestaltManager.stagingDecision(for: stagedBaseline, layout: layout, liveAIEnabled: nil, userConfirmedUnverifiedCombination: false, proposedUnlock: false)
+        try expect(stagedDecision?.outcome == .warn && stagedDecision?.requiresExplicitConfirmation == true,
+                   "Manager decision warns for the staged #178 combination (CacheExtra audioIntelligence = 1, slot at its native 0)")
+        let stagedConfirmed = GestaltManager.stagingDecision(for: stagedBaseline, layout: layout, liveAIEnabled: nil, userConfirmedUnverifiedCombination: true, proposedUnlock: false)
+        try expect(stagedConfirmed?.outcome == .allow,
+                   "Manager decision allows the warned combination once the user confirmed it")
+        let unstagedBaseline = try docWithSlots(audioSlot: false, translatorSlot: true, extraAudio: nil, extraTranslator: nil)
+        let proposalDecision = GestaltManager.stagingDecision(for: unstagedBaseline, layout: layout, liveAIEnabled: nil, userConfirmedUnverifiedCombination: false, proposedUnlock: true)
+        try expect(proposalDecision?.outcome == .warn,
+                   "Manager proposal decision warns for the unlock before it is staged (both guarded keys proposed as 1)")
+        let unproposedDecision = GestaltManager.stagingDecision(for: unstagedBaseline, layout: layout, liveAIEnabled: nil, userConfirmedUnverifiedCombination: false, proposedUnlock: false)
+        try expect(unproposedDecision?.outcome == .allow,
+                   "Manager decision allows when nothing is staged and the slots read their baselines")
+        let slotConflictDoc = try docWithSlots(audioSlot: true, translatorSlot: true, extraAudio: nil, extraTranslator: nil)
+        let slotConflictDecision = GestaltManager.stagingDecision(for: slotConflictDoc, layout: layout, liveAIEnabled: nil, userConfirmedUnverifiedCombination: false, proposedUnlock: false)
+        try expect(slotConflictDecision?.outcome == .block && slotConflictDecision?.requiresSlotRepair == true,
+                   "Manager decision blocks when the Audio Intelligence slot reads 1, even with no key staged")
+        let translatorConflictDoc = try docWithSlots(audioSlot: false, translatorSlot: false, extraAudio: nil, extraTranslator: nil)
+        let translatorConflictDecision = GestaltManager.stagingDecision(for: translatorConflictDoc, layout: layout, liveAIEnabled: nil, userConfirmedUnverifiedCombination: false, proposedUnlock: false)
+        try expect(translatorConflictDecision?.outcome == .block,
+                   "Manager decision blocks when the Personal Translator slot reads 0 on native hardware")
+
         // Manager level on the offline profile: slots do not resolve, so
         // there are no conflicts to repair, and Fix stages the unlock.
         let profile = MobileGestaltCacheLayout.originalProfile
@@ -151,6 +353,8 @@ import Foundation
         let manager = GestaltManager()
         manager.loadSnapshotForTests(snapshot)
         try expect(manager.aiConflicts.isEmpty, "Offline profile has no resolvable slots, so no conflicts")
+        try expect(manager.aiStagingDecision == nil,
+                   "Offline profile carries no resolved AdvAI slot index, so the manager reports no staging decision (unobservable slots, not a block)")
         try expect(!manager.repairAIConflicts(), "Nothing to repair without conflicts")
         guard let before = manager.aiReadinessCheckup else { throw Failure(message: "Checkup exists for a loaded document") }
         try expect(before.readyCount == 2, "Unstaged fixture is 2/4 ready (regulatory model + AI eligibility via native hardware)")
@@ -159,6 +363,6 @@ import Foundation
         try expect(manager.aiReadinessCheckup?.isReady == true,
                    "Staged fixture is 4/4 ready")
 
-        print("PASS: eligibility table, native baselines, 4-factor evaluation, AdvAI slot read/repair, and manager-level Fix staging.")
+        print("PASS: eligibility table, native baselines, 4-factor evaluation, AdvAI slot read/repair, CacheExtra vs CacheData distinction, staging-guard block/warn/fail-closed on native vs non-native hardware, guard decisions in the checkup, manager-level guard request building (staged, proposal, confirmed, blocked), per-layer conflict cases, and manager-level Fix staging.")
     }
 }

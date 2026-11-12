@@ -39,6 +39,10 @@ struct MobileGestaltCacheLayout: Codable, Equatable, Sendable {
 
     // Retain offline editing of the previously verified layout. Other layouts
     // are resolved from the device's own library, never selected by model/OS.
+    // Simulator/offline fixtures ONLY: on a device build `resolve(in:)`
+    // never consults this profile (see the `#if` in `resolve(in:)`), so an
+    // unknown device can never silently borrow it. Do not use it as a
+    // fallback anywhere else.
     static let originalProfile = Self(uuid: "7F1DF278-18B7-4E5A-8425-09E8830DE9AF",
                                       slotCount: 720, greenTeaIndex: 383, notGreenTeaIndex: 506, wapiIndex: 694)
     private static let runtimeProfile: Self? = {
@@ -67,6 +71,21 @@ struct MobileGestaltCacheLayout: Codable, Equatable, Sendable {
     /// the scan succeeded. Exposed only so diagnostics can name which
     /// profile matched; resolution itself goes through `resolve(in:)`.
     static func runtimeLayout() -> Self? { runtimeProfile }
+
+    /// The reason the cache layout cannot be resolved for this document,
+    /// or `nil` when it resolves. This is the lock reason for the eSIM /
+    /// WAPI switches: when it is non-nil the switches stay locked and
+    /// this string is shown, rather than falling back to any layout.
+    /// On a device build a failed runtime scan lands here; the hardcoded
+    /// offline profile is never substituted.
+    static func lockReason(in document: GestaltDocument) -> String? {
+        do {
+            _ = try resolve(in: document)
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
 
     static func resolve(in document: GestaltDocument) throws -> Self {
         #if os(iOS) && !targetEnvironment(simulator)

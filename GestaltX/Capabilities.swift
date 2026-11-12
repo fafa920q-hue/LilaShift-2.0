@@ -44,12 +44,14 @@ struct Capability: Identifiable {
     var requiresEnableConfirmation: Bool { id == "storage" }
     var effectHint: String {
         switch id {
-        case "ai", "personalTranslator", "photosCleanUp", "alwaysListeningSiri":
+        case "ai", "photosCleanUp", "alwaysListeningSiri":
             "Restart required. Apple Intelligence also depends on device and region."
+        case "personalTranslator":
+            "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value."
         case "siriOnDevice":
             "Restart required. Siri uses a device-specific capability type; changing it may affect the Apple Intelligence Siri interface. Keep the current value or restore the recorded original."
         case "audioIntelligence":
-            "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version."
+            "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value."
         case "handwritingSynthesis":
             "Restart required. Apple Intelligence also depends on device and region. Results depend on the app and system support."
         case "pencil": "Restart the device, then reopen Settings. Pencil hardware support is still required."
@@ -169,6 +171,55 @@ enum ChinaUnlock {
                                   "photosCleanUp", "handwritingSynthesis", "alwaysListeningSiri"]
     static let aiCapabilities = aiCapabilityIDs.compactMap { id in
         Capability.all.first { $0.id == id }
+    }
+}
+
+/// Fail-closed model gate for model-dependent presets (P0-4).
+///
+/// A device is "known" only when it has a verified entry in
+/// `USRegulatoryModelMapping` — an exact product-type entry, or a recorded
+/// original regulatory model that is itself a verified entry. There is no
+/// family or prefix inference: an unlisted variant of a known family
+/// (for example iPhone19,9), an unknown ProductType (iPhone99,9), a
+/// made-up prefix, an iPad, or an empty product type are all unknown.
+///
+/// An unknown device must resolve to `.unknown(reason:)` — never to a
+/// borrowed layout, a guessed model number, or an assumed capability.
+/// The reason is the string the UI shows when the model-dependent part
+/// of a preset is withheld.
+///
+/// Scope: this gates MODEL-DEPENDENT writes only (the Full US model
+/// number, and any preset that assumes a known model). It does not gate
+/// model-independent writes such as the region code, and it does not
+/// gate an explicit per-capability choice the user makes tap by tap in
+/// `Capability.apply` — that path has no model judgement to fail closed.
+/// Auto-staging paths (one-tap unlock, Fix) must consult this decision
+/// before staging anything model-dependent; see the cross-file note in
+/// the P0-4 report for the `GestaltManager` wiring.
+enum DeviceModelSupport {
+    static func decision(for productType: String, originalRegModel: String?) -> DeviceModelDecision {
+        if USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: originalRegModel,
+                                                      productType: productType) != nil {
+            return .known
+        }
+        return .unknown(reason: USRegulatoryModelMapping.unknownModelReason(
+            originalRegModel: originalRegModel, productType: productType)
+            ?? L("No US regulatory model known for this device — region code only."))
+    }
+}
+
+enum DeviceModelDecision: Equatable {
+    /// The device has a verified mapping entry; model-dependent presets
+    /// may proceed for that entry only.
+    case known
+    /// The device matches no verified entry: read-only for anything
+    /// model-dependent. `reason` explains why it is blocked.
+    case unknown(reason: String)
+
+    var isKnown: Bool { self == .known }
+    var reason: String? {
+        if case .unknown(let reason) = self { return reason }
+        return nil
     }
 }
 
