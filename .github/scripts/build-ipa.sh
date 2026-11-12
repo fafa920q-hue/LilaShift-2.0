@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build GestaltX and package an ad-hoc signed IPA with the entitlements of the
+# Build LilaShift and package an ad-hoc signed IPA with the entitlements of the
 # app and its share extension embedded. Re-signing tools such as AltStore and
 # SideStore read the entitlements from the existing signature to decide which
 # App Groups to register, so an unsigned IPA ends up without an App Group.
@@ -21,7 +21,7 @@ if [[ -z "$version" || "$(wc -l <<< "$version")" -ne 1 ]]; then
   echo "Error: expected one MARKETING_VERSION, found: ${version:-none}" >&2
   exit 1
 fi
-echo "==> Building GestaltX $version"
+echo "==> Building LilaShift $version"
 
 if [[ -n "${BUILD_DATE:-}" ]]; then
   printf '%s' "$BUILD_DATE" > GestaltX/BuildDate.txt
@@ -90,10 +90,10 @@ if not common:
 print("App and embedded extensions retain common App Groups with ad-hoc signatures.")
 VERIFY_ENTITLEMENTS
 
-ipa="$out/GestaltX_$version.ipa"
+ipa="$out/LilaShift_$version.ipa"
 # Keep an existing package until the replacement is complete.
-(cd "$stage" && zip -qry "$stage/GestaltX_$version.ipa" Payload)
-mv -f "$stage/GestaltX_$version.ipa" "$ipa"
+(cd "$stage" && zip -qry "$stage/LilaShift_$version.ipa" Payload)
+mv -f "$stage/LilaShift_$version.ipa" "$ipa"
 echo "==> Wrote $ipa"
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
