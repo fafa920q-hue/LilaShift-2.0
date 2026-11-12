@@ -1,0 +1,44 @@
+# Apply the LilaShift patch (one-shot)
+#
+# Manually dispatched once, right after the fork is created: applies
+# china-unlock-v107.patch (the complete LilaShift 1.0.7 changes on top of
+# upstream GestaltX at c60519c) and commits the result to main.
+# Do NOT re-run after the patch is applied: git apply --check fails when
+# the changes are already in the tree, and the run stops before committing.
+name: Apply LilaShift patch
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the fork
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Apply the patch and verify localizations
+        run: |
+          git apply --check china-unlock-v107.patch
+          git apply china-unlock-v107.patch
+          python3 -X utf8 scripts/generate_localization.py
+          python3 -X utf8 tests/LocalizationTests.py
+
+      - name: Commit the applied patch
+        run: |
+          git config user.name "fafa920q-hue"
+          git config user.email "fafa920q-hue@users.noreply.github.com"
+          git add -A
+          git status --short
+          git commit -m "LilaShift 1.0.7: apply China Unlock patch on upstream c60519c
+
+          Complete LilaShift 1.0.7 source: 9-item China Unlock, lavender
+          Liquid Glass, Erosion-CN hardening, LilaShift rebrand, cat icon.
+          Upstream: huamidev/GestaltX v1.0.7 (dfd4a7e) + PR #126 (c60519c).
+          Maintainer: @steam8871. License: GPL-3.0."
+          git push origin main
