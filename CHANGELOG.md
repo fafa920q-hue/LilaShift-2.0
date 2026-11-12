@@ -2,7 +2,9 @@
 
 English | [简体中文](CHANGELOG_ZH-CN.md)
 
-## [Unreleased]
+## [1.0.7] - 2026-11-13 - LilaShift 2.0
+
+Build `11130112`. Full-source LilaShift 2.0 project (this repository), based on upstream GestaltX v1.0.7 plus PR #126.
 
 ### Added
 
@@ -10,14 +12,12 @@ English | [简体中文](CHANGELOG_ZH-CN.md)
 - Redesign the Tools home, preset group pages and change review in Liquid Glass: a shared glass component system (`GlassBackground`, `GlassCard`, `GlassButton` styles, `GlassFeatureRow`, `GlassCategoryTile`, `GlassStatusBadge`, `GlassBottomBar`) built on the native iOS 26 `glassEffect` / `GlassEffectContainer` APIs with a Material fallback, Reduce Transparency / Reduce Motion / Dynamic Type support, and light/dark mode; a China Unlock status card with live eSIM, region-code and Apple Intelligence status, grouped preset categories, per-preset status with a pending-changes count, and a change-confirmation page that summarizes the China Unlock items with before/after values and technical details. The bottom tab bar stays the native iOS 26 glass tab bar.
 - Restyle the Liquid Glass theme in light lavender (#F6F3FF page background, #EAE1FF glass, #8652DC primary purple): a light-purple glass unlock card and category tiles, purple-gradient primary buttons and a light-purple glass tab bar; dark mode keeps a readable deep-plum glass theme. Add a live author badge, read-progress cards driven by the real read state (indeterminate — the upstream read path reports no numeric progress, so no percentage is invented) and an apply-progress card (backup → write → verify → done) driven by the real write flow observed through the session log.
 - Add an Open Source & Acknowledgements section to About: the original project GestaltX by huamidev, the enhanced version maintained by @steam8871, the GNU GPL v3.0 license and the original project URL, with in-app license text and source links; original contributor acknowledgements are unchanged.
+- Harden the write path, learned from Erosion-CN (no code copied): in-place writes with `F_FULLFSYNC` and full read-back verification plus in-place rollback, runtime dynamic resolution of the eSIM cache layout, a diff preview before applying, a dual-vault backup with a factory vault that survives uninstall/reinstall, a region-mode choice (region code only, or full US `LL` + `LL/A`), and a 4-factor Apple Intelligence checkup with slot-level conflict guards.
+- Rebrand the app as LilaShift (Chinese name 紫序) and use a cat photo as the app icon.
 
 ### Changed
 
 - Keep the iOS 27.3 container-discovery fix and diagnostic logging from 1.0.7, including the Share Log entry.
-
-## [1.0.7] - 2026-11-13
-
-Build `11130112`.
 
 ### Fixed
 
