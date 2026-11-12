@@ -1,4 +1,4 @@
-name: Build IPA
+name: Build LilaShift IPA
 
 # Builds an ad-hoc signed IPA for every push to main, pull request, version
 # tag, release, and manual dispatch. The IPA keeps the App Group entitlements
@@ -60,7 +60,7 @@ jobs:
           git fetch --depth=1 origin "$DEFAULT_BRANCH"
           git checkout FETCH_HEAD -- .github/scripts/build-ipa.sh
 
-      - name: Build IPA
+      - name: Build LilaShift IPA
         id: build
         run: |
           export BUILD_DATE="$(date -u +%F)"
@@ -69,7 +69,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v7
         with:
-          name: GestaltX-${{ steps.build.outputs.version }}
+          name: LilaShift-${{ steps.build.outputs.version }}
           path: ${{ steps.build.outputs.ipa }}
           if-no-files-found: error
           retention-days: 14
@@ -83,7 +83,7 @@ jobs:
           version="${TAG#v}"
           notes="$RUNNER_TEMP/release-notes.md"
           : > "$notes"
-          printf 'English | [简体中文](https://github.com/huamidev/GestaltX/blob/%s/CHANGELOG_ZH-CN.md)\n\n' "$TAG" > "$notes"
+          printf 'English | [简体中文](https://github.com/fafa920q-hue/LilaShift-2.0/blob/%s/CHANGELOG_ZH-CN.md)\n\n' "$TAG" > "$notes"
           if [[ -f CHANGELOG.md ]]; then
             awk -v ver="$version" '
               $0 ~ "^## \\[" ver "\\]" { found = 1; next }
@@ -92,11 +92,11 @@ jobs:
             ' CHANGELOG.md >> "$notes"
           fi
           if ! grep -q '^### ' "$notes"; then
-            printf 'GestaltX %s\n' "$TAG" >> "$notes"
+            printf 'LilaShift %s\n' "$TAG" >> "$notes"
           fi
           if ! gh release view "$TAG" >/dev/null 2>&1; then
             gh release create "$TAG" --verify-tag \
-              --title "GestaltX $TAG" --notes-file "$notes"
+              --title "LilaShift $TAG" --notes-file "$notes"
           fi
           assets=("$IPA")
           [[ -f CHANGELOG.md ]] && assets+=("CHANGELOG.md")
