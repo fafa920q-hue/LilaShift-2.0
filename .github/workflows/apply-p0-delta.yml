@@ -1,0 +1,52 @@
+# Apply the P0 security-fixes delta patch (one-shot)
+#
+# Manually dispatched once, on the dev/p0-security-fixes branch: applies
+# p0-delta.patch (Phase B: P0-1 writer hardening, P0-2 backup provenance,
+# P0-3 AI staging guard, P0-4 exact-match model eligibility, P0-5 licenses)
+# on top of main (LilaShift 1.0.7, patch commit 0eb268b) and commits the
+# result to the current branch. Do NOT re-run after the patch is applied:
+# git apply --check fails when the changes are already in the tree, and
+# the run stops before committing.
+name: Apply P0 delta patch
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Apply the delta patch and verify localizations
+        run: |
+          git apply --check p0-delta.patch
+          git apply p0-delta.patch
+          python3 -X utf8 scripts/generate_localization.py
+          python3 -X utf8 tests/LocalizationTests.py
+          python3 -X utf8 tests/ThirdPartyNoticesTests.py
+
+      - name: Commit the applied delta
+        run: |
+          git config user.name "fafa920q-hue"
+          git config user.email "fafa920q-hue@users.noreply.github.com"
+          git add -A
+          git status --short
+          git commit -m "Phase B (P0): safe file writing, backup provenance, AI staging guard, exact-match model eligibility, licenses
+
+          P0-1: hardened DevicePlistWriter (lstat/fstat identity checks,
+          no unsafe open fallback, fault-injection tests).
+          P0-2: BackupProvenance (verifiedFactory/firstRead/preModification/
+          importedHistory/unknown); never auto-overwrite a valid vault.
+          P0-3: AI staging guard wired into Fix + checkup; per-layer
+          #178/#266 conflicts; untested combos blocked by default.
+          P0-4: exact-match native-AI model list; unknown models fail-closed.
+          P0-5: THIRD_PARTY_NOTICES completed (Erosion-CN named per file).
+          9-item one-tap preset unchanged; #178 decision still pending."
+          git push
