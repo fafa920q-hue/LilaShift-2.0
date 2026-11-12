@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "GXMobileGestaltImage.h"
 #import <TargetConditionals.h>
+#import <ctype.h>
 #import <dlfcn.h>
 #import <mach-o/dyld.h>
 #import <mach-o/getsect.h>
@@ -40,8 +41,45 @@ NSDictionary<NSString *, id> *GXCopyMobileGestaltImage(void) {
                 NSData *data = GXCopySection(header, slide, segments[j], "__const", NULL);
                 if (data) [constants addObject:data];
             }
+            // UUID strings harvested from `__cfstring`: a second source for
+            // the CacheUUID if a future iOS moves it out of `__cstring`.
+            // Adapted from Erosion-CN's MGImageReader `__cfstring` walk;
+            // simplified for GestaltX: 32-byte entries are accepted only
+            // when their length is 36 and their data pointer lands inside
+            // the copied `__cstring` range, and only UUID-shaped text is
+            // kept. No pointer outside that range is ever read.
+            NSMutableArray<NSString *> *cfUUIDs = [NSMutableArray array];
+            if (strings && stringAddress != 0) {
+                const char *cfSegments[] = {"__AUTH_CONST", "__DATA_CONST"};
+                for (size_t j = 0; j < sizeof(cfSegments) / sizeof(cfSegments[0]); j++) {
+                    unsigned long cfSize = 0;
+                    const uint8_t *cfPtr = getsectiondata(header, cfSegments[j], "__cfstring", &cfSize);
+                    if (!cfPtr || cfSize < 32 || cfSize > 8 * 1024 * 1024) continue;
+                    for (size_t off = 0; off + 32 <= cfSize; off += 32) {
+                        uint64_t rawDataPtr = 0, rawLen = 0;
+                        memcpy(&rawDataPtr, cfPtr + off + 16, sizeof(uint64_t));
+                        memcpy(&rawLen, cfPtr + off + 24, sizeof(uint64_t));
+                        if (rawLen != 36) continue;
+                        uint64_t charPtr = rawDataPtr & 0x00007FFFFFFFFFFFULL;
+                        if (charPtr < stringAddress || charPtr + 36 > stringAddress + strings.length) continue;
+                        const char *chars = (const char *)(uintptr_t)charPtr;
+                        BOOL isUUID = YES;
+                        for (int c = 0; c < 36; c++) {
+                            unsigned char ch = (unsigned char)chars[c];
+                            if (c == 8 || c == 13 || c == 18 || c == 23) {
+                                if (ch != '-') { isUUID = NO; break; }
+                            } else if (!isxdigit(ch)) { isUUID = NO; break; }
+                        }
+                        if (!isUUID) continue;
+                        NSString *candidate = [[NSString alloc] initWithBytes:chars length:36 encoding:NSASCIIStringEncoding];
+                        if (candidate && [[NSUUID alloc] initWithUUIDString:candidate] != nil) {
+                            [cfUUIDs addObject:candidate];
+                        }
+                    }
+                }
+            }
             if (strings && constants.count) {
-                image = @{ @"strings": strings, @"stringAddress": @(stringAddress), @"constants": constants };
+                image = @{ @"strings": strings, @"stringAddress": @(stringAddress), @"constants": constants, @"cfUUIDs": [cfUUIDs copy] };
             }
             return;
         }

@@ -272,7 +272,7 @@ static void GXDiscoverLaunchPaths(void) {
                 if(handle>=0)worse_query_release(handle);
             }
             if([identifier isEqualToString:own]){
-                item[@"name"]=[NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleDisplayName"]?:@"GestaltX";
+                item[@"name"]=[NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleDisplayName"]?:@"LilaShift";
                 path=NSHomeDirectory();bundle=NSBundle.mainBundle.bundlePath;
                 version=[NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleVersion"]?:@"";
                 item[@"installed"]=@YES;
@@ -338,7 +338,7 @@ static void GXDiscoverLaunchPaths(void) {
         NSMutableDictionary<NSString *,NSString *> *names=NSMutableDictionary.new,*paths=NSMutableDictionary.new;
         NSMutableArray<NSDictionary<NSString *,NSString *> *> *result=NSMutableArray.new;
         NSString *own=NSBundle.mainBundle.bundleIdentifier;
-        if(own){paths[own]=NSHomeDirectory();names[own]=[NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleDisplayName"]?:@"GestaltX";}
+        if(own){paths[own]=NSHomeDirectory();names[own]=[NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleDisplayName"]?:@"LilaShift";}
         dlopen("/System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices",RTLD_NOW|RTLD_LOCAL);
         Class workspace=NSClassFromString(@"LSApplicationWorkspace");
         id service=[workspace respondsToSelector:@selector(defaultWorkspace)]?[workspace defaultWorkspace]:nil;

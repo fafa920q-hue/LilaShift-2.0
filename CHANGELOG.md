@@ -2,6 +2,19 @@
 
 English | [简体中文](CHANGELOG_ZH-CN.md)
 
+## [Unreleased]
+
+### Added
+
+- Add China Unlock, a one-tap setup for compatible China-mainland iPhones with eSIM hardware: it stages the eSIM cache flags, the U.S. region code (`LL`, sales region untouched) and six Apple Intelligence presets (Apple Intelligence, Audio Intelligence, Personal Translator, Photos Clean Up, Handwriting Synthesis, always-listening Hey Siri) as nine staged changes for review before applying. If the eSIM cache layout cannot be verified, staging stops for the whole group and shows the reason; region code and AI remain settable through their individual presets. One-tap restore reverts all nine items to their recorded originals.
+- Redesign the Tools home, preset group pages and change review in Liquid Glass: a shared glass component system (`GlassBackground`, `GlassCard`, `GlassButton` styles, `GlassFeatureRow`, `GlassCategoryTile`, `GlassStatusBadge`, `GlassBottomBar`) built on the native iOS 26 `glassEffect` / `GlassEffectContainer` APIs with a Material fallback, Reduce Transparency / Reduce Motion / Dynamic Type support, and light/dark mode; a China Unlock status card with live eSIM, region-code and Apple Intelligence status, grouped preset categories, per-preset status with a pending-changes count, and a change-confirmation page that summarizes the China Unlock items with before/after values and technical details. The bottom tab bar stays the native iOS 26 glass tab bar.
+- Restyle the Liquid Glass theme in light lavender (#F6F3FF page background, #EAE1FF glass, #8652DC primary purple): a light-purple glass unlock card and category tiles, purple-gradient primary buttons and a light-purple glass tab bar; dark mode keeps a readable deep-plum glass theme. Add a live author badge, read-progress cards driven by the real read state (indeterminate — the upstream read path reports no numeric progress, so no percentage is invented) and an apply-progress card (backup → write → verify → done) driven by the real write flow observed through the session log.
+- Add an Open Source & Acknowledgements section to About: the original project GestaltX by huamidev, the enhanced version maintained by @steam8871, the GNU GPL v3.0 license and the original project URL, with in-app license text and source links; original contributor acknowledgements are unchanged.
+
+### Changed
+
+- Keep the iOS 27.3 container-discovery fix and diagnostic logging from 1.0.7, including the Share Log entry.
+
 ## [1.0.7] - 2026-11-13
 
 Build `11130112`.

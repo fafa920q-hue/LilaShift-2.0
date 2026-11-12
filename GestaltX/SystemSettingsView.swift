@@ -18,7 +18,7 @@ final class SystemSettingsModel: ObservableObject {
             ?? UserDefaults.standard.string(forKey: "GestaltX.installationID") ?? "local"
         store = SystemSettingsStore(storage: directory, deviceID: deviceID, acquire: { path in
             #if targetEnvironment(simulator)
-            throw GestaltFailure("Device access is unavailable in the Simulator. Open a plist to explore GestaltX.")
+            throw GestaltFailure("Device access is unavailable in the Simulator. Open a plist to explore LilaShift.")
             #else
             let groups = GXEntitlementsReader.usableAppGroups()
             guard !groups.isEmpty else { throw GestaltFailure("The signed app has no usable App Group. Enable its App Group capability and sign it again.") }

@@ -10,7 +10,7 @@ struct AboutView: View {
                 HStack(spacing: 12) {
                     BrandMark(size: 44)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("GestaltX").font(.headline)
+                        Text(L("LilaShift")).font(.headline)
                     }
                 }.padding(.vertical, 6)
                 Link(destination: GestaltBrand.projects) {
@@ -38,6 +38,38 @@ struct AboutView: View {
                 }
             }
             Section {
+                LabeledContent(L("Original Project"), value: "GestaltX")
+                LabeledContent(L("Original Author"), value: "huamidev")
+                LabeledContent(L("Enhanced Version Maintainer"), value: "@steam8871")
+                NavigationLink { LicenseTextView(name: "GestaltX-GPL-3.0", title: "GNU GPL v3") } label: {
+                    LabeledContent(L("Open Source License"), value: "GNU GPL v3.0")
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L("Original Project URL")).font(.caption).foregroundStyle(.secondary)
+                    Link("https://github.com/huamidev/GestaltX", destination: GestaltBrand.projects)
+                        .font(.subheadline)
+                }
+                .padding(.vertical, 4)
+                Link(destination: GestaltBrand.projects) {
+                    LabeledContent(L("Source Code"), value: "github.com/huamidev/GestaltX")
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L("Enhanced Source URL")).font(.caption).foregroundStyle(.secondary)
+                    Link("https://github.com/fafa920q-hue/LilaShift", destination: URL(string: "https://github.com/fafa920q-hue/LilaShift")!)
+                        .font(.subheadline)
+                }
+                .padding(.vertical, 4)
+                Text("Based on GestaltX by huamidev")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 4)
+            } header: {
+                Text(L("Open Source & Acknowledgements"))
+            } footer: {
+                Text(L("The enhanced version is distributed under the GNU GPL v3.0. Its complete source is distributed with the release as the pristine v1.0.7 source plus the modification patch."))
+                    .font(.footnote)
+            }
+            Section {
                 NavigationLink { CreditsView() } label: { Label(L("Credits & Licenses"), systemImage: "text.book.closed") }
             } footer: {
                 aboutFooter.padding(.top, 8)
@@ -51,7 +83,7 @@ struct AboutView: View {
     private var aboutFooter: some View {
         let year = Calendar.current.component(.year, from: .now)
         return VStack(spacing: 8) {
-            Text("Version: \(GestaltBrand.version) (\(GestaltBrand.build))")
+            Text("\(L("LilaShift")) \(GestaltBrand.version) (\(GestaltBrand.build))")
                 .foregroundStyle(.secondary)
             Text("Developed by huamidev")
                 .foregroundStyle(.secondary.opacity(0.7))

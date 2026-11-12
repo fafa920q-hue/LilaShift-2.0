@@ -11,5 +11,7 @@
 
 #import "GXMobileGestaltImage.h"
 
+#import "GXLiveGestaltProbe.h"
+
 #import "GXDeviceIdentity.h"
 #import "GXCustomizationAccess.h"

@@ -114,7 +114,7 @@ struct WallpapersView: View {
         List {
             Section {
                 Button { showsImport = true } label: { Label(L("Import Wallpaper"), systemImage: "square.and.arrow.down") }
-            } footer: { Text(L("Import a .tendies or .zip wallpaper pack. You can also share it to GestaltX.")) }
+            } footer: { Text(L("Import a .tendies or .zip wallpaper pack. You can also share it to LilaShift.")) }
             if model.packs.isEmpty {
                 Section { ContentUnavailableView(L("No Wallpapers"), systemImage: "photo.on.rectangle.angled") }
             } else {
@@ -166,8 +166,8 @@ struct WallpapersView: View {
         .alert(L("Delete the imported wallpaper pack?"), isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })) {
             Button(L("Cancel"), role: .cancel) { pendingDelete = nil }
             Button(L("Delete"), role: .destructive) { if let pack = pendingDelete { Task { await model.deleteImportedWallpaper(pack) } }; pendingDelete = nil }
-        } message: { Text(L("This only deletes the imported pack from GestaltX. Applied wallpapers will be kept.")) }
-        .alert(L("GestaltX"), isPresented: Binding(get: { model.message != nil }, set: { if !$0 { model.message = nil } })) {
+        } message: { Text(L("This only deletes the imported pack from LilaShift. Applied wallpapers will be kept.")) }
+        .alert(L("LilaShift"), isPresented: Binding(get: { model.message != nil }, set: { if !$0 { model.message = nil } })) {
             Button(L("OK"), role: .cancel) { model.message = nil }
         } message: { Text(model.message ?? "") }
     }

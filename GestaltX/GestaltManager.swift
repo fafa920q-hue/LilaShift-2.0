@@ -17,6 +17,10 @@ final class GestaltManager: ObservableObject {
     @Published private(set) var snapshot: DocumentSnapshot?
     @Published private(set) var working: GestaltDocument?
     @Published private(set) var isBusy = false
+    /// True only while `connect()` is reading the device. Presentation
+    /// state for the read-progress card; no read/write behavior depends
+    /// on it.
+    @Published private(set) var isReading = false
     @Published private(set) var status = "Connect to your device or open a plist."
     @Published private(set) var deviceAccessible = false
     @Published private(set) var backups: [BackupRecord] = []
@@ -28,6 +32,16 @@ final class GestaltManager: ObservableObject {
     @Published var regionID = "keep"
     @Published var regionCodeID = "keep"
     @Published var modelID = "keep"
+    /// Opt-in region mode for China Unlock (default region-code-only).
+    /// Persisted across launches; never reset by loading a document.
+    @Published var chinaUnlockRegionMode: ChinaUnlockRegionMode = .regionCodeOnly
+    /// US regulatory model staged by the Full US mode, if a mapping is
+    /// known for this device. `nil` means the mode stages region +
+    /// sales region only (see `regionModeNote`).
+    @Published var fullUSModelNumber: String?
+    /// Shown under the region-mode picker when Full US cannot map this
+    /// device to a US regulatory model.
+    @Published var regionModeNote: String?
     @Published var changesName = false
     @Published var modelName = ""
     @Published var subtype = 0
@@ -38,6 +52,7 @@ final class GestaltManager: ObservableObject {
 
     init() {
         let defaults = UserDefaults.standard
+        chinaUnlockRegionMode = ChinaUnlockRegionMode.stored
         let deviceID = defaults.string(forKey: "GestaltX.installationID") ?? UUID().uuidString
         defaults.set(deviceID, forKey: "GestaltX.installationID")
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -45,7 +60,7 @@ final class GestaltManager: ObservableObject {
         files = GestaltFileStore(deviceURL: URL(fileURLWithPath: GestaltKeys.devicePath), backupDirectory: directory,
                                 deviceID: deviceID, acquire: {
             #if targetEnvironment(simulator)
-            throw GestaltFailure("Device access is unavailable in the Simulator. Open a plist to explore GestaltX.")
+            throw GestaltFailure("Device access is unavailable in the Simulator. Open a plist to explore LilaShift.")
             #else
             let target = (GestaltKeys.devicePath as NSString).deletingLastPathComponent
             let signedGroups = GXEntitlementsReader.usableAppGroups()
@@ -98,6 +113,25 @@ final class GestaltManager: ObservableObject {
         guard let original = snapshot?.document, let edited = preview else { return [] }
         return DeviceCacheOptions.changes(from: original, to: edited)
     }
+    /// Full CacheData diff for the review sheet, including any changed
+    /// byte outside the known slots.
+    var cacheDataDiff: CacheDataDiff? {
+        guard let original = snapshot?.document, let edited = preview else { return nil }
+        return DeviceCacheOptions.diff(from: original, to: edited)
+    }
+    /// Pre-preview validation gate: the same `validateEdit` that `commit`
+    /// enforces, run when the review sheet opens so a staged edit that
+    /// fails validation is shown (and Apply disabled) before Apply is
+    /// pressed. The commit-time check remains the enforcement point.
+    var previewValidationError: String? {
+        guard let snapshot, let preview else { return nil }
+        do {
+            try DeviceCacheOptions.validateEdit(from: snapshot.document, to: preview)
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
     var changeCount: Int { changeKeys.count + cacheDataChanges.count }
     var hasDocument: Bool { snapshot != nil }
     var sourceIsDevice: Bool { snapshot?.source == .device }
@@ -121,8 +155,12 @@ final class GestaltManager: ObservableObject {
             doc.set(modelName.trimmingCharacters(in: .whitespacesAndNewlines), for: "bbtR9jQx50Fv5Af/affNtA")
         }
         doc.applyRegion(salesRegion: RegionPreset.all.first { $0.id == regionID },
-                        regionCode: RegionPreset.all.first { $0.id == regionCodeID })
+                        regionCode: RegionPreset.all.first { $0.id == regionCodeID },
+                        skipCreatingRegionInfoOnModernOS: chinaUnlockRegionMode == .fullUS)
         doc.applyModel(ModelPreset.all.first { $0.id == modelID })
+        if chinaUnlockRegionMode == .fullUS, let model = fullUSModelNumber {
+            doc.set(model, for: GestaltKeys.modelNumber)
+        }
         return doc
     }
 
@@ -135,6 +173,7 @@ final class GestaltManager: ObservableObject {
     private func accept(_ loaded: DocumentSnapshot) {
         snapshot = loaded; working = loaded.document
         choices = [:]; regionID = "keep"; regionCodeID = "keep"; modelID = "keep"; changesName = false; subtype = 0
+        fullUSModelNumber = nil; regionModeNote = nil
         cacheOptionChoice = .keep
         wapiChoice = .keep
         modelName = loaded.document.artwork["ArtworkDeviceProductDescription"] as? String ?? ""
@@ -143,8 +182,315 @@ final class GestaltManager: ObservableObject {
         if let snapshot { accept(snapshot) }
     }
 
-    func stageCacheOption(_ choice: CacheOptionChoice) {
-        guard !isBusy, var document = working, let snapshot else { return }
+    /// Test-only entry point: loads a fixture snapshot so staging and
+    /// preview logic can be verified without a device or signing.
+    /// Production code never calls this; it only resets staged state
+    /// through the same `accept` path as a real read.
+    func loadSnapshotForTests(_ snapshot: DocumentSnapshot) { accept(snapshot) }
+
+    // MARK: - China Unlock
+
+    /// True while the full China Unlock is staged (not yet applied):
+    /// eSIM flags enabled, region code US and all six AI presets enabled.
+    var isChinaUnlockStaged: Bool {
+        guard hasDocument else { return false }
+        return cacheOptionChoice == .enable
+            && regionCodeID == ChinaUnlock.regionCodeID
+            && ChinaUnlock.aiCapabilityIDs.allSatisfy { (choices[$0] ?? .keep) == .enable }
+    }
+
+    /// Region code shown by the staged preview (`LL` once unlocked).
+    var previewRegionCode: String? { preview?.extra[GestaltKeys.regionCode] as? String }
+
+    var previewESIMFlags: CachedOptionFlags? {
+        guard let preview else { return nil }
+        return try? DeviceCacheOptions.flags(in: preview)
+    }
+
+    var isESIMUnlockedInPreview: Bool { previewESIMFlags == .enabled }
+
+    var chinaUnlockEnabledAICapabilityIDs: Set<String> {
+        guard let fields = preview?.extra else { return [] }
+        return Set(ChinaUnlock.aiCapabilities.filter { capability in
+            capability.keys.allSatisfy { (fields[$0] as? NSNumber)?.intValue == 1 }
+        }.map(\.id))
+    }
+
+    var chinaUnlockAIEnabledCount: Int { chinaUnlockEnabledAICapabilityIDs.count }
+
+    /// True when the preview already shows the full unlock, whether it was
+    /// just staged or applied in an earlier session. In Full US mode it
+    /// also requires the sales-region suffix (LL/A) and, when a US model
+    /// is known for this device, the mapped regulatory model number.
+    var isChinaUnlockedInPreview: Bool {
+        guard isESIMUnlockedInPreview, previewRegionCode == "LL",
+              chinaUnlockAIEnabledCount == ChinaUnlock.aiCapabilityIDs.count else { return false }
+        guard chinaUnlockRegionMode == .fullUS else { return true }
+        let sysconfig = preview?.extra[GestaltKeys.legacyRegionInfo] as? String
+        let regionInfo = preview?.extra[GestaltKeys.regionInfo] as? String
+        guard sysconfig == "LL/A" || regionInfo == "LL/A" else { return false }
+        if let expected = expectedFullUSModelNumber {
+            return preview?.extra[GestaltKeys.modelNumber] as? String == expected
+        }
+        return true
+    }
+
+    /// US regulatory model for the Full US mode, from the recorded
+    /// original model number and product type. `nil` means unknown: the
+    /// mode then stages region + sales region only.
+    var expectedFullUSModelNumber: String? {
+        guard let snapshot else { return nil }
+        let originalRegModel = snapshot.originalValue(for: GestaltKeys.modelNumber) as? String
+            ?? snapshot.document.extra[GestaltKeys.modelNumber] as? String
+        let productType = snapshot.document.extra[GestaltKeys.productType] as? String ?? ""
+        return USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: originalRegModel,
+                                                          productType: productType)
+    }
+
+    /// Switches the region mode (persisted). If the unlock is currently
+    /// staged, it is re-staged under the new mode so the review reflects it.
+    func setChinaUnlockRegionMode(_ mode: ChinaUnlockRegionMode) {
+        chinaUnlockRegionMode = mode
+        ChinaUnlockRegionMode.stored = mode
+        if isChinaUnlockStaged { _ = stageChinaUnlock() }
+    }
+
+    // MARK: - AI readiness checkup (item 4)
+
+    /// Live on-device probe answers (MGCopyAnswer). `nil` means the probe
+    /// could not answer (simulator, or the key is unreadable) — the
+    /// checkup renders "live: unknown", never a faked value.
+    @Published var liveRegionCode: String?
+    @Published var liveRegModel: String?
+    @Published var liveAIEnabled: Bool?
+
+    /// Refreshes the live probe answers. Read-only; safe to call from the
+    /// checkup card's `onAppear`.
+    func refreshLiveProbe() {
+        liveRegionCode = LiveGestaltProbe.queryString(GestaltKeys.regionCode)
+        liveRegModel = LiveGestaltProbe.queryString(GestaltKeys.modelNumber)
+        liveAIEnabled = Capability.all.first { $0.id == "ai" }.flatMap { capability in
+            capability.keys.first.flatMap { LiveGestaltProbe.queryBool($0) }
+        }
+    }
+
+    /// Slot-only conflicts on native-AI hardware, computed from the staged
+    /// preview: a CacheData slot disagrees with its native baseline. The
+    /// CacheExtra key is deliberately NOT consulted here (see the #178
+    /// note in AIReadinessCheckup.swift): the unlock sets CacheExtra
+    /// `audioIntelligence` = 1 by definition, and whether that key alone
+    /// harms native-AI iPhones is unverified. An unresolvable slot means
+    /// "unknown", never a conflict.
+    var aiConflicts: [AIConflict] {
+        guard let preview,
+              let productType = preview.extra[GestaltKeys.productType] as? String,
+              DeviceAIEligibility.isNativeAppleIntelligence(productType: productType),
+              let layout = try? MobileGestaltCacheLayout.resolve(in: preview) else { return [] }
+        var conflicts: [AIConflict] = []
+        let ptBaseline = DeviceAIEligibility.nativeAdvAISlotValue(
+            key: DeviceCacheOptions.personalTranslatorKey, productType: productType)
+        if ptBaseline == true {
+            let slotValue = DeviceCacheOptions.advAISlotValue(
+                DeviceCacheOptions.personalTranslatorKey, in: preview, using: layout)
+            let extraDisabled = (preview.extra[DeviceCacheOptions.personalTranslatorKey] as? NSNumber)?.intValue == 0
+            if slotValue == false || extraDisabled {
+                conflicts.append(.personalTranslatorDisabled(
+                    slot: layout.slotIndex(forKey: DeviceCacheOptions.personalTranslatorKey)))
+            }
+        }
+        let audioBaseline = DeviceAIEligibility.nativeAdvAISlotValue(
+            key: DeviceCacheOptions.audioIntelligenceKey, productType: productType)
+        if audioBaseline == false,
+           DeviceCacheOptions.advAISlotValue(
+               DeviceCacheOptions.audioIntelligenceKey, in: preview, using: layout) == true {
+            conflicts.append(.audioIntelligenceEnabled(
+                slot: layout.slotIndex(forKey: DeviceCacheOptions.audioIntelligenceKey)))
+        }
+        return conflicts
+    }
+
+    /// The 4-factor readiness checkup for the staged preview, or `nil`
+    /// when no document is loaded.
+    var aiReadinessCheckup: AIReadinessCheckup? {
+        guard let preview, let snapshot else { return nil }
+        let productType = preview.extra[GestaltKeys.productType] as? String
+            ?? snapshot.document.extra[GestaltKeys.productType] as? String ?? ""
+        return AIReadinessCheckup.evaluate(
+            regionCode: preview.extra[GestaltKeys.regionCode] as? String,
+            sysconfig: preview.extra[GestaltKeys.legacyRegionInfo] as? String,
+            regModel: preview.extra[GestaltKeys.modelNumber] as? String,
+            regionMode: chinaUnlockRegionMode,
+            expectedUSModel: expectedFullUSModelNumber,
+            esimEnabled: isESIMUnlockedInPreview,
+            conflicts: aiConflicts,
+            aiEnabledCount: chinaUnlockAIEnabledCount,
+            aiTotal: ChinaUnlock.aiCapabilities.count,
+            productType: productType,
+            liveRegionCode: liveRegionCode,
+            liveRegModel: liveRegModel,
+            liveAIEnabled: liveAIEnabled)
+    }
+
+    /// Stages slot-only repairs for the detected AI conflicts: each slot
+    /// is set to its native baseline through the normal staging path, so
+    /// the repair still goes through review + backup + readback. A
+    /// CacheExtra key that was explicitly disabled is restored to its
+    /// recorded original. Returns true when anything was staged.
+    @discardableResult
+    func repairAIConflicts() -> Bool {
+        guard !isBusy, var document = working, let snapshot,
+              let productType = document.extra[GestaltKeys.productType] as? String else { return false }
+        var staged = false
+        for conflict in aiConflicts {
+            switch conflict {
+            case .personalTranslatorDisabled:
+                if let baseline = DeviceAIEligibility.nativeAdvAISlotValue(
+                       key: DeviceCacheOptions.personalTranslatorKey, productType: productType),
+                   let current = DeviceCacheOptions.advAISlotValue(
+                       DeviceCacheOptions.personalTranslatorKey, in: document),
+                   current != baseline {
+                    do {
+                        try document.setAdvAISlot(DeviceCacheOptions.personalTranslatorKey, value: baseline)
+                        staged = true
+                    } catch { /* Layout changed under us; leave it unstaged. */ }
+                }
+                if (document.extra[DeviceCacheOptions.personalTranslatorKey] as? NSNumber)?.intValue == 0 {
+                    document.set(snapshot.originalValue(for: DeviceCacheOptions.personalTranslatorKey),
+                                 for: DeviceCacheOptions.personalTranslatorKey)
+                    staged = true
+                }
+            case .audioIntelligenceEnabled:
+                if let baseline = DeviceAIEligibility.nativeAdvAISlotValue(
+                       key: DeviceCacheOptions.audioIntelligenceKey, productType: productType),
+                   let current = DeviceCacheOptions.advAISlotValue(
+                       DeviceCacheOptions.audioIntelligenceKey, in: document),
+                   current != baseline {
+                    do {
+                        try document.setAdvAISlot(DeviceCacheOptions.audioIntelligenceKey, value: baseline)
+                        staged = true
+                    } catch { /* Layout changed under us; leave it unstaged. */ }
+                }
+            }
+        }
+        if staged { working = document }
+        return staged
+    }
+
+    /// One-tap fix for the AI readiness checkup: stages the China Unlock
+    /// when it is not already unlocked in the preview, then repairs any
+    /// slot conflicts. Never writes directly; the caller opens the
+    /// existing review sheet (same as the unlock card's path).
+    @discardableResult
+    func fixAIReadiness() -> Bool {
+        var didSomething = false
+        if !isChinaUnlockedInPreview, stageChinaUnlock() { didSomething = true }
+        if repairAIConflicts() { didSomething = true }
+        return didSomething
+    }
+
+    /// The reason the cache layout cannot be resolved on this device, if
+    /// any. `nil` means the runtime scan matched this document. This is
+    /// the UI lock state for the eSIM/WAPI switches: when it is non-nil
+    /// the switches stay locked and the reason is shown. Presentation
+    /// only; the stage-time throw remains the enforcement point.
+    var cacheLayoutError: String? {
+        guard let working else { return L("Read MobileGestalt first.") }
+        do {
+            _ = try MobileGestaltCacheLayout.resolve(in: working)
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    /// The reason the eSIM cache layout cannot be verified, if any.
+    /// `nil` means the layout resolves and the eSIM flags can be read,
+    /// so the full group may be staged. Read-only: it never writes.
+    var chinaUnlockESIMLayoutError: String? {
+        guard let working else { return L("Read MobileGestalt first.") }
+        do {
+            _ = try DeviceCacheOptions.flags(in: working)
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    /// Stages the full China Unlock: eSIM cache flags, region code US and
+    /// the six Apple Intelligence presets. Nothing is written here; the
+    /// user still reviews the changes and applies them, and a restart is
+    /// required before they take effect. Sales region, `siriOnDevice`,
+    /// the model number and WAPI are left untouched in the default
+    /// region-code-only mode. In the opt-in Full US mode the sales region
+    /// (LL/A) and the mapped US regulatory model are staged as well; when
+    /// no US model is known for this device the model number is left
+    /// untouched and the reason is shown under the mode picker.
+    ///
+    /// If the eSIM cache layout cannot be verified, the whole group is
+    /// stopped and the reason is shown (`message`); region code and AI
+    /// are NOT staged as a fallback. They remain settable through their
+    /// individual preset entries.
+    @discardableResult
+    func stageChinaUnlock() -> Bool {
+        guard !isBusy else { return false }
+        if let reason = chinaUnlockESIMLayoutError {
+            message = reason
+            log(reason)
+            return false
+        }
+        guard stageCacheOption(.enable) else { return false }
+        regionCodeID = ChinaUnlock.regionCodeID
+        if chinaUnlockRegionMode == .fullUS {
+            regionID = "US"
+            if let mapped = expectedFullUSModelNumber {
+                fullUSModelNumber = mapped
+                regionModeNote = nil
+            } else {
+                fullUSModelNumber = nil
+                regionModeNote = L("No US regulatory model known for this device — region code only.")
+            }
+        } else {
+            regionID = "keep"
+            fullUSModelNumber = nil
+            regionModeNote = nil
+        }
+        for id in ChinaUnlock.aiCapabilityIDs { choices[id] = .enable }
+        return true
+    }
+
+    /// Stages a restore of the full China Unlock: eSIM flags back to the
+    /// recorded originals, region code back to its recorded original and
+    /// the six AI presets back to their recorded originals (`.disable`
+    /// removes keys that were originally absent). `siriOnDevice`, the
+    /// model number, WAPI and the sales region are left untouched.
+    @discardableResult
+    func restoreChinaUnlock() -> Bool {
+        guard stageCacheOption(.restoreOriginal) else { return false }
+        regionCodeID = "keep"
+        regionID = "keep"
+        fullUSModelNumber = nil
+        regionModeNote = nil
+        if let snapshot, var document = working {
+            // The region overlay is preview-only, so stopping the overlay
+            // alone would leave a previously applied `LL` in `working`.
+            // Reset the working document itself to the recorded original.
+            document.set(snapshot.originalValue(for: GestaltKeys.regionCode), for: GestaltKeys.regionCode)
+            if chinaUnlockRegionMode == .fullUS {
+                // Full-US staging also writes the sales-region suffixes
+                // and the regulatory model number; restore those too.
+                document.set(snapshot.originalValue(for: GestaltKeys.regionInfo), for: GestaltKeys.regionInfo)
+                document.set(snapshot.originalValue(for: GestaltKeys.legacyRegionInfo), for: GestaltKeys.legacyRegionInfo)
+                document.set(snapshot.originalValue(for: GestaltKeys.modelNumber), for: GestaltKeys.modelNumber)
+            }
+            working = document
+        }
+        for id in ChinaUnlock.aiCapabilityIDs { choices[id] = .disable }
+        return true
+    }
+
+    @discardableResult
+    func stageCacheOption(_ choice: CacheOptionChoice) -> Bool {
+        guard !isBusy, var document = working, let snapshot else { return false }
         do {
             let flags: CachedOptionFlags
             switch choice {
@@ -155,7 +501,11 @@ final class GestaltManager: ObservableObject {
             try document.setCacheOptions(flags)
             working = document
             cacheOptionChoice = choice
-        } catch { failed(error) }
+            return true
+        } catch {
+            failed(error)
+            return false
+        }
     }
 
     func stageWAPI(_ choice: WAPIChoice) {
@@ -292,7 +642,8 @@ final class GestaltManager: ObservableObject {
         if let cacheData = document.root["CacheData"] as? Data { lines.append("CacheData: \(cacheData.count) bytes") }
         do {
             let layout = try MobileGestaltCacheLayout.resolve(in: document)
-            lines.append("Cache layout: \(layout.uuid), \(layout.slotCount) slots")
+            let source = MobileGestaltCacheLayout.runtimeLayout().map { $0 == layout } == true ? "runtime scan" : "offline profile"
+            lines.append("Cache layout: \(layout.uuid), \(layout.slotCount) slots (\(source))")
             lines.append(String(format: "green-tea: index %d, offset 0x%X; not-green-tea: index %d, offset 0x%X",
                                 layout.greenTeaIndex, layout.greenTeaOffset, layout.notGreenTeaIndex, layout.notGreenTeaOffset))
         } catch { lines.append("Cache offsets: " + error.localizedDescription) }
@@ -315,9 +666,9 @@ final class GestaltManager: ObservableObject {
 
     func connect(showErrorAlert: Bool = true) async {
         guard !isBusy else { return }
-        isBusy = true; status = "Checking device access…"
+        isBusy = true; isReading = true; status = "Checking device access…"
         log("[read] Starting MobileGestalt access")
-        defer { isBusy = false }
+        defer { isBusy = false; isReading = false }
         do {
             let result = try await files.loadDevice()
             accept(result); deviceAccessible = true; status = "Device connected"
@@ -459,7 +810,7 @@ final class GestaltManager: ObservableObject {
         // Explicit field edits take precedence: discard presets that would overwrite the key.
         let changedKeys = Set([key, draft.originalKey].compactMap { $0 })
         for capability in Capability.all where !changedKeys.isDisjoint(with: capability.keys) { choices[capability.id] = .keep }
-        if !changedKeys.isDisjoint(with: [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo]) { regionID = "keep"; regionCodeID = "keep" }
+        if !changedKeys.isDisjoint(with: [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo]) { regionID = "keep"; regionCodeID = "keep"; fullUSModelNumber = nil }
         if changedKeys.contains(GestaltKeys.artwork) { subtype = 0 }
         if changedKeys.contains(GestaltKeys.modelNumber) { modelID = "keep" }
         if !changedKeys.isDisjoint(with: [GestaltKeys.artwork, "Z/dqyWS6OZTRy10UcmUAhw", "bbtR9jQx50Fv5Af/affNtA"]) { changesName = false }
@@ -467,7 +818,7 @@ final class GestaltManager: ObservableObject {
     func removeField(_ key: String) {
         working?.set(nil, for: key)
         for capability in Capability.all where capability.keys.contains(key) { choices[capability.id] = .keep }
-        if [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo].contains(key) { regionID = "keep"; regionCodeID = "keep" }
+        if [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo].contains(key) { regionID = "keep"; regionCodeID = "keep"; fullUSModelNumber = nil }
         if key == GestaltKeys.artwork { subtype = 0 }
         if key == GestaltKeys.modelNumber { modelID = "keep" }
         if [GestaltKeys.artwork, "Z/dqyWS6OZTRy10UcmUAhw", "bbtR9jQx50Fv5Af/affNtA"].contains(key) { changesName = false }
@@ -554,7 +905,7 @@ final class GestaltManager: ObservableObject {
         do {
             let plain = try doc.encoded()
             let bytes = snapshot.source == .device || snapshot.ownershipVerified ? try DeviceBoundPlist.seal(plain) : plain
-            return try exportData(bytes, name: "MobileGestalt-GestaltX.plist")
+            return try exportData(bytes, name: "MobileGestalt-LilaShift.plist")
         }
         catch { failed(error); return nil }
     }

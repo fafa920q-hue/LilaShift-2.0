@@ -22,7 +22,7 @@ final class ShareViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemGroupedBackground
         let title = UILabel()
-        title.text = "GestaltX"
+        title.text = text("LilaShift")
         title.font = .preferredFont(forTextStyle: .title2)
         title.textAlignment = .center
         status.text = text("Importing…")
@@ -56,7 +56,7 @@ final class ShareViewController: UIViewController {
             let providers = (extensionContext?.inputItems as? [NSExtensionItem])?.flatMap { $0.attachments ?? [] } ?? []
             guard providers.count == 1 else { throw SharedPlistError(key: "Share one file at a time.") }
             guard SharedAppGroups.inboxes.first != nil else {
-                throw SharedPlistError(key: "Sign GestaltX and its share extension with the same App Group, then try again.")
+                throw SharedPlistError(key: "Sign LilaShift and its share extension with the same App Group, then try again.")
             }
             let receipt = try await read(providers[0])
             if Task.isCancelled { receipt.cancel(); throw CancellationError() }
@@ -135,7 +135,7 @@ final class ShareViewController: UIViewController {
     nonisolated private static func save(_ url: URL, suggestedName: String?, archiveHint: Bool, checkCancellation: () throws -> Void) throws -> Receipt {
         let wallpaper = archiveHint || SharedPlistInbox.isWallpaperName(suggestedName ?? "") || SharedPlistInbox.isWallpaperName(url.lastPathComponent)
         let inbox = wallpaper ? SharedAppGroups.wallpaperInboxes.first : SharedAppGroups.inboxes.first
-        guard let inbox else { throw SharedPlistError(key: "Sign GestaltX and its share extension with the same App Group, then try again.") }
+        guard let inbox else { throw SharedPlistError(key: "Sign LilaShift and its share extension with the same App Group, then try again.") }
         let name = suggestedName ?? url.lastPathComponent
         try checkCancellation()
         let entry: SharedPlistEntry
@@ -168,7 +168,7 @@ final class ShareViewController: UIViewController {
 
     private func showSaved() {
         spinner.stopAnimating()
-        status.text = text(receivedWallpaper ? "Open GestaltX to confirm importing the wallpaper pack." : "Open GestaltX to confirm importing the plist.")
+        status.text = text(receivedWallpaper ? "Open LilaShift to confirm importing the wallpaper pack." : "Open LilaShift to confirm importing the plist.")
         closeButton.setTitle(text("OK"), for: .normal)
     }
     private func finish() { extensionContext?.completeRequest(returningItems: nil) }

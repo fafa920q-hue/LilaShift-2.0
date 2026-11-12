@@ -102,8 +102,9 @@ final class AccessTrace: @unchecked Sendable {
         try expectThrows("Missing WAPI cannot be written") { try wapiEdited.setWAPI(false, using: withoutWAPI) }
         var invalidWAPI = descriptors
         put(UInt32(5), into: &invalidWAPI, at: 128 + 0x3C)
-        let nonBoolean = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [invalidWAPI])
-        try expect(nonBoolean.wapiIndex == nil, "Non-Boolean WAPI keeps green-tea available")
+        try expectThrows("A non-Boolean WAPI descriptor fails the whole scan") {
+            _ = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [invalidWAPI])
+        }
         var ambiguous = descriptors
         ambiguous.append(descriptors.subdata(in: 64..<128))
         put(Int16(3), into: &ambiguous, at: descriptors.count + 0x3A)

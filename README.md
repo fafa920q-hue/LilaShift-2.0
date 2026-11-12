@@ -21,6 +21,7 @@ A MobileGestalt editor for iPhone and iPad. Developed by [huamidev](https://gith
 | Device | Model name, boot/shutdown chime, charge limit, tap to wake, Camera Control settings, Action Button settings, Collision SOS, Audio Mix, Spatial FaceTime audio |
 | iPad | Apple Pencil settings, Stage Manager capability, iPad app compatibility |
 | Intelligence | Independent region-code options, Apple Intelligence capability flag, on-device Siri, Audio Intelligence, Personal Translator, Photos Clean Up, Handwriting Synthesis, always-listening Hey Siri, and sales-region options for activation attempts on China-mainland devices |
+| China Unlock | One-tap setup for compatible China-mainland iPhones with eSIM hardware: eSIM cache flags, U.S. region code (`LL`, sales region untouched) and six Apple Intelligence presets, staged as nine changes for review; if the eSIM cache layout cannot be verified, staging stops for the whole group and shows the reason; one-tap restore reverts all nine items |
 | Advanced | Apple internal feature flags, the system-wide InternalBuild flag with explicit enable confirmation, internal settings bundle, Security Research Device flag |
 | Field editor | Read, search, add, edit, and remove `CacheExtra` fields; local plist import/export; String, Integer, Real, Boolean, Data, Date, Array, and Dictionary values |
 | Changes | Automatic reading and manual re-read, staged before/after review, verified writes, per-preset restore |
@@ -34,6 +35,20 @@ Usually, changing the region code is enough to try enabling AI; there is no need
 Disabling a preset or using its Revert button restores the recorded original values and types. Keys that were originally absent are removed. If an older change has no original record, use Remove Added Fields only when you know those fields were added.
 
 Presets modify capability flags; actual effects depend on the device and OS. China-mainland devices can use the Apple Intelligence and region options to attempt activation; availability also depends on the model, OS version, and Apple services.
+
+China Unlock is a convenience shortcut: the same eSIM, region-code and Apple Intelligence settings remain available as individual presets. Staging stops with a reason when the eSIM cache layout cannot be verified. Flags do not guarantee features: adding a foreign eSIM still depends on the carrier and local rules, and Apple Intelligence still depends on the model, region and Apple services.
+
+## Modifications (China Unlock enhanced version)
+
+This enhanced version is based on the official GestaltX **v1.0.7** (commit `dfd4a7e`, build `11130112`). It is distributed under the **GNU General Public License v3.0**; see [LICENSE](LICENSE).
+
+Added changes:
+
+- **China Unlock**: one-tap setup for compatible China-mainland iPhones with eSIM hardware — eSIM cache flags, U.S. region code (`LL`, sales region untouched) and six Apple Intelligence presets, staged as nine changes for review; if the eSIM cache layout cannot be verified, staging stops for the whole group and shows the reason; one-tap restore reverts all nine items to their recorded originals.
+- **Liquid Glass UI**: the Tools home, preset group pages and change review redesigned in a light-lavender Liquid Glass style, with a live author badge, read-progress and apply-progress cards driven by the real read/write state; the bottom tab bar, status pills and confirmation flow keep the official behavior.
+- **Open Source & Acknowledgements**: the About page lists the original project, its author, the enhanced version maintainer (@steam8871), the GPL v3.0 license and the original project URL, with in-app license text and source links. Original contributor acknowledgements are unchanged.
+
+The complete corresponding source for this enhanced version is distributed with the release as the pristine official v1.0.7 source plus the modification patch (`china-unlock-v107.patch`), which applies cleanly to commit `dfd4a7e`. No original copyright notices were removed.
 
 ## Compatibility
 

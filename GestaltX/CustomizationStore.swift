@@ -27,7 +27,7 @@ actor CustomizationStore {
         defer { worse_query_release(handle) }
         return try operation(URL(fileURLWithPath: path, isDirectory: true))
         #else
-        throw CustomizationFailure("Device access is unavailable in the Simulator. Open a plist to explore GestaltX.")
+        throw CustomizationFailure("Device access is unavailable in the Simulator. Open a plist to explore LilaShift.")
         #endif
     }
     func listWallpapers() throws -> [WallpaperPack] {
@@ -130,7 +130,7 @@ actor CustomizationStore {
             let actual = try CustomizationFiles.tree(url)
             guard actual.allSatisfy({ entry.files[$0.key] == $0.value }),
                   !entry.committed || actual == entry.files else {
-                throw CustomizationFailure("This wallpaper was changed outside GestaltX. It was not removed.")
+                throw CustomizationFailure("This wallpaper was changed outside LilaShift. It was not removed.")
             }
             try fm.removeItem(at: url)
         }
@@ -211,7 +211,7 @@ actor CustomizationStore {
             for entry in pack.installations {
                 if let index = installations.firstIndex(where: { $0.relative == entry.relative }) {
                     guard installations[index].files == entry.files else {
-                        throw CustomizationFailure("This wallpaper was changed outside GestaltX. It was not removed.")
+                        throw CustomizationFailure("This wallpaper was changed outside LilaShift. It was not removed.")
                     }
                     installations[index].committed = installations[index].committed || entry.committed
                 } else {
@@ -225,7 +225,7 @@ actor CustomizationStore {
                 for entry in installations {
                     let url = try installationURL(entry.relative, root: root)
                     if fm.fileExists(atPath: url.path), try CustomizationFiles.tree(url) != entry.files, entry.committed {
-                        throw CustomizationFailure("This wallpaper was changed outside GestaltX. It was not removed.")
+                        throw CustomizationFailure("This wallpaper was changed outside LilaShift. It was not removed.")
                     }
                 }
                 for entry in installations { try removeInstallation(entry, root: root) }

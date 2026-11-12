@@ -12,7 +12,7 @@ struct WelcomeView: View {
                     HStack(spacing: 14) {
                         BrandMark(size: 52)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(L("Welcome to GestaltX")).font(.title3.bold())
+                            Text(L("Welcome to LilaShift")).font(.title3.bold())
                             Text(L("MobileGestalt Editor")).font(.subheadline).foregroundStyle(.secondary)
                         }
                     }.padding(.vertical, 8)

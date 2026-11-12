@@ -130,6 +130,21 @@ struct GestaltDocument: @unchecked Sendable {
         root["CacheData"] = data
     }
 
+    /// Stages one Apple Intelligence CacheData slot to its native baseline
+    /// value (conflict repair, item 4). Only the two AdvAI keys are
+    /// accepted; anything else is a no-op. The staged edit still goes
+    /// through review, backup and readback like every other change.
+    mutating func setAdvAISlot(_ key: String, value: Bool, using resolvedLayout: MobileGestaltCacheLayout? = nil) throws {
+        guard key == DeviceCacheOptions.audioIntelligenceKey
+                || key == DeviceCacheOptions.personalTranslatorKey else { return }
+        let layout = try resolvedLayout ?? MobileGestaltCacheLayout.resolve(in: self)
+        guard DeviceCacheOptions.advAISlotValue(key, in: self, using: layout) != nil,
+              let offset = layout.slotIndex(forKey: key).map({ $0 * 8 }),
+              var data = root["CacheData"] as? Data else { return }
+        data[offset] = value ? 1 : 0
+        root["CacheData"] = data
+    }
+
     mutating func preservePendingCacheData(_ pending: Self, comparedTo original: Self) {
         // Restoring an unrelated CacheExtra preset must retain staged cache edits.
         // The complete edit is validated again by GestaltFileStore before writing.
@@ -138,12 +153,22 @@ struct GestaltDocument: @unchecked Sendable {
         }
     }
 
-    mutating func applyRegion(code: String, salesSuffix: String? = nil) {
+    mutating func applyRegion(code: String, salesSuffix: String? = nil, skipCreatingRegionInfoOnModernOS: Bool = false) {
         set(code, for: GestaltKeys.regionCode)
         // A code-only edit must leave both sales-region suffix fields untouched.
         guard let salesSuffix else { return }
         let present = [GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo].filter { extra[$0] != nil }
-        for key in present.isEmpty ? [GestaltKeys.regionInfo] : present { set(salesSuffix, for: key) }
+        if present.isEmpty {
+            if skipCreatingRegionInfoOnModernOS && ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27 {
+                // On iOS 27 regionInfo is a non-cached key: creating it can
+                // trigger a cache reset. Only create the sysconfig suffix.
+                set(salesSuffix, for: GestaltKeys.legacyRegionInfo)
+            } else {
+                set(salesSuffix, for: GestaltKeys.regionInfo)
+            }
+        } else {
+            for key in present { set(salesSuffix, for: key) }
+        }
     }
 
     mutating func applyModel(_ model: ModelPreset?) {
@@ -151,11 +176,12 @@ struct GestaltDocument: @unchecked Sendable {
         set(model.value, for: GestaltKeys.modelNumber)
     }
 
-    mutating func applyRegion(salesRegion: RegionPreset?, regionCode: RegionPreset?) {
+    mutating func applyRegion(salesRegion: RegionPreset?, regionCode: RegionPreset?,
+                              skipCreatingRegionInfoOnModernOS: Bool = false) {
         let sales = salesRegion.flatMap { $0.id == "keep" ? nil : $0 }
         let standaloneCode = regionCode.flatMap { $0.id == "keep" ? nil : $0 }
         guard let code = standaloneCode?.code ?? sales?.code else { return }
-        applyRegion(code: code, salesSuffix: sales?.info)
+        applyRegion(code: code, salesSuffix: sales?.info, skipCreatingRegionInfoOnModernOS: skipCreatingRegionInfoOnModernOS)
     }
 
     @discardableResult
@@ -341,7 +367,7 @@ actor GestaltFileStore {
     init(deviceURL: URL, backupDirectory: URL, deviceID: String,
          acquire: @escaping @Sendable () throws -> Int64,
          release: @escaping @Sendable (Int64) -> Void,
-         writeData: @escaping @Sendable (Data, URL) throws -> Void = { try $0.write(to: $1) },
+         writeData: @escaping @Sendable (Data, URL) throws -> Void = { try DevicePlistWriter.write($0, to: $1) },
          removeBackupItem: @escaping @Sendable (URL) throws -> Void = { try FileManager.default.removeItem(at: $0) },
          eventSink: @escaping @Sendable (String) -> Void = { _ in }) {
         self.deviceURL = deviceURL; self.backupDirectory = backupDirectory; self.deviceID = deviceID
@@ -365,15 +391,29 @@ actor GestaltFileStore {
             let document = try GestaltDocument(data: data)
             let originals = try loadOriginals(for: document)
             if try !backups().contains(where: { $0.source == .device && $0.deviceID == deviceID }) {
-                var baseline = document
-                for (key, original) in originals.fields { baseline.set(original.value, for: key) }
-                if let audio = originals.cachedOptions, let flags = try? audio.flags(in: baseline) {
-                    try baseline.setCacheOptions(flags)
+                // Fresh install or reinstall: try to recover the factory
+                // backup from the system vault before creating a fresh
+                // initial backup. The vault is best-effort redundancy,
+                // never the only backup; a failed recovery falls through
+                // to the existing fresh-backup path below.
+                if let recovered = recoverFromSystemVault(live: document) {
+                    _ = try saveBackup(recovered, source: .device, reason: "Initial backup")
+                    eventSink("Factory backup recovered from system vault.")
+                    syncSystemVault(data: recovered, live: document)
+                } else {
+                    var baseline = document
+                    for (key, original) in originals.fields { baseline.set(original.value, for: key) }
+                    if let audio = originals.cachedOptions, let flags = try? audio.flags(in: baseline) {
+                        try baseline.setCacheOptions(flags)
+                    }
+                    if let wapi = originals.wapi, let value = try? wapi.value(in: baseline) { try baseline.setWAPI(value) }
+                    let hasOriginals = !originals.fields.isEmpty || originals.cachedOptions != nil || originals.wapi != nil
+                    let initialData = hasOriginals ? try baseline.encoded() : data
+                    try saveBackup(initialData, source: .device, reason: hasOriginals ? "Original values snapshot" : "Initial backup")
+                    // Mirror only the factory/initial backup, so the vault
+                    // always means "earliest known-good state".
+                    syncSystemVault(data: initialData, live: document)
                 }
-                if let wapi = originals.wapi, let value = try? wapi.value(in: baseline) { try baseline.setWAPI(value) }
-                let hasOriginals = !originals.fields.isEmpty || originals.cachedOptions != nil || originals.wapi != nil
-                let initialData = hasOriginals ? try baseline.encoded() : data
-                try saveBackup(initialData, source: .device, reason: hasOriginals ? "Original values snapshot" : "Initial backup")
             }
             return DocumentSnapshot(data: data, document: document, source: .device, name: "MobileGestalt",
                                     originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions, wapiOriginal: originals.wapi)
@@ -618,7 +658,94 @@ actor GestaltFileStore {
     }
 
     private func backupDigest(_ data: Data) -> String {
+        Self.sha256Hex(of: data)
+    }
+
+    static func sha256Hex(of data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// The system vault lives next to the live plist in the shared
+    /// `mobilegestaltcache` Caches directory, so it survives app
+    /// uninstall/reinstall and certificate expiry. The filename is
+    /// GestaltX-attributable to avoid collisions with other tools.
+    private var systemVaultPlistURL: URL {
+        deviceURL.deletingLastPathComponent().appendingPathComponent(".gestaltx_factory_vault.plist")
+    }
+    private var systemVaultSHA256URL: URL {
+        systemVaultPlistURL.appendingPathExtension("sha256")
+    }
+
+    /// Pure 4-check gate for vault recovery: ProductType, CacheVersion,
+    /// CacheUUID (case-insensitive) and CacheData length must all match
+    /// the live document, and CacheData must be non-empty. Any mismatch
+    /// refuses the vault rather than "helpfully" restoring a stale build
+    /// (for example after a system update changed the cache generation).
+    static func vaultMatchesLive(vaultData: Data, live: GestaltDocument) -> Bool {
+        guard let vault = try? GestaltDocument(data: vaultData),
+              let vaultCache = vault.root["CacheData"] as? Data,
+              let liveCache = live.root["CacheData"] as? Data,
+              !vaultCache.isEmpty, vaultCache.count == liveCache.count,
+              let vaultUUID = vault.root["CacheUUID"] as? String,
+              let liveUUID = live.root["CacheUUID"] as? String,
+              vaultUUID.caseInsensitiveCompare(liveUUID) == .orderedSame else { return false }
+        switch (vault.root["CacheVersion"], live.root["CacheVersion"]) {
+        case (nil, nil): break
+        case (let saved?, let current?) where GestaltDocument.valuesEqual(saved, current): break
+        default: return false
+        }
+        return vault.extra[GestaltKeys.productType] as? String == live.extra[GestaltKeys.productType] as? String
+    }
+
+    /// Mirrors the factory (initial) backup into the system vault with a
+    /// SHA-256 sidecar. Best-effort: failures are logged, never fatal.
+    /// Never overwrites a vault that already matches the live build, and
+    /// never mirrors data that fails the 4-check gate.
+    private func syncSystemVault(data: Data, live: GestaltDocument) {
+        do {
+            if let existing = try? Data(contentsOf: systemVaultPlistURL),
+               let digest = try? String(contentsOf: systemVaultSHA256URL, encoding: .utf8),
+               digest.trimmingCharacters(in: .whitespacesAndNewlines) == Self.sha256Hex(of: existing),
+               Self.vaultMatchesLive(vaultData: existing, live: live) {
+                return
+            }
+            guard Self.vaultMatchesLive(vaultData: data, live: live) else { return }
+            do {
+                try data.write(to: systemVaultPlistURL, options: .atomic)
+            } catch {
+                // Atomic rename needs directory-create access; a direct
+                // write keeps the same inode-creation semantics as the
+                // vault file is new. The readback below still verifies it.
+                try data.write(to: systemVaultPlistURL)
+            }
+            try Self.sha256Hex(of: data).write(to: systemVaultSHA256URL, atomically: true, encoding: .utf8)
+            guard try Data(contentsOf: systemVaultPlistURL) == data,
+                  (try? String(contentsOf: systemVaultSHA256URL, encoding: .utf8))?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) == Self.sha256Hex(of: data) else {
+                throw GestaltFailure("The backup could not be verified. No system write was started.")
+            }
+            var plistURL = systemVaultPlistURL
+            var shaURL = systemVaultSHA256URL
+            var values = URLResourceValues()
+            values.isExcludedFromBackup = true
+            try? plistURL.setResourceValues(values)
+            try? shaURL.setResourceValues(values)
+            eventSink("Factory backup saved to system vault.")
+        } catch {
+            eventSink("System vault backup skipped: " + error.localizedDescription)
+        }
+    }
+
+    /// Attempts vault recovery for a fresh install/reinstall (no local
+    /// device backup for this installation). Returns the vault bytes only
+    /// when the digest file exists and verifies and all four checks pass
+    /// against the live document.
+    private func recoverFromSystemVault(live: GestaltDocument) -> Data? {
+        guard let vault = try? Data(contentsOf: systemVaultPlistURL),
+              let digest = try? String(contentsOf: systemVaultSHA256URL, encoding: .utf8),
+              digest.trimmingCharacters(in: .whitespacesAndNewlines) == Self.sha256Hex(of: vault),
+              Self.vaultMatchesLive(vaultData: vault, live: live) else { return nil }
+        return vault
     }
 
     func deleteBackup(_ record: BackupRecord) throws {
@@ -644,6 +771,13 @@ actor GestaltFileStore {
         case (nil, nil): break
         case (let saved?, let live?) where GestaltDocument.valuesEqual(saved, live): break
         default: throw failure
+        }
+        // The factory baseline must belong to this exact hardware model:
+        // a backup from another device must never be restored here.
+        // Enforced whenever the live document carries a product type.
+        if let liveProduct = current.extra[GestaltKeys.productType] as? String,
+           document.extra[GestaltKeys.productType] as? String != liveProduct {
+            throw failure
         }
     }
 
@@ -725,6 +859,8 @@ actor GestaltFileStore {
             do {
                 // Atomic replacement needs directory-create access which some extensions lack.
                 // Keep the device file's existing inode; backups are already durable.
+                // `writeData` is the hardened in-place writer (pwrite, no
+                // pre-truncate, F_FULLFSYNC, descriptor readback, rollback).
                 eventSink("Write: \(output.count) bytes")
                 try writeData(output, deviceURL)
                 eventSink("Readback: comparing full plist and value types")
@@ -736,7 +872,10 @@ actor GestaltFileStore {
                 eventSink("Write/readback failed: " + error.localizedDescription)
                 eventSink("Recovery: restoring previous bytes")
                 do {
-                    try current.write(to: deviceURL)
+                    // The recovery write uses the same hardened in-place
+                    // writer: the old `current.write(to:)` was itself a
+                    // truncating write with the same 0-byte window.
+                    try writeData(current, deviceURL)
                     guard try Data(contentsOf: deviceURL) == current else { throw GestaltFailure("The original file could not be restored.") }
                 } catch { throw GestaltFailure("Write verification and recovery failed. Keep the backup and recover the device file before trying again.") }
                 eventSink("Recovery: previous bytes restored and verified")

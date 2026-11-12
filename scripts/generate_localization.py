@@ -3,7 +3,7 @@ import json
 ROOT = Path(__file__).resolve().parents[1]
 TRANSLATIONS = '''
 Save Current Launch Image	保存当前启动图
-Allow GestaltX to add photos in Settings, then try again.	请在“设置”中允许 GestaltX 添加照片，然后重试。
+Allow LilaShift to add photos in Settings, then try again.	请在“设置”中允许 紫序 添加照片，然后重试。
 The launch image was saved to Photos.	启动图已保存到相册。
 App Launch Images	应用启动图
 No Launch Images	暂无启动图
@@ -11,7 +11,7 @@ Only apps with readable launch images are listed. iOS may refresh these images.	
 Choose Photo	选择照片
 Shown briefly while the app opens. Close the selected app before applying.	仅在 App 启动时短暂显示。应用前请先关闭目标 App。
 The original launch images will be backed up before applying.	应用前会备份原始启动图。
-Only launch images changed by GestaltX will be restored.	仅还原由 GestaltX 修改的启动图。
+Only launch images changed by LilaShift will be restored.	仅还原由 紫序 修改的启动图。
 Launch image saved. Close and reopen the app to see it.	启动图已保存，请关闭并重新打开该 App 查看。
 Restored. Launch images refreshed by iOS were left unchanged.	已还原；iOS 重新生成的启动图保持不变。
 No launch images found. Open the app once, close it, then read again.	未找到启动图。请先打开该 App 一次，关闭后重新读取。
@@ -20,15 +20,15 @@ This image could not be used. Choose another image.	无法使用这张图片，�
 Importing…	正在导入…
 Share one file at a time.	一次仅分享一个文件。
 Choose a MobileGestalt plist or a wallpaper pack.	请选择 MobileGestalt plist 或壁纸包。
-Open GestaltX to confirm importing the wallpaper pack.	打开 GestaltX 以确认导入壁纸包。
+Open LilaShift to confirm importing the wallpaper pack.	打开 紫序 以确认导入壁纸包。
 Import this wallpaper pack? It will be added to Wallpaper Settings.	导入这个壁纸包？导入后将添加到“壁纸设置”。
 A shared file is waiting. Save or discard your current changes, then import it.	有分享的文件等待导入，请先保存或放弃当前更改。
-Import a .tendies or .zip wallpaper pack. You can also share it to GestaltX.	导入 .tendies 或 .zip 壁纸包，也可通过分享发送到 GestaltX。
+Import a .tendies or .zip wallpaper pack. You can also share it to LilaShift.	导入 .tendies 或 .zip 壁纸包，也可通过分享发送到 紫序。
 Applied	已应用
 Customization	个性化
 Import Wallpaper	导入壁纸
 No Wallpapers	暂无壁纸
-This only deletes the imported pack from GestaltX. Applied wallpapers will be kept.	只从 GestaltX 删除导入包，已应用的壁纸会保留。
+This only deletes the imported pack from LilaShift. Applied wallpapers will be kept.	只从 紫序 删除导入包，已应用的壁纸会保留。
 Open Wallpaper Gallery	打开壁纸图库
 Delete the imported wallpaper pack?	删除导入的壁纸包？
 Some files could not be restored. The backup has been kept.	部分文件未能恢复，备份已保留。
@@ -41,7 +41,7 @@ The files changed. Read again before applying.	文件已变化，请重新读取
 The original files could not be backed up.	未能备份原始文件。
 This adds new wallpapers without replacing your existing ones.	将添加新壁纸，保留现有壁纸。
 This pack contains no compatible wallpapers.	此包中没有兼容的壁纸。
-This wallpaper was changed outside GestaltX. It was not removed.	壁纸已被其他方式修改，未执行移除。
+This wallpaper was changed outside LilaShift. It was not removed.	壁纸已被其他方式修改，未执行移除。
 Wallpaper added. Open the wallpaper gallery to select it. If it does not appear, restart PosterBoard or respring.	壁纸已添加，请打开图库选择。若未出现，可重新启动 PosterBoard 或执行注销。
 Wallpaper Settings	壁纸设置
 WAPI	WAPI
@@ -53,7 +53,7 @@ Special Thanks	特别鸣谢
 Supported	支持
 Unsupported	不支持
 Welcome	欢迎
-Welcome to GestaltX	欢迎使用 GestaltX
+Welcome to LilaShift	欢迎使用 紫序
 MobileGestalt Editor	MobileGestalt 编辑工具
 Disclaimer	免责说明
 I Understand, Continue	我已了解，继续
@@ -103,7 +103,7 @@ Enter an ISO 8601 date, such as 2026-11-09T12:00:00Z.	请输入 ISO 8601 日期�
 Tools	工具
 Backups	备份
 About	关于
-GestaltX	GestaltX
+LilaShift	紫序
 OK	好
 Cancel	取消
 Apply	应用
@@ -125,7 +125,7 @@ Keep Current	保持当前值
 Display	显示
 Device	设备
 iPad	iPad
-Intelligence	智能
+Intelligence	Apple 智能与地区
 Advanced	高级
 String	字符串
 Integer	整数
@@ -199,7 +199,7 @@ Stage	暂存
 Write to this device	写入本机
 Save local document	保存本地文稿
 A backup is created before writing. The result is read back and compared.	写入前会创建备份，写入后会回读并比较内容。
-This edits the opened file in GestaltX. Export it to save a copy; the system file is not changed.	仅编辑 GestaltX 中打开的文件。请导出以保存副本，系统文件不会被修改。
+This edits the opened file in LilaShift. Export it to save a copy; the system file is not changed.	仅编辑 紫序 中打开的文件。请导出以保存副本，系统文件不会被修改。
 Apply to Device	应用到设备
 Save Local Changes	保存本地更改
 Discard Changes	放弃更改
@@ -238,35 +238,25 @@ Internal features and research settings	内部功能与研究设置
 Dynamic Island	灵动岛
 Enable the alternate Dynamic Island capability.	启用备用灵动岛功能标记。
 Always-On Display	全天候显示
-Display behavior depends on the panel. May increase power use and burn-in risk.	显示效果取决于屏幕硬件，可能增加耗电与烧屏风险。
 AOD Vibrancy	全天候显示色彩
 Adjust Always-On rendering capabilities.	调整全天候显示的渲染功能标记。
 Liquid Glass Low-Power Rendering	液态玻璃低性能渲染
-Use the low-performance rendering capability on iOS 26 and later.	在 iOS 26 及以后版本启用低性能渲染标记。
 Boot & Shutdown Chime	开关机提示音
 Expose the startup and shutdown sound capability.	显示开关机提示音功能。
 Charge Limit	充电上限
-Show charging limit settings. Actual charging control depends on hardware.	显示充电上限设置，实际充电控制仍取决于硬件。
 Tap to Wake	轻点唤醒
-Expose tap-to-wake on devices where it is hidden.	在隐藏此功能的设备上显示轻点唤醒选项。
 Camera Control	相机控制
-Show Camera Control settings. Does not add a physical button.	显示相机控制设置，不会为设备增加实体按钮。
 Action Button	操作按钮
 Show the Action Button settings page.	显示操作按钮设置页面。
 Apple Pencil	Apple Pencil
-Expose Apple Pencil settings. Hardware support is still required.	显示 Apple Pencil 设置，仍需要硬件支持。
 Stage Manager	台前调度
-Expose Stage Manager support. Layout behavior varies by device.	显示台前调度功能，布局效果因设备而异。
 iPad App Compatibility	iPad 应用兼容性
 Allow iPad app compatibility types on iPhone.	允许 iPhone 使用 iPad 应用兼容类型。
-Apple Intelligence Capability	Apple 智能功能标记
-Set the generative models capability. Availability also depends on hardware, region and Apple services.	设置生成式模型功能标记，可用性仍取决于硬件、地区与 Apple 服务。
+Apple Intelligence Capability	Apple 智能
 Apple Internal Features	Apple 内部功能
-Expose internal menus. Some system services may behave differently.	显示内部菜单，部分系统服务的行为可能发生变化。
 Internal Storage View	内部存储视图
 Show internal storage categories. Experimental on iPad.	显示内部存储分类，在 iPad 上属于实验性功能。
 Security Research Device	安全研究设备
-Change the SRD capability flag. This does not turn the device into an Apple SRD.	更改 SRD 功能标记，不会将设备变成 Apple 官方安全研究设备。
 United States	美国
 Hong Kong	中国香港
 Japan	日本
@@ -305,7 +295,7 @@ The write did not match the readback.	写入内容与回读结果不一致。
 The original file could not be restored.	无法恢复原始文件。
 Write verification and recovery failed. Keep the backup and recover the device file before trying again.	写入验证与恢复均失败。请保留备份，恢复设备文件后再尝试。
 The write failed. The previous file was restored and verified.	写入失败，之前的文件已恢复并通过验证。
-Device access is unavailable in the Simulator. Open a plist to explore GestaltX.	模拟器无法访问设备文件，你可以打开 plist 体验 GestaltX。
+Device access is unavailable in the Simulator. Open a plist to explore LilaShift.	模拟器无法访问设备文件，你可以打开 plist 体验 紫序。
 The signed app has no usable App Group. Enable its App Group capability and sign it again.	当前签名没有可用的 App Group，请启用对应能力后重新签名。
 Choose a plist smaller than 16 MB.	请选择小于 16 MB 的 plist。
 Enter a field key.	请输入字段键名。
@@ -328,7 +318,7 @@ MobileGestalt preset research	MobileGestalt 预设研究
 MobileGestalt workflow reference	MobileGestalt 工作流参考
 Open Source	开源许可
 Third-Party Notices	第三方声明
-GestaltX is independent software. It is not affiliated with Apple or the credited projects.	GestaltX 是独立软件，与 Apple 及鸣谢项目没有隶属关系。
+LilaShift is independent software. It is not affiliated with Apple or the credited projects.	紫序 是独立软件，与 Apple 及鸣谢项目没有隶属关系。
 worse_query	worse_query
 Available paths and MobileGestalt presets vary by device and OS build.	可访问的路径及 MobileGestalt 预设因设备与系统版本而异。
 Read Upstream Compatibility	查看上游兼容性说明
@@ -349,25 +339,25 @@ This preset changes unrelated cache bytes.	此预设更改了无关的缓存字�
 Unable to resolve this device's MobileGestalt cache layout.	无法解析此设备的 MobileGestalt 缓存布局。
 Importing Plist…	正在导入 plist…
 Share one MobileGestalt plist at a time.	请每次分享一个 MobileGestalt plist 文件。
-Sign GestaltX and its share extension with the same App Group, then try again.	请为 GestaltX 和分享扩展签入同一个 App Group 后重试。
+Sign LilaShift and its share extension with the same App Group, then try again.	请为 紫序 和分享扩展签入同一个 App Group 后重试。
 The shared plist could not be read. Share it again.	无法读取分享的 plist，请重新分享。
 A shared plist is waiting. Save or discard your current changes, then import it.	有分享的 plist 等待导入，请先保存或放弃当前更改。
 Save or discard your current changes before opening another plist.	请先保存或放弃当前更改，再打开另一个 plist。
 Import	导入
-Open GestaltX to confirm importing the plist.	请打开 GestaltX 确认导入 plist。
+Open LilaShift to confirm importing the plist.	请打开 紫序 确认导入 plist。
 This device's identity could not be verified. Read MobileGestalt on this device and try sharing again.	无法核验本机身份，请先读取本机 MobileGestalt 后重新分享。
 This plist belongs to another device and cannot be imported.	此 plist 的设备标识与本机不符，无法导入。
 This plist does not contain enough device identifiers to verify ownership.	此 plist 缺少足够的设备标识，无法确认属于本机。
 Additional Options	附加选项
 MG Control	MG 控制
-Read MobileGestalt in Tools, or share this device's plist to GestaltX.	在工具中读取 MobileGestalt，或将本机 plist 分享到 GestaltX。
+Read MobileGestalt in Tools, or share this device's plist to LilaShift.	在工具中读取 MobileGestalt，或将本机 plist 分享到 紫序。
 This plist has been verified for this device. Import it?	已核验此 plist 属于本机，是否导入？
 This plist's device proof could not be verified on this device.	无法在本机验证此 plist 的设备凭证。
 The device proof is temporarily unavailable. Unlock this device and try again.	设备凭证暂时不可用。请解锁此设备后重试。
 This plist uses a different system cache layout and cannot be restored.	此 plist 的系统缓存布局与本机不符，无法恢复。
 Restore Imported Plist	恢复导入的 plist
 The current device file will be backed up before restoring. Restart the device afterward.	恢复前会备份当前设备文件，完成后请重启设备。
-Share this device's plist to GestaltX to edit its keys and values or restore a verified backup. Export a copy from GestaltX first to keep a device-bound proof.	现在可将本机 plist 分享到 GestaltX，核验后导入、增删改键值并恢复。建议先从 GestaltX 导出一份带本机校验凭证的备份。
+Share this device's plist to LilaShift to edit its keys and values or restore a verified backup. Export a copy from LilaShift first to keep a device-bound proof.	现在可将本机 plist 分享到 紫序，核验后导入、增删改键值并恢复。建议先从 紫序 导出一份带本机校验凭证的备份。
 Canada	加拿大
 Model Number	型号号码
 A device restart may be required after changing the model number.	修改型号号码后可能需要重启设备。
@@ -390,37 +380,30 @@ Allow Always-On Display to reach a higher brightness level.	允许“始终显�
 Always-On Display Flipbook	始终显示翻页组件
 Enable AOD flipbook widgets on the Lock Screen.	在锁屏上启用 AOD 翻页小组件。
 AOD Flipbook Count	AOD 翻页数量
-Set how many AOD flipbook entries are allowed. Experimental; the accepted range varies by build.	设置允许的 AOD 翻页条目数量。实验性功能，可用范围因系统版本而异。
 Disable Wallpaper Parallax	关闭壁纸视差
 Stop the wallpaper from moving with device motion.	停止壁纸随设备移动产生位移。
 HDR Photo Display	HDR 照片显示
 Enable true HDR rendering for photos.	为照片启用真正的 HDR 渲染。
 Pulse Width Modulation	脉宽调制 (PWM)
-Advertise PWM display support. Actual dimming behavior depends on the panel.	声明支持 PWM 调光。实际调光行为取决于屏幕面板。
 DisplayPort Output	DisplayPort 输出
-Advertise DisplayPort output support. Compatible hardware is still required.	声明支持 DisplayPort 输出，仍需要兼容硬件。
 Collision SOS	车祸检测 SOS
-Show collision detection in Emergency SOS settings. Hardware support is still required.	在“紧急 SOS”设置中显示车祸检测，仍需要硬件支持。
 Audio Mix	音频混音
 Enable the audio mix capability for supported media.	为支持的媒体启用音频混音能力。
 Spatial FaceTime Audio	FaceTime 空间音频
 Enable spatial audio playback for FaceTime.	为 FaceTime 启用空间音频播放。
 Internal Settings Bundle	内部设置包
-Expose Apple's internal settings bundle. Some system services may behave differently.	显示 Apple 内部设置包。部分系统服务可能表现异常。
 On-Device Siri	端侧 Siri
-Siri uses a device-specific capability type. Changing it may affect the Apple Intelligence Siri interface. Keep the current value or restore the recorded original.	Siri 使用机型相关的能力类型。修改此类型可能影响 Apple 智能 Siri 界面。请选择保持当前值或还原已记录的原始值。
 Audio Intelligence	音频智能
-Advertise the iOS 27 audio intelligence capability.	声明 iOS 27 音频智能能力。
+Advertise the iOS 27 audio intelligence capability.	启用音频智能功能。
 Personal Translator	个人翻译
-Advertise the personal translator capability.	声明个人翻译能力。
+Advertise the personal translator capability.	用于支持的翻译场景，让系统识别设备具备个人翻译能力。
 Photos Clean Up	照片消除
-Advertise the photos inpainting (Clean Up) capability.	声明照片物体清除与修复功能。
+Advertise the photos inpainting (Clean Up) capability.	用于在“照片”里移除画面中的干扰物。
 Handwriting Synthesis	手写合成
-Advertise the handwriting synthesis model capability.	声明手写合成模型能力。
+Advertise the handwriting synthesis model capability.	用于生成手写笔迹。
 Always-Listening Hey Siri	常听 Hey Siri
-Advertise always-listening Hey Siri support.	声明支持常听 Hey Siri。
+Advertise always-listening Hey Siri support.	让支持的设备监听“嘿 Siri”唤醒语。
 Internal Build	内部构建
-Changes the system-wide InternalBuild flag, not just storage information. System services may behave differently. Revert restores the recorded original value.	修改系统全局的 InternalBuild 标记，并非仅调整存储信息。系统服务的行为可能发生变化。“还原”会恢复已记录的原始值。
 Enable Internal Build?	启用内部构建？
 This stages the system-wide InternalBuild flag. It can affect system services beyond the storage screen. You can review the change before applying it.	这会暂存系统全局的 InternalBuild 标记变更。它可能影响存储页面以外的系统服务。你可以在应用前检查这项变更。
 Lock Screen Text	锁屏底部文字
@@ -440,6 +423,151 @@ System settings could not be verified after writing.	写入后无法验证系统
 Some settings could not be restored automatically. Read them again and use Revert.	部分设置未能自动恢复，请重新读取并使用“还原”。
 These system settings are not accessible on this device.	当前设备无法访问这些系统设置。
 Lock screen text updated.	锁屏文字已更新。
+China Unlock	国行一键解锁
+One-Tap Restore	一键还原
+One-Tap Unlock	一键解锁
+Device Information	设备信息
+Included AI Features	查看包含的 AI 功能
+Review the changes, apply them, then restart the device.	先查看并应用更改，然后重启设备。
+Read Device	读取本机
+Read the device before choosing a preset.	读取本机后即可选择预设。
+Configured	已配置
+Not Configured	未配置
+eSIM settings are unavailable. You can still configure region and AI under Intelligence.	无法读取 eSIM 配置。仍可在“Apple 智能与地区”中单独设置地区代码和 AI。
+Import and apply wallpaper packs.	导入并应用壁纸包。
+Change the image shown when an app opens.	更换 App 打开时短暂显示的图片。
+Technical Details	技术详情
+Other Fields	其他字段
+Advanced & Diagnostics	高级与诊断
+After applying, restart, then check the related entries in system Settings.	应用后请重启设备，再到系统“设置”查看相关入口。
+Apple Intelligence	Apple 智能
+Apple Intelligence & Region	Apple 智能与地区
+Back to adjust	返回调整
+Charge limit, tap to wake	充电上限、轻点唤醒
+Charging & Buttons	充电与按键
+Charging limits, buttons and alerts.	充电上限、按键与提醒。
+Check which settings this will update.	检查这次操作会更新哪些设置。
+Configure 6 items	将配置 6 项
+Confirm Changes	确认更改
+Device identity, internal features and diagnostics.	设备标识、内部功能与诊断。
+Diagnostics	诊断
+Digital SIM	数字 SIM
+Digital SIM, Wi-Fi options	数字 SIM、Wi-Fi 选项
+Display Effects	画面效果
+Dynamic Island, Always-On Display	灵动岛、全天候显示
+Feature Categories	功能分类
+Internal Features	内部功能
+Lock Screen Display	锁屏显示
+Lock screen display, screen brightness and display effects.	锁屏显示、屏幕亮度与画面效果。
+Model, sales region, run log	型号、销售地区、运行日志
+More options	更多选项
+Multitasking	多任务
+Network & eSIM	网络与 eSIM
+Not read yet	尚未读取
+Pending	待应用
+Personalization	个性化
+Read MobileGestalt first.	请先读取 MobileGestalt。
+Region	地区
+Region code and Apple Intelligence features.	地区代码与 Apple 智能功能。
+Region code, translation and Clean Up	地区代码、翻译与消除
+Screen & Lock Screen	屏幕与锁屏
+Set up eSIM, region code and Apple Intelligence in one tap.	一次配置 eSIM、地区代码和 Apple 智能。
+Share Log	分享日志
+Stage Manager, Apple Pencil	台前调度、Apple Pencil
+View %lld pending changes	查看 %lld 项待应用更改
+Wallpapers, Lock Screen text and app launch images.	壁纸、锁屏文字与应用启动图。
+Wallpapers, Lock Screen text, launch images	壁纸、锁屏文字、启动图
+Wi-Fi & Calls	Wi-Fi 与通话
+Will configure	将配置
+eSIM options, WAPI and call audio.	eSIM 选项、WAPI 与通话音频。
+iPad & Multitasking	iPad 与多任务
+iPad features on iPhone.	在 iPhone 上使用 iPad 功能。
+Restore pre-unlock state	还原解锁前状态
+Latest backup	最新备份
+A backup is created before writing.	写入前会创建备份。
+Tools LilaShift	工具 紫序
+Author @steam8871	作者 @steam8871
+Data read from this device	已读取本机数据
+Open Source & Acknowledgements	开源与鸣谢
+Original Project	原项目
+Original Author	原项目作者
+Enhanced Version Maintainer	国行增强版维护
+Open Source License	开源许可证
+Original Project URL	原项目地址
+Enhanced Source URL	增强版源码地址
+Source Code	源代码
+The enhanced version is distributed under the GNU GPL v3.0. Its complete source is distributed with the release as the pristine v1.0.7 source plus the modification patch.	增强版遵循 GNU GPL v3.0 发布。完整源代码随发布一同提供，即官方 v1.0.7 原始源码加修改补丁。
+Reading device data…	读取本机数据...
+Reading related settings…	正在读取相关配置...
+Write	写入
+Verify	校验
+Apply Progress (Writing %lld/4)	应用进度（正在写入中 %lld/4）
+Apply Progress (Done %lld/4)	应用进度（已完成 %lld/4）
+Keep the Lock Screen visible while the display is off.	屏幕关闭后仍显示锁屏内容。
+Set how many AOD flipbook entries are allowed.	设置允许的 AOD 翻页条目数量。
+Advertise PWM display support.	声明支持 PWM 调光。
+Advertise DisplayPort output support.	声明支持 DisplayPort 输出。
+Use low-power Liquid Glass rendering.	使用低功耗液态玻璃渲染。
+Show charging limit settings.	显示充电上限设置。
+Expose tap-to-wake.	显示轻点唤醒选项。
+Show Camera Control settings.	显示相机控制设置。
+Show collision detection in Emergency SOS settings.	在“紧急 SOS”设置中显示车祸检测。
+Expose Apple Pencil settings.	显示 Apple Pencil 设置。
+Expose Stage Manager support.	显示台前调度功能。
+Enable Apple Intelligence generative models.	启用 Apple 智能生成式模型。
+Run Siri processing on the device.	在设备端处理 Siri 请求。
+Expose internal menus.	显示内部菜单。
+Mark the device as an internal build.	将设备标记为内部版本。
+Change the Security Research Device capability flag.	更改安全研究设备功能标记。
+Expose Apple's internal settings bundle.	显示 Apple 内部设置包。
+Respring first. Restart the device if the change does not appear. Display behavior depends on the panel and may increase power use and burn-in risk.	先执行注销，若未生效则重新启动设备。显示效果取决于屏幕面板，可能增加耗电与烧屏风险。
+A device restart may be required. Experimental; the accepted range varies by iOS build.	可能需要重新启动设备才能生效。实验性功能，可用范围因系统版本而异。
+A device restart may be required. Actual dimming behavior depends on the panel.	可能需要重新启动设备才能生效。实际调光行为取决于屏幕面板。
+A device restart may be required. Compatible hardware is still required.	可能需要重新启动设备才能生效。仍需要兼容硬件。
+Respring first. Restart the device if the change does not appear. Requires iOS 26 or later.	先执行注销，若未生效则重新启动设备。需要 iOS 26 或更高版本。
+A device restart may be required. Actual charging control depends on hardware.	可能需要重新启动设备才能生效。实际充电控制仍取决于硬件。
+A device restart may be required. Only shown on devices where tap-to-wake is hidden.	可能需要重新启动设备才能生效。仅在隐藏轻点唤醒的设备上显示。
+A device restart may be required. This does not add a physical button.	可能需要重新启动设备才能生效。此操作不会为设备增加实体按钮。
+A device restart may be required. Hardware support is still required.	可能需要重新启动设备才能生效。仍需要硬件支持。
+A device restart may be required. Layout behavior varies by device.	可能需要重新启动设备才能生效。布局效果因设备而异。
+Restart required. Siri uses a device-specific capability type; changing it may affect the Apple Intelligence Siri interface. Keep the current value or restore the recorded original.	需要重新启动设备。Siri 使用机型相关的能力类型，修改此类型可能影响 Apple 智能 Siri 界面，请保持当前值或还原已记录的原始值。
+Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version.	需要重新启动设备。Apple 智能还取决于机型与地区。具体入口取决于设备和系统版本。
+Restart required. Apple Intelligence also depends on device and region. Results depend on the app and system support.	需要重新启动设备。Apple 智能还取决于机型与地区。效果取决于 App 和系统支持。
+A device restart may be required. Some system services may behave differently.	可能需要重新启动设备才能生效。部分系统服务的行为可能发生变化。
+A device restart may be required. This changes the system-wide InternalBuild flag, not just storage information. System services may behave differently. Revert restores the recorded original value.	可能需要重新启动设备才能生效。此操作修改系统全局的 InternalBuild 标记，并非仅调整存储信息。系统服务的行为可能发生变化。“还原”会恢复已记录的原始值。
+A device restart may be required. This does not turn the device into an Apple SRD.	可能需要重新启动设备才能生效。此操作不会将设备变成 Apple 官方安全研究设备。
+Choose the Dynamic Island layout size.	选择灵动岛布局尺寸。
+Set the device region code for region-locked features.	设置设备地区代码，用于解锁地区限定功能。
+Set the sales-region suffix of the device model.	设置机型型号的销售地区后缀。
+Change the reported device model number.	更改设备上报的机型号。
+Change the device model name shown by the system.	更改系统显示的设备机型名称。
+Enable or disable the eSIM-related system options.	启用或停用与 eSIM 相关的系统选项。
+Use the WAPI wireless security standard.	使用 WAPI 无线安全标准。
+Add a digital SIM in Settings.	在“设置”中添加数字 SIM。
+eSIM requires eSIM hardware.	需要设备具备 eSIM 硬件。
+Enable six Apple Intelligence features, including translation, Clean Up and always-listening Hey Siri.	启用 6 项 Apple 智能功能，包括翻译、照片消除和常听 Hey Siri。
+CacheData[0x%X] · slot %d	CacheData[0x%X] · 槽位 %d
+Other CacheData bytes changed	其他 CacheData 字节已更改
+Unrelated cache bytes changed — apply will be refused.	存在无关缓存字节更改，将拒绝应用。
+No US regulatory model known for this device — region code only.	未知此设备的美国监管型号，仅使用地区代码。
+Region mode	地区模式
+Region code only (LL)	仅地区代码 (LL)
+Full US (LL + LL/A)	完整美国 (LL + LL/A)
+Keeps the CH/A suffix and factory model — safest for dual-SIM phones.	保留 CH/A 后缀与出厂型号，双卡手机最安全。
+Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.	同时设置销售地区与美国型号，最一致，但可能与双卡硬件冲突。
+Apple Intelligence readiness	Apple 智能就绪检查
+Ready %d/4	就绪 %d/4
+Live on device	本机已生效
+Ready — restart to apply	已配齐，重启后生效
+Live status unknown	本机状态未知
+Fix	修复
+Regulatory model	监管型号
+Regulatory model (factory model kept)	监管型号（保留出厂型号）
+eSIM gate and conflicts	eSIM 门控与冲突
+On-device AI eligibility	本机 AI 资格
+Native Apple Intelligence hardware	原生 Apple 智能硬件
+Personal Translator slot is off on a native-AI iPhone — Photos Clean Up and Camera Siri may fail.	个人翻译槽位在原生 Apple 智能 iPhone 上处于关闭状态，照片消除与相机 Siri 可能失效。
+Audio Intelligence slot is on — Photos high-quality Clean Up may fail.	音频智能槽位处于开启状态，照片高质量消除可能失败。
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():

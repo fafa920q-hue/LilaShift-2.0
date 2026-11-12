@@ -79,7 +79,7 @@ final class LaunchArtworkModel: ObservableObject {
             var authorization = PHPhotoLibrary.authorizationStatus(for: .addOnly)
             if authorization == .notDetermined { authorization = await PHPhotoLibrary.requestAuthorization(for: .addOnly) }
             guard authorization == .authorized || authorization == .limited else {
-                throw CustomizationFailure("Allow GestaltX to add photos in Settings, then try again.")
+                throw CustomizationFailure("Allow LilaShift to add photos in Settings, then try again.")
             }
             try await PHPhotoLibrary.shared().performChanges {
                 let request = PHAssetCreationRequest.forAsset()
@@ -217,8 +217,8 @@ private struct LaunchArtworkEditor: View {
         .alert(L("Restore Original"), isPresented: $asksRestore) {
             Button(L("Cancel"), role: .cancel) {}
             Button(L("Restore")) { Task { await model.restore(app) } }
-        } message: { Text(L("Only launch images changed by GestaltX will be restored.")) }
-        .alert(L("GestaltX"), isPresented: Binding(get: { model.message != nil }, set: { if !$0 { model.message = nil } })) {
+        } message: { Text(L("Only launch images changed by LilaShift will be restored.")) }
+        .alert(L("LilaShift"), isPresented: Binding(get: { model.message != nil }, set: { if !$0 { model.message = nil } })) {
             Button(L("OK"), role: .cancel) { model.message = nil }
         } message: { Text(model.message ?? "") }
     }

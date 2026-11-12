@@ -7,8 +7,30 @@ struct MobileGestaltCacheLayout: Codable, Equatable, Sendable {
     let greenTeaIndex: Int
     let notGreenTeaIndex: Int
     var wapiIndex: Int? = nil
+    /// Dynamically resolved Apple Intelligence CacheData slots (item 4).
+    /// `nil` means the slot did not resolve on this library: the guard that
+    /// needs it reports "unknown", never a guessed number. These are
+    /// resolved, never hardcoded: #178/#266 are per-device observations,
+    /// not constants.
+    var audioIntellIndex: Int? = nil
+    var personalTranslatorIndex: Int? = nil
 
     var wapiOffset: Int? { wapiIndex.map { $0 * 8 } }
+    var audioIntellOffset: Int? { audioIntellIndex.map { $0 * 8 } }
+    var personalTranslatorOffset: Int? { personalTranslatorIndex.map { $0 * 8 } }
+
+    /// Slot index for a known obfuscated key, or `nil` when the key has no
+    /// resolved CacheData slot on this layout.
+    func slotIndex(forKey key: String) -> Int? {
+        switch key {
+        case DeviceCacheOptions.greenTeaKey: return greenTeaIndex
+        case DeviceCacheOptions.notGreenTeaKey: return notGreenTeaIndex
+        case DeviceCacheOptions.wapiKey: return wapiIndex
+        case DeviceCacheOptions.audioIntelligenceKey: return audioIntellIndex
+        case DeviceCacheOptions.personalTranslatorKey: return personalTranslatorIndex
+        default: return nil
+        }
+    }
 
     var byteCount: Int { slotCount * 9 }
     var greenTeaOffset: Int { greenTeaIndex * 8 }
@@ -34,14 +56,38 @@ struct MobileGestaltCacheLayout: Codable, Equatable, Sendable {
               let uuid = document.root["CacheUUID"] as? String,
               let data = document.root["CacheData"] as? Data else { return false }
         if let wapiIndex, (!(0..<slotCount).contains(wapiIndex) || wapiIndex == greenTeaIndex || wapiIndex == notGreenTeaIndex) { return false }
+        for index in [audioIntellIndex, personalTranslatorIndex].compactMap({ $0 }) {
+            guard (0..<slotCount).contains(index), index != greenTeaIndex, index != notGreenTeaIndex,
+                  index != wapiIndex else { return false }
+        }
         return self.uuid.caseInsensitiveCompare(uuid) == .orderedSame && data.count == byteCount
     }
 
+    /// The runtime layout resolved from this launch's loaded library, if
+    /// the scan succeeded. Exposed only so diagnostics can name which
+    /// profile matched; resolution itself goes through `resolve(in:)`.
+    static func runtimeLayout() -> Self? { runtimeProfile }
+
     static func resolve(in document: GestaltDocument) throws -> Self {
+        #if os(iOS) && !targetEnvironment(simulator)
+        // On device the hardcoded layout is never silently used. If the
+        // runtime scan failed, the eSIM switches lock and the reason is
+        // shown instead of guessing a layout that may not match this iOS
+        // build. The offline profile below exists only for the simulator
+        // and the offline test fixtures, where no library can be scanned.
+        guard let runtime = runtimeProfile else {
+            throw GestaltFailure("Unable to resolve this device's MobileGestalt cache layout.")
+        }
+        guard runtime.matches(document) else {
+            throw GestaltFailure("Unable to resolve this device's MobileGestalt cache layout.")
+        }
+        return runtime
+        #else
         for layout in [runtimeProfile, originalProfile].compactMap({ $0 }) {
             if layout.matches(document) { return layout }
         }
         throw GestaltFailure("Unable to resolve this device's MobileGestalt cache layout.")
+        #endif
     }
 
     static func scan(image: [String: Any]) throws -> Self {
@@ -50,20 +96,27 @@ struct MobileGestaltCacheLayout: Codable, Equatable, Sendable {
               let constants = image["constants"] as? [Data] else {
             throw GestaltFailure("Unable to resolve this device's MobileGestalt cache layout.")
         }
-        return try scan(strings: strings, stringAddress: address.uint64Value, constants: constants)
+        return try scan(strings: strings, stringAddress: address.uint64Value, constants: constants,
+                        cfUUIDs: image["cfUUIDs"] as? [String] ?? [])
     }
 
     // Modern MobileGestalt query descriptors are 64 bytes. Their first pointer
     // identifies the exact obfuscated key; +0x3A is the signed cache index and
     // +0x3C is the query type (11 = Boolean). Resolve both independently.
-    static func scan(strings: Data, stringAddress: UInt64, constants: [Data]) throws -> Self {
+    // `cfUUIDs` are UUID strings harvested from the library's `__cfstring`
+    // section (see GXMobileGestaltImage.m): if a future iOS moves the
+    // CacheUUID string out of `__cstring`, the scan still resolves.
+    static func scan(strings: Data, stringAddress: UInt64, constants: [Data], cfUUIDs: [String] = []) throws -> Self {
         let failure = GestaltFailure("Unable to resolve this device's MobileGestalt cache layout.")
         guard !strings.isEmpty, strings.count <= 32 * 1024 * 1024,
               stringAddress <= UInt64.max - UInt64(strings.count),
-              constants.count <= 8, constants.allSatisfy({ $0.count <= 32 * 1024 * 1024 }) else { throw failure }
+              !constants.isEmpty, constants.count <= 8, constants.allSatisfy({ $0.count <= 32 * 1024 * 1024 }) else { throw failure }
         let bytes = [UInt8](strings)
         var hashes: [UInt64: String] = [:]
         var uuids = Set<String>()
+        for uuid in cfUUIDs {
+            if let parsed = UUID(uuidString: uuid) { uuids.insert(parsed.uuidString) }
+        }
         var start = 0
         for end in bytes.indices where bytes[end] == 0 {
             let token = bytes[start..<end]
@@ -82,22 +135,31 @@ struct MobileGestaltCacheLayout: Codable, Equatable, Sendable {
         var targets: [String: Set<Int>] = [:]
         var wapiIndices = Set<Int>()
         var wapiLocations = Set<String>()
-        var invalidWAPI = false
         var targetLocations: [String: Set<String>] = [:]
+        // Apple Intelligence CacheData slots: resolved only when unique,
+        // in range and alignment-matched. An ambiguous or invalid AdvAI
+        // descriptor leaves the slot unresolved (nil), never guessed.
+        var advTargets: [String: Set<Int>] = [:]
+        var advLocations: [String: Set<String>] = [:]
         for (sectionID, section) in constants.enumerated() where section.count >= 64 {
             try section.withUnsafeBytes { raw in
                 for offset in stride(from: 0, through: section.count - 64, by: 8) {
                     // Loaded pointers may carry arm64e PAC bits; no pointer is
                     // dereferenced. Compare its canonical user address only.
-                    let pointer = UInt64(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt64.self)) & 0x0000_FFFF_FFFF_FFFF
+                    // Darwin arm64e userland VA space is 47-bit, so bits
+                    // 63:47 are stripped (a 48-bit mask would keep a set
+                    // bit 47 and map a PAC-tagged pointer to a wrong address).
+                    let pointer = UInt64(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt64.self)) & 0x0000_7FFF_FFFF_FFFF
                     guard let key = hashes[pointer] else { continue }
                     let index = Int(Int16(littleEndian: raw.loadUnaligned(fromByteOffset: offset + 0x3A, as: Int16.self)))
                     let type = UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: offset + 0x3C, as: UInt32.self))
                     if key == DeviceCacheOptions.wapiKey {
-                        if type == 11 && index >= 0 && index < 16384 {
-                            wapiIndices.insert(index)
-                            wapiLocations.insert("\(sectionID):\(offset % 64)")
-                        } else { invalidWAPI = true }
+                        // A wapi descriptor that exists but is unusable
+                        // fails the whole scan: silently dropping it would
+                        // let the scan claim a layout it cannot verify.
+                        guard type == 11, (0..<16384).contains(index) else { throw failure }
+                        wapiIndices.insert(index)
+                        wapiLocations.insert("\(sectionID):\(offset % 64)")
                     }
                     if key == DeviceCacheOptions.greenTeaKey || key == DeviceCacheOptions.notGreenTeaKey {
                         // Every reference to a target must be usable. Ignoring an
@@ -105,6 +167,12 @@ struct MobileGestaltCacheLayout: Codable, Equatable, Sendable {
                         guard type == 11, (0..<16384).contains(index) else { throw failure }
                         targets[key, default: []].insert(index)
                         targetLocations[key, default: []].insert("\(sectionID):\(offset % 64)")
+                    }
+                    if key == DeviceCacheOptions.audioIntelligenceKey || key == DeviceCacheOptions.personalTranslatorKey {
+                        if type == 11, (0..<16384).contains(index) {
+                            advTargets[key, default: []].insert(index)
+                            advLocations[key, default: []].insert("\(sectionID):\(offset % 64)")
+                        }
                     }
                     guard (-1..<16384).contains(index), (1...11).contains(type) else { continue }
                     if index >= 0 { indices.insert(index) }
@@ -118,9 +186,21 @@ struct MobileGestaltCacheLayout: Codable, Equatable, Sendable {
               let greenIndex = green.first, let notGreenIndex = notGreen.first, greenIndex != notGreenIndex,
               let greenLocation = targetLocations[DeviceCacheOptions.greenTeaKey], greenLocation.count == 1,
               greenLocation == targetLocations[DeviceCacheOptions.notGreenTeaKey] else { throw failure }
-        let wapi = !invalidWAPI && wapiIndices.count == 1 && !wapiIndices.contains(greenIndex) && !wapiIndices.contains(notGreenIndex) && wapiLocations == greenLocation
+        let wapi = wapiIndices.count == 1 && !wapiIndices.contains(greenIndex) && !wapiIndices.contains(notGreenIndex) && wapiLocations == greenLocation
             ? wapiIndices.first : nil
+        // A wapi descriptor that resolved to several indices, or to an index
+        // colliding with the eSIM pair, is ambiguous too: refuse it rather
+        // than picking one. No descriptor at all still means "no WAPI".
+        if !wapiIndices.isEmpty && wapi == nil { throw failure }
+        func featureSlot(for key: String) -> Int? {
+            guard let found = advTargets[key], found.count == 1,
+                  let index = found.first, index != greenIndex, index != notGreenIndex,
+                  index != wapi, advLocations[key] == greenLocation else { return nil }
+            return index
+        }
         return Self(uuid: uuid, slotCount: maximum + 1, greenTeaIndex: greenIndex,
-                    notGreenTeaIndex: notGreenIndex, wapiIndex: wapi)
+                    notGreenTeaIndex: notGreenIndex, wapiIndex: wapi,
+                    audioIntellIndex: featureSlot(for: DeviceCacheOptions.audioIntelligenceKey),
+                    personalTranslatorIndex: featureSlot(for: DeviceCacheOptions.personalTranslatorKey))
     }
 }

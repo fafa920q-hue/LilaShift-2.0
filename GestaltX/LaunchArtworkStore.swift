@@ -71,7 +71,7 @@ actor LaunchArtworkStore {
                 guard handle >= 0 else { throw CustomizationFailure("These system settings are not accessible on this device.") }
             }
             #else
-            throw CustomizationFailure("Device access is unavailable in the Simulator. Open a plist to explore GestaltX.")
+            throw CustomizationFailure("Device access is unavailable in the Simulator. Open a plist to explore LilaShift.")
             #endif
         }
         defer {

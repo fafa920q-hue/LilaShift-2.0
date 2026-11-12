@@ -54,9 +54,13 @@ import Foundation
         let stillValid = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [unrelated])
         try expect(stillValid == layout, "Unrelated invalid descriptors do not disable a valid target table")
         let badWAPI = valid + descriptor(2, index: -2, type: 0)
-        let optional = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [badWAPI])
-        try expect(optional.wapiIndex == nil && optional.greenTeaIndex == 1 && optional.notGreenTeaIndex == 4,
-                   "Malformed optional WAPI remains isolated from the required pair")
+        do {
+            _ = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [badWAPI])
+            throw Failure(message: "Malformed WAPI descriptor did not fail the scan")
+        } catch is GestaltFailure {
+            // A wapi descriptor that exists but is unusable fails the whole
+            // scan; only a missing wapi descriptor leaves wapiIndex nil.
+        }
         print("PASS: malformed target indices/types cannot hide behind valid duplicates; valid and unrelated controls resolve.")
     }
 }
