@@ -92,7 +92,7 @@ final class LaunchArtworkCatalogTests: XCTestCase {
         let invalidID = AppAppearanceProposal(bundleID: "../invalid", currentName: "微信", proposedName: "WX")
         XCTAssertEqual(invalidID.check, .invalidIdentifier)
 
-        let controls = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX\\nBad")
+        let controls = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX\nBad")
         XCTAssertEqual(controls.check, .invalidName)
     }
 
