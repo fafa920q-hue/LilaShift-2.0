@@ -185,19 +185,24 @@ final class DiagnosticsExpansionTests: XCTestCase {
         await recorder.record(OperationEvent(kind: .readSucceeded, detail: "first"))
         await recorder.record(OperationEvent(kind: .backupCreated, detail: "second"))
         await recorder.record(OperationEvent(kind: .readFailed, detail: "third"))
-        XCTAssertEqual(await recorder.count, 3)
+        let countAfterThree = await recorder.count
+        XCTAssertEqual(countAfterThree, 3)
         let events = await recorder.recordedEvents()
         XCTAssertEqual(events.map(\.detail), ["third", "second", "first"])
 
         for index in 0..<600 {
             await recorder.record(OperationEvent(kind: .readSucceeded, detail: "event \(index)"))
         }
-        XCTAssertEqual(await recorder.count, OperationEventRecorder.maxEvents)
-        XCTAssertEqual(await recorder.recordedEvents().first?.detail, "event 599")
+        let countAfterCap = await recorder.count
+        XCTAssertEqual(countAfterCap, OperationEventRecorder.maxEvents)
+        let cappedEvents = await recorder.recordedEvents()
+        XCTAssertEqual(cappedEvents.first?.detail, "event 599")
 
         await recorder.clear()
-        XCTAssertEqual(await recorder.count, 0)
-        XCTAssertTrue(await recorder.recordedEvents().isEmpty)
+        let countAfterClear = await recorder.count
+        XCTAssertEqual(countAfterClear, 0)
+        let eventsAfterClear = await recorder.recordedEvents()
+        XCTAssertTrue(eventsAfterClear.isEmpty)
     }
 
     func testOperationLogSnapshotEmptyAndConnectedStates() {
