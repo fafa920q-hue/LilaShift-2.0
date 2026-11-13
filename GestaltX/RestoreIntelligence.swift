@@ -906,7 +906,7 @@ enum RestoreIntelligence {
                               against current: GestaltDocument?,
                               directory: URL? = nil) -> [BackupVerification] {
         let directory = directory ?? backupDirectory
-        records.map { record in
+        return records.map { record in
             let url = directory.appendingPathComponent(record.filename)
             guard FileManager.default.fileExists(atPath: url.path) else {
                 return BackupVerification(record: record, status: .notFound, layoutMatchesCurrent: nil)
