@@ -602,6 +602,158 @@ Restart required. Apple Intelligence also depends on device and region. This sta
 Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.	需要重启。Apple 智能还取决于设备与地区。具体入口取决于设备与系统版本。此操作暂存 CacheExtra 键；CacheData 槽位是另一个独立值。
 Live probe: on	实时探针：开启
 Live probe: off — restart to apply	实时探针：关闭 — 重启后生效
+%d steps, %d blockers	共 %d 步，%d 个阻止项
+A precise restore cannot be guaranteed without a trusted backup. Use read-only diagnostics or import a backup instead.	没有可信备份，无法保证精确恢复。请改用只读诊断或导入备份。
+A simulation passing does not mean the system will take effect. Real-device verification after a restart is still required.	模拟通过并不代表系统一定会生效。仍需在重启后于真机上验证。
+A trusted backup exists for restore.	已有可信备份可用于恢复。
+A trusted original is available for this change.	此更改有可信的原值可用。
+AI Only	仅 AI
+All preset dependencies are satisfied.	所有预设依赖均已满足。
+Backup Verification	备份验证
+Backup and restore prerequisites	备份与恢复的前提条件
+Backup file not found.	未找到备份文件。
+Blocked	已阻止
+Blocked by a pre-check.	被前置检查阻止。
+Cache layout is resolved from the device's own library, never selected by model or OS.	缓存布局取自设备自身的系统库，从不按机型或系统版本推测。
+CacheData slot #%d reads back at its native baseline — this verifies the slot value, not the feature itself.	CacheData 槽位 #%d 回读值为原生基线——这仅验证槽位值，不验证功能本身。
+CacheData slots #%d/#%d read back as staged — this verifies the flags, not eSIM hardware.	CacheData 槽位 #%d/#%d 回读值与暂存一致——这仅验证标志位，不验证 eSIM 硬件。
+CacheExtra key %@ reads back as staged — this verifies the staged flag, not the underlying hardware or service.	CacheExtra 键 %@ 回读值与暂存一致——这仅验证暂存的标志位，不验证底层硬件或服务。
+Cannot restore automatically	无法自动恢复
+Changed	已更改
+China Unlock is not ready	一键解锁尚未就绪
+China Unlock is ready to stage	一键解锁已就绪，可以暂存
+Conflict	冲突
+Current	当前
+Detected	已检测到
+Device identity is unavailable.	无法获取设备身份。
+Effect States	生效状态
+Eligible	符合条件
+File write success is never presented as the feature definitely working.	文件写入成功绝不代表功能一定生效。
+File write verified	文件写入已验证
+File write verified: the written file read back as staged.	文件写入已验证：写入的文件回读值与暂存一致。
+First-recorded value	首次记录值
+Hardware-identity check	硬件身份检查
+Hide Details	隐藏详情
+Hide Pre-Checks	隐藏前置检查
+High risk	高风险
+History is unavailable: no installation ID has been recorded yet.	历史记录不可用：尚未记录安装 ID。
+In effect	生效中
+Lila Intelligence	紫序智能引擎
+Low risk	低风险
+Medium risk	中风险
+Modification Timeline	修改时间线
+Modification timeline and precise restore, from trusted records only.	修改时间线与精确恢复，仅依据可信记录。
+Native	原生
+Native support and conflicts	原生支持与冲突
+No backups stored yet.	尚未存储任何备份。
+No device document is available, so this feature cannot be judged.	没有可用的设备文档，无法判断此功能。
+No document has been read.	尚未读取任何文档。
+No eligibility result was provided for this feature, so it cannot be staged.	未提供此功能的资格评估结果，因此无法暂存。
+No fresh re-read was supplied, so the snapshot could not be re-verified.	未提供新的重新读取数据，因此无法再次验证快照。
+No hardware-identity field is touched.	未触及任何硬件身份字段。
+No modifications recorded and no differences detected.	未记录任何修改，也未检测到差异。
+No native support or conflict blocks this proposal.	没有原生支持或冲突会阻止此方案。
+No recorded original exists, so a precise restore cannot be guaranteed.	不存在已记录的原值，因此无法保证精确恢复。
+No restore path is connected for this CacheData slot yet.	此 CacheData 槽位尚未连接恢复路径。
+No restore path is connected for this artwork key yet.	此 artwork 键尚未连接恢复路径。
+No restore path is connected for this key yet.	此键尚未连接恢复路径。
+No trusted backup exists yet. A pre-change restore point will be created before applying; a precise restore is only guaranteed for changes with a trusted original.	尚无可信备份。应用前会创建修改前还原点；仅对有可信原值的更改保证精确恢复。
+No verified OS-build compatibility table exists for this model, so OS-build compatibility is unknown.	此机型没有已验证的系统版本兼容表，因此系统版本兼容性未知。
+No verified per-model eSIM-hardware table exists, so eSIM hardware presence is unknown.	没有已验证的按机型 eSIM 硬件表，因此无法确认是否存在 eSIM 硬件。
+Not a China-market device.	不是中国市场机型。
+Not yet	尚未
+Offline serialization	离线序列化
+Original	原值
+Original → target diff	原值 → 目标值差异
+Original: first-recorded value	原值：首次记录值
+Original: key was absent	原值：键原本不存在
+Original: recorded original	原值：已记录的原值
+Personalized recommendations for this device, generated locally from real readings.	针对本机的个性化建议，根据真实读取数据在本地生成。
+Pre-Restore Diff	恢复前差异
+Preset dependencies	预设依赖
+Proposal	方案
+Re-read consistent after restart	重启后重读一致
+Re-read consistent after restart: the value survived a device restart.	重启后重读一致：该值在设备重启后仍保持。
+Read the device first to see personalized recommendations.	请先读取设备，再查看个性化建议。
+Read the device first to see the modification timeline.	请先读取设备，再查看修改时间线。
+Read the device first to simulate a change.	请先读取设备，再模拟更改。
+Recommendations are generated on this device from its own readings. Nothing is sent anywhere.	建议根据本机自身的读取数据在设备上生成，不会向任何地方发送数据。
+Region code is unknown, so this device cannot be confirmed as a China-market device.	地区代码未知，因此无法确认此设备为中国市场机型。
+Region code is unknown.	地区代码未知。
+Region code reads back as %@ — this verifies the staged code, not region-restricted services.	地区代码回读值为 %@——这仅验证暂存的代码，不验证受地区限制的服务。
+Requires a device restart to take effect.	需要重启设备才能生效。
+Restart verified	已验证重启
+Restore Backup	恢复备份
+Restore Intelligence	智能恢复引擎
+Restore Preview	恢复预览
+Restore log: %d entries	恢复日志：%d 条
+Restore path not yet connected for this item.	此项目尚未连接恢复路径。
+Restore staged through the existing path. Apply and restart to verify.	已通过现有路径暂存恢复。请应用并重启以验证。
+Restore staged. Apply it, then restart and re-read to verify.	恢复已暂存。请应用，然后重启并重新读取以验证。
+Restore to	恢复为
+Restored	已恢复
+Restores the whole device file from this backup (%@).	将从此备份（%@）恢复整个设备文件。
+Restoring only one of the eSIM pair leaves the flags inconsistent. Restore both together.	仅恢复 eSIM 两个标志中的一个会导致标志不一致。请一起恢复。
+Restoring only the region code leaves the sales-region suffix inconsistent. Restore both together.	仅恢复地区代码会导致销售地区后缀不一致。请一起恢复。
+Review required	需要复核
+SafePatch Simulator	SafePatch 模拟器
+Sales region	销售地区
+See what a change would do before you enable it. Simulation only — nothing is written.	在启用更改前，先查看它会产生什么影响。仅为模拟——不会写入任何内容。
+Show All	显示全部
+Show Details	显示详情
+Show Less	收起
+Show Pre-Checks	显示前置检查
+Signing state could not be read.	无法读取签名状态。
+Simulation blocked	模拟已阻止
+Simulation passed	模拟已通过
+Some features are already natively supported or configured and need no change.	部分功能已获得原生支持或已配置，无需更改。
+Staged	已暂存
+Staged: the change is prepared for review, not yet written.	已暂存：更改已准备好供审核，尚未写入。
+Staging flips the eSIM cache flags only. It does not prove eSIM hardware is present.	暂存仅翻转 eSIM 缓存标志，不能证明存在 eSIM 硬件。
+System function actually verified	系统功能已实际验证
+System function actually verified: the feature works on the device.	系统功能已实际验证：该功能在设备上可用。
+The CacheData slot cannot be repaired to a known baseline on this device, so staging is refused until the recorded original value is available.	此设备上的 CacheData 槽位无法修复到已知的基线，因此在获得已记录的原值之前拒绝暂存。
+The backup could not be verified. No system changes were made.	无法验证备份，未做任何系统更改。
+The change history could not be read. No system changes were made.	无法读取更改历史，未做任何系统更改。
+The change history could not be saved and verified. No system changes were made.	无法保存并验证更改历史，未做任何系统更改。
+The device data changed since the snapshot. Read again before simulating.	自快照以来设备数据已更改。请重新读取后再模拟。
+The device data matches the snapshot.	设备数据与快照一致。
+The first-read value is the first-recorded value, never a factory original. Fields with no trusted original never offer a precise restore.	首次读取值即首次记录值，绝非出厂原值。没有可信原值的字段绝不提供精确恢复。
+The region code restores with the eSIM & Region group, not per item.	地区代码随 eSIM 与地区组合一起恢复，不支持单项恢复。
+The restore could not be staged.	无法暂存恢复。
+The restore could not be staged. No system changes were made.	无法暂存恢复，未做任何系统更改。
+The restore log could not be read. No system changes were made.	无法读取恢复日志，未做任何系统更改。
+The simulated document could not be serialized and verified.	无法序列化并验证模拟文档。
+The simulated document serializes and reads back correctly.	模拟文档序列化并回读正确。
+The stored artwork value is malformed, so it cannot be restored.	存储的 artwork 值格式错误，因此无法恢复。
+The system cache layout could not be resolved, so CacheData checks are unavailable.	无法解析系统缓存布局，因此 CacheData 检查不可用。
+This backup's origin is not trusted, so it cannot be restored automatically. It can be reviewed manually instead.	此备份来源不可信，因此无法自动恢复。可改为手动复核。
+This change touches a CacheData slot that cannot be located on this device.	此更改涉及此设备上无法定位的 CacheData 槽位。
+This device already has Dynamic Island natively.	此设备原生已有灵动岛。
+This device natively supports Apple Intelligence.	此设备原生支持 Apple 智能。
+This feature is not in the capability catalog, so it cannot be staged.	此功能不在能力目录中，因此无法暂存。
+This history belongs to a different device.	此历史记录属于另一台设备。
+This history uses a newer format this version cannot read.	此历史记录使用了当前版本无法读取的新格式。
+This proposal changes a device-identity field. Staging it is refused.	此方案会更改设备身份字段，已拒绝暂存。
+This proposal touches a hardware-identity field. Staging it is refused.	此方案触及硬件身份字段，已拒绝暂存。
+This proposal would change nothing on this device.	此方案不会更改此设备上的任何内容。
+This proposal would change nothing.	此方案不会产生任何更改。
+This restores all %d keys of %@.	这将恢复 %d 个键（%@）。
+This restores both eSIM flags together.	这将同时恢复两个 eSIM 标志。
+This restores every field in the backup, not just one change.	这将恢复备份中的所有字段，而不仅是一项更改。
+Trusted original snapshot	可信原值快照
+Unchanged since snapshot	自快照以来未更改
+Unknown	未知
+Unknown OS	未知系统
+Unknown build	未知版本
+Unknown device	未知设备
+Unknown feature — eligibility cannot be determined.	未知功能——无法确定资格。
+Verified	已验证
+Verified, but the cache layout differs from this device.	已验证，但缓存布局与此设备不同。
+Verified.	已验证。
+Verified. Cache layout matches this device.	已验证。缓存布局与此设备一致。
+WAPI flag reads back as disabled — this verifies the staged flag, not network hardware.	WAPI 标志回读值为关闭——这仅验证暂存的标志位，不验证网络硬件。
+Would change %d fields	将更改 %d 个字段
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():

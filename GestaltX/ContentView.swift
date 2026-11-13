@@ -370,6 +370,12 @@ struct ContentView: View {
 
                 ModifiedValuesCard()
 
+                LilaIntelligenceCard()
+
+                SafePatchCard()
+
+                RestoreIntelligenceCard()
+
                 if model.isReading {
                     GlassReadProgressCard(title: L("Reading device data…"))
                 }

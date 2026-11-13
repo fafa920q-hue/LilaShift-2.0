@@ -4,7 +4,7 @@
 // Preset behavior is independently implemented for GestaltX.
 import Foundation
 
-enum CapabilityCategory: String, CaseIterable, Identifiable {
+enum CapabilityCategory: String, CaseIterable, Equatable, Identifiable {
     case display = "Display", device = "Device", ipad = "iPad", intelligence = "Intelligence", advanced = "Advanced"
     var id: String { rawValue }
     var symbol: String {
@@ -27,7 +27,7 @@ enum CapabilityCategory: String, CaseIterable, Identifiable {
     }
 }
 
-struct Capability: Identifiable {
+struct Capability: Identifiable, Equatable {
     let id: String
     let category: CapabilityCategory
     let title: String
@@ -37,6 +37,19 @@ struct Capability: Identifiable {
     /// Per-key values for presets that are not a plain Boolean 1, such as the
     /// parallax switch (0) or the AOD flipbook count.
     var values: [String: Any]? = nil
+
+    /// Capabilities are compared by their Equatable fields. `values` is
+    /// excluded: `[String: Any]` cannot be Equatable, and the catalog is
+    /// keyed by `id`, so the same id always carries the same values in
+    /// practice.
+    static func == (lhs: Capability, rhs: Capability) -> Bool {
+        lhs.id == rhs.id
+            && lhs.category == rhs.category
+            && lhs.title == rhs.title
+            && lhs.detail == rhs.detail
+            && lhs.keys == rhs.keys
+            && lhs.caution == rhs.caution
+    }
     var availableChoices: [PresetChoice] {
         // Preserve the device-specific Siri capability type and allow recovery from older overrides.
         id == "siriOnDevice" ? [.keep, .disable, .removeAdded] : PresetChoice.allCases
@@ -86,7 +99,13 @@ struct Capability: Identifiable {
         default: "Respring first. Restart the device if the change does not appear."
         }
     }
-    var enabled: Any { id == "ipadApps" ? [1, 2] : NSNumber(value: 1) }
+    /// The enable value for a plain boolean capability flag. This must
+    /// be a real Boolean (`true`), not the integer 1: the codebase
+    /// distinguishes Boolean from integer ("Do not conflate Boolean
+    /// and integer"), and `ChangeValue` reports them as different
+    /// types. Capabilities whose enable value is not a plain boolean
+    /// declare it explicitly in `values`.
+    var enabled: Any { id == "ipadApps" ? [1, 2] : true }
 
     func isEnabled(in document: GestaltDocument?) -> Bool {
         guard let fields = document?.extra else { return false }
