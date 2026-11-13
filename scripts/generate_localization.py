@@ -543,16 +543,10 @@ CacheData[0x%X] · slot %d	CacheData[0x%X] · 槽位 %d
 Other CacheData bytes changed	其他 CacheData 字节已更改
 Unrelated cache bytes changed — apply will be refused.	存在无关缓存字节更改，将拒绝应用。
 No US regulatory model known for this device — region code only.	未知此设备的美国监管型号，仅使用地区代码。
-Region mode	地区模式
-Region code only (LL)	仅地区代码 (LL)
-Full US (LL + LL/A)	完整美国 (LL + LL/A)
-Keeps the CH/A suffix and factory model — safest for dual-SIM phones.	保留 CH/A 后缀与出厂型号，双卡手机最安全。
-Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.	同时设置销售地区与美国型号，最一致，但可能与双卡硬件冲突。
 Apple Intelligence readiness	Apple 智能就绪检查
 Ready %d/4	就绪 %d/4
 Live status unknown	本机状态未知
 Fix	修复
-Regulatory model	监管型号
 Regulatory model (factory model kept)	监管型号（保留出厂型号）
 eSIM gate and conflicts	eSIM 门控与冲突
 On-device AI eligibility	本机 AI 资格

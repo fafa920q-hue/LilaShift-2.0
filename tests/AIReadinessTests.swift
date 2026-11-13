@@ -17,10 +17,8 @@ final class AIReadinessTests: XCTestCase {
         withUnsafeBytes(of: &little) { data.replaceSubrange(offset..<(offset + $0.count), with: $0) }
     }
 
-    static func evaluate(regionCode: String? = "LL", sysconfig: String? = nil,
+    static func evaluate(regionCode: String? = "LL",
                          regModel: String? = "A3518",
-                         regionMode: ChinaUnlockRegionMode = .regionCodeOnly,
-                         expectedUSModel: String? = nil,
                          esimEnabled: Bool = true, conflicts: [AIConflict] = [],
                          aiEnabledCount: Int = 6, aiTotal: Int = 6,
                          productType: String = "iPhone16,2",
@@ -28,8 +26,7 @@ final class AIReadinessTests: XCTestCase {
                          liveAIEnabled: Bool? = nil,
                          stagingDecision: AIStagingDecision? = nil) -> AIReadinessCheckup {
         AIReadinessCheckup.evaluate(
-            regionCode: regionCode, sysconfig: sysconfig, regModel: regModel,
-            regionMode: regionMode, expectedUSModel: expectedUSModel,
+            regionCode: regionCode, regModel: regModel,
             esimEnabled: esimEnabled, conflicts: conflicts,
             aiEnabledCount: aiEnabledCount, aiTotal: aiTotal, productType: productType,
             liveRegionCode: liveRegionCode, liveRegModel: liveRegModel, liveAIEnabled: liveAIEnabled,
@@ -75,17 +72,17 @@ final class AIReadinessTests: XCTestCase {
         XCTAssert(unknownLive.factors[0].isLiveActive == nil,
                    "No probe answer renders live: unknown, never faked")
 
-        // LL-only mode passes on any kept factory model; Full US mode
-        // requires the mapped US model.
+        // The one-tap unlock keeps the factory model and never stages a
+        // sales-region suffix, so the checkup requires only the LL region
+        // code and a present model number — never an LL/A suffix or a
+        // mapped US model.
         let kept = Self.evaluate(regModel: "A3518")
-        XCTAssert(kept.factors[1].isReady, "LL-only passes on the kept factory model")
-        let fullUS = Self.evaluate(sysconfig: "LL/A", regModel: "A3260", regionMode: .fullUS,
-                              expectedUSModel: "A3260")
-        XCTAssert(fullUS.factors[0].isReady && fullUS.factors[1].isReady,
-                   "Full US passes with LL/A and the mapped model")
-        let fullUSWrong = Self.evaluate(sysconfig: "LL/A", regModel: "A3518", regionMode: .fullUS,
-                                   expectedUSModel: "A3260")
-        XCTAssert(!fullUSWrong.factors[1].isReady, "Full US fails when the model is not the mapped US model")
+        XCTAssert(kept.factors[1].isReady, "The kept factory model passes")
+        XCTAssert(kept.factors[0].isReady, "The LL region code alone passes, with no sales-region suffix")
+        let noModel = Self.evaluate(regModel: nil)
+        XCTAssert(!noModel.factors[1].isReady, "A missing model number fails the regulatory-model factor")
+        let wrongRegion = Self.evaluate(regionCode: "CH")
+        XCTAssert(!wrongRegion.factors[0].isReady, "A CH region code fails the region factor")
 
         // A slot conflict fails the eSIM/conflict factor and names itself.
         let conflict = AIConflict.personalTranslatorSlotDisabled(slot: 266)

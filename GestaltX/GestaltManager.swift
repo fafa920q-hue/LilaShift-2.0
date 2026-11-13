@@ -32,13 +32,12 @@ final class GestaltManager: ObservableObject {
     @Published var regionID = "keep"
     @Published var regionCodeID = "keep"
     @Published var modelID = "keep"
-    /// Opt-in region mode for China Unlock (default region-code-only).
+    /// Region mode for China Unlock (default region-code-only).
     /// Persisted across launches; never reset by loading a document.
+    /// The one-tap unlock stages the same 9 items in either mode; the
+    /// mode only affects manual region presets and restoring an unlock
+    /// applied by an older build.
     @Published var chinaUnlockRegionMode: ChinaUnlockRegionMode = .regionCodeOnly
-    /// US regulatory model staged by the Full US mode, if a mapping is
-    /// known for this device. `nil` means the mode stages region +
-    /// sales region only (see `regionModeNote`).
-    @Published var fullUSModelNumber: String?
     /// The user explicitly confirmed an unverified (warned) AI staging
     /// combination after reading its reason on the checkup card, by
     /// tapping Fix. In-memory only, never persisted: a fresh launch
@@ -46,9 +45,6 @@ final class GestaltManager: ObservableObject {
     /// Only ever converts a `.warn` decision into `.allow` (see
     /// `AIStagingGuard`); a `.block` is never overridden by it.
     @Published var userConfirmedUnverifiedAICombination = false
-    /// Shown under the region-mode picker when Full US cannot map this
-    /// device to a US regulatory model.
-    @Published var regionModeNote: String?
     @Published var changesName = false
     @Published var modelName = ""
     @Published var subtype = 0
@@ -167,9 +163,6 @@ final class GestaltManager: ObservableObject {
                         regionCode: RegionPreset.all.first { $0.id == regionCodeID },
                         skipCreatingRegionInfoOnModernOS: chinaUnlockRegionMode == .fullUS)
         doc.applyModel(ModelPreset.all.first { $0.id == modelID })
-        if chinaUnlockRegionMode == .fullUS, let model = fullUSModelNumber {
-            doc.set(model, for: GestaltKeys.modelNumber)
-        }
         return doc
     }
 
@@ -182,7 +175,6 @@ final class GestaltManager: ObservableObject {
     private func accept(_ loaded: DocumentSnapshot) {
         snapshot = loaded; working = loaded.document
         choices = [:]; regionID = "keep"; regionCodeID = "keep"; modelID = "keep"; changesName = false; subtype = 0
-        fullUSModelNumber = nil; regionModeNote = nil
         userConfirmedUnverifiedAICombination = false
         cacheOptionChoice = .keep
         wapiChoice = .keep
@@ -229,40 +221,13 @@ final class GestaltManager: ObservableObject {
     var chinaUnlockAIEnabledCount: Int { chinaUnlockEnabledAICapabilityIDs.count }
 
     /// True when the preview already shows the full unlock, whether it was
-    /// just staged or applied in an earlier session. In Full US mode it
-    /// also requires the sales-region suffix (LL/A) and, when a US model
-    /// is known for this device, the mapped regulatory model number.
+    /// just staged or applied in an earlier session: eSIM enabled, region
+    /// code LL and all six AI presets enabled. The sales-region suffix
+    /// and the regulatory model number are never part of the unlock, so
+    /// they are not required here.
     var isChinaUnlockedInPreview: Bool {
-        guard isESIMUnlockedInPreview, previewRegionCode == "LL",
-              chinaUnlockAIEnabledCount == ChinaUnlock.aiCapabilityIDs.count else { return false }
-        guard chinaUnlockRegionMode == .fullUS else { return true }
-        let sysconfig = preview?.extra[GestaltKeys.legacyRegionInfo] as? String
-        let regionInfo = preview?.extra[GestaltKeys.regionInfo] as? String
-        guard sysconfig == "LL/A" || regionInfo == "LL/A" else { return false }
-        if let expected = expectedFullUSModelNumber {
-            return preview?.extra[GestaltKeys.modelNumber] as? String == expected
-        }
-        return true
-    }
-
-    /// US regulatory model for the Full US mode, from the recorded
-    /// original model number and product type. `nil` means unknown: the
-    /// mode then stages region + sales region only.
-    var expectedFullUSModelNumber: String? {
-        guard let snapshot else { return nil }
-        let originalRegModel = snapshot.originalValue(for: GestaltKeys.modelNumber) as? String
-            ?? snapshot.document.extra[GestaltKeys.modelNumber] as? String
-        let productType = snapshot.document.extra[GestaltKeys.productType] as? String ?? ""
-        return USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: originalRegModel,
-                                                          productType: productType)
-    }
-
-    /// Switches the region mode (persisted). If the unlock is currently
-    /// staged, it is re-staged under the new mode so the review reflects it.
-    func setChinaUnlockRegionMode(_ mode: ChinaUnlockRegionMode) {
-        chinaUnlockRegionMode = mode
-        ChinaUnlockRegionMode.stored = mode
-        if isChinaUnlockStaged { _ = stageChinaUnlock() }
+        isESIMUnlockedInPreview && previewRegionCode == "LL"
+            && chinaUnlockAIEnabledCount == ChinaUnlock.aiCapabilityIDs.count
     }
 
     // MARK: - AI readiness checkup (item 4)
@@ -401,10 +366,7 @@ final class GestaltManager: ObservableObject {
             ?? snapshot.document.extra[GestaltKeys.productType] as? String ?? ""
         return AIReadinessCheckup.evaluate(
             regionCode: preview.extra[GestaltKeys.regionCode] as? String,
-            sysconfig: preview.extra[GestaltKeys.legacyRegionInfo] as? String,
             regModel: preview.extra[GestaltKeys.modelNumber] as? String,
-            regionMode: chinaUnlockRegionMode,
-            expectedUSModel: expectedFullUSModelNumber,
             esimEnabled: isESIMUnlockedInPreview,
             conflicts: aiConflicts,
             aiEnabledCount: chinaUnlockAIEnabledCount,
@@ -522,14 +484,14 @@ final class GestaltManager: ObservableObject {
     }
 
     /// Stages the full China Unlock: eSIM cache flags, region code US and
-    /// the six Apple Intelligence presets. Nothing is written here; the
-    /// user still reviews the changes and applies them, and a restart is
-    /// required before they take effect. Sales region, `siriOnDevice`,
-    /// the model number and WAPI are left untouched in the default
-    /// region-code-only mode. In the opt-in Full US mode the sales region
-    /// (LL/A) and the mapped US regulatory model are staged as well; when
-    /// no US model is known for this device the model number is left
-    /// untouched and the reason is shown under the mode picker.
+    /// the six Apple Intelligence presets — exactly the 9 items, in either
+    /// region mode. Nothing is written here; the user still reviews the
+    /// changes and applies them, and a restart is required before they
+    /// take effect. The sales-region suffix, the regulatory model number,
+    /// `siriOnDevice` and WAPI are never staged: a regulatory model that
+    /// does not match the hardware makes the system discard the whole
+    /// MobileGestalt cache at boot and rebuild it from factory data, so
+    /// the region change does not stick.
     ///
     /// This is an explicit user action, so it is deliberately not gated
     /// by the AI staging guard (see `AIStagingGuard`): it stages
@@ -552,20 +514,7 @@ final class GestaltManager: ObservableObject {
         }
         guard stageCacheOption(.enable) else { return false }
         regionCodeID = ChinaUnlock.regionCodeID
-        if chinaUnlockRegionMode == .fullUS {
-            regionID = "US"
-            if let mapped = expectedFullUSModelNumber {
-                fullUSModelNumber = mapped
-                regionModeNote = nil
-            } else {
-                fullUSModelNumber = nil
-                regionModeNote = L("No US regulatory model known for this device — region code only.")
-            }
-        } else {
-            regionID = "keep"
-            fullUSModelNumber = nil
-            regionModeNote = nil
-        }
+        regionID = "keep"
         for id in ChinaUnlock.aiCapabilityIDs { choices[id] = .enable }
         return true
     }
@@ -573,15 +522,15 @@ final class GestaltManager: ObservableObject {
     /// Stages a restore of the full China Unlock: eSIM flags back to the
     /// recorded originals, region code back to its recorded original and
     /// the six AI presets back to their recorded originals (`.disable`
-    /// removes keys that were originally absent). `siriOnDevice`, the
-    /// model number, WAPI and the sales region are left untouched.
+    /// removes keys that were originally absent). `siriOnDevice` and WAPI
+    /// are left untouched. The sales-region suffixes and the model number
+    /// are also restored when the stored mode is Full US, so an unlock
+    /// applied by an older build can still be reverted.
     @discardableResult
     func restoreChinaUnlock() -> Bool {
         guard stageCacheOption(.restoreOriginal) else { return false }
         regionCodeID = "keep"
         regionID = "keep"
-        fullUSModelNumber = nil
-        regionModeNote = nil
         if let snapshot, var document = working {
             // The region overlay is preview-only, so stopping the overlay
             // alone would leave a previously applied `LL` in `working`.
@@ -922,7 +871,7 @@ final class GestaltManager: ObservableObject {
         // Explicit field edits take precedence: discard presets that would overwrite the key.
         let changedKeys = Set([key, draft.originalKey].compactMap { $0 })
         for capability in Capability.all where !changedKeys.isDisjoint(with: capability.keys) { choices[capability.id] = .keep }
-        if !changedKeys.isDisjoint(with: [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo]) { regionID = "keep"; regionCodeID = "keep"; fullUSModelNumber = nil }
+        if !changedKeys.isDisjoint(with: [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo]) { regionID = "keep"; regionCodeID = "keep" }
         if changedKeys.contains(GestaltKeys.artwork) { subtype = 0 }
         if changedKeys.contains(GestaltKeys.modelNumber) { modelID = "keep" }
         if !changedKeys.isDisjoint(with: [GestaltKeys.artwork, "Z/dqyWS6OZTRy10UcmUAhw", "bbtR9jQx50Fv5Af/affNtA"]) { changesName = false }
@@ -930,7 +879,7 @@ final class GestaltManager: ObservableObject {
     func removeField(_ key: String) {
         working?.set(nil, for: key)
         for capability in Capability.all where capability.keys.contains(key) { choices[capability.id] = .keep }
-        if [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo].contains(key) { regionID = "keep"; regionCodeID = "keep"; fullUSModelNumber = nil }
+        if [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo].contains(key) { regionID = "keep"; regionCodeID = "keep" }
         if key == GestaltKeys.artwork { subtype = 0 }
         if key == GestaltKeys.modelNumber { modelID = "keep" }
         if [GestaltKeys.artwork, "Z/dqyWS6OZTRy10UcmUAhw", "bbtR9jQx50Fv5Af/affNtA"].contains(key) { changesName = false }

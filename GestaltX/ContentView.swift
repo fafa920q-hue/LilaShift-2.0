@@ -554,29 +554,6 @@ private struct ChinaUnlockCard: View {
                 statusColumn(title: L("Apple Intelligence"), value: model.hasDocument ? "\(model.chinaUnlockAIEnabledCount)/\(ChinaUnlock.aiCapabilities.count)" : L("Not read yet"))
             }
 
-            // Region mode (opt-in Full US). Shown for China hardware and
-            // while the unlock is staged. The two options use a menu
-            // picker: the full labels do not fit a segmented control on a
-            // phone screen. Changing the mode re-stages the unlock.
-            if model.hasDocument && (model.isChinaUnlockStaged || model.snapshot?.document.extra[GestaltKeys.regionCode] as? String == "CH") {
-                VStack(alignment: .leading, spacing: 6) {
-                    Picker(L("Region mode"), selection: Binding(
-                        get: { model.chinaUnlockRegionMode },
-                        set: { model.setChinaUnlockRegionMode($0) }
-                    )) {
-                        ForEach(ChinaUnlockRegionMode.allCases) { mode in
-                            Text(L(mode.title)).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    Text(L(model.chinaUnlockRegionMode.detail))
-                        .font(.caption).foregroundStyle(.secondary)
-                    if let note = model.regionModeNote {
-                        Text(note).font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-            }
-
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(ChinaUnlock.aiCapabilities) { capability in
@@ -1708,13 +1685,10 @@ struct ChangeReviewView: View {
         return code
     }
 
-    /// Region row's after-value: in Full US mode the staged sales-region
-    /// suffix is shown too, so the "9 items" summary never understates
-    /// the two extra staged fields.
+    /// Region row's after-value: the one-tap unlock stages the region
+    /// code only, so the after-value is just the LL display string.
     private var regionAfterText: String {
-        let code = regionDisplay(code: "LL")
-        guard model.chinaUnlockRegionMode == .fullUS else { return code }
-        return code + " · LL/A"
+        regionDisplay(code: "LL")
     }
 
     private var fieldChanges: some View {

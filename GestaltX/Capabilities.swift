@@ -223,28 +223,18 @@ enum DeviceModelDecision: Equatable {
     }
 }
 
-/// Region mode for China Unlock, kept outside the 9-item definition so the
-/// default unlock is byte-identical to before. Default stays
-/// region-code-only (LL): the shipped 9-item definition, and the safest
-/// choice for CN dual-physical-SIM + eSIM hardware (Erosion-CN's own note
-/// warns a full-US mapping to a US model can conflict on dual-SIM
-/// hardware). Full US is an explicit opt-in that additionally stages the
-/// sales-region suffix (LL/A) and the mapped US regulatory model number.
+/// Region mode for China Unlock. The one-tap unlock always stages exactly
+/// the 9-item definition (eSIM + region code LL + six AI keys) in either
+/// mode — the sales-region suffix and the regulatory model number are
+/// never staged by the one-tap, because a regulatory model that does not
+/// match the hardware makes the system discard the whole MobileGestalt
+/// cache at boot and rebuild it from factory data, so the region change
+/// does not stick. The mode only affects manual region presets (which
+/// sales-region key is created on iOS 27) and restoring an unlock applied
+/// by an older build.
 enum ChinaUnlockRegionMode: String, CaseIterable, Identifiable {
     case regionCodeOnly, fullUS
     var id: String { rawValue }
-    var title: String {
-        switch self {
-        case .regionCodeOnly: "Region code only (LL)"
-        case .fullUS: "Full US (LL + LL/A)"
-        }
-    }
-    var detail: String {
-        switch self {
-        case .regionCodeOnly: "Keeps the CH/A suffix and factory model — safest for dual-SIM phones."
-        case .fullUS: "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware."
-        }
-    }
     static let userDefaultsKey = "GestaltX.chinaUnlockRegionMode"
     static var stored: Self {
         get {
