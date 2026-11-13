@@ -1,6 +1,8 @@
 name: Apply region fix patch
 on:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   apply:
     runs-on: ubuntu-latest
