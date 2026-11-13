@@ -230,6 +230,36 @@ final class GestaltManager: ObservableObject {
             && chinaUnlockAIEnabledCount == ChinaUnlock.aiCapabilityIDs.count
     }
 
+    /// True while the AI-only preset is staged: all six AI presets
+    /// enabled. This is the AI part of the one-tap unlock, staged on its
+    /// own; eSIM and region are untouched. It is not blocked by the eSIM
+    /// cache layout, because the six AI keys are CacheExtra values and do
+    /// not need the layout to resolve.
+    var isChinaAIOnlyStaged: Bool {
+        guard hasDocument else { return false }
+        return ChinaUnlock.aiCapabilityIDs.allSatisfy { (choices[$0] ?? .keep) == .enable }
+    }
+
+    /// True when the preview already shows all six AI presets enabled,
+    /// whether staged now or applied in an earlier session.
+    var isChinaAIOnlyApplied: Bool {
+        chinaUnlockAIEnabledCount == ChinaUnlock.aiCapabilityIDs.count
+    }
+
+    /// True while the eSIM+region preset is staged: eSIM flags enabled
+    /// and region code US. This is the eSIM+region part of the one-tap
+    /// unlock, staged on its own; the six AI presets are untouched.
+    var isChinaESIMRegionStaged: Bool {
+        guard hasDocument else { return false }
+        return cacheOptionChoice == .enable && regionCodeID == ChinaUnlock.regionCodeID
+    }
+
+    /// True when the preview already shows eSIM enabled and region code
+    /// LL, whether staged now or applied in an earlier session.
+    var isChinaESIMRegionApplied: Bool {
+        isESIMUnlockedInPreview && previewRegionCode == "LL"
+    }
+
     // MARK: - AI readiness checkup (item 4)
 
     /// Live on-device probe answers (MGCopyAnswer). `nil` means the probe
@@ -546,6 +576,67 @@ final class GestaltManager: ObservableObject {
             working = document
         }
         for id in ChinaUnlock.aiCapabilityIDs { choices[id] = .disable }
+        return true
+    }
+
+    /// Stages only the six Apple Intelligence presets — the AI part of the
+    /// one-tap unlock, without eSIM or region. Deliberately not gated by
+    /// the eSIM cache layout (see `chinaUnlockESIMLayoutError`): the AI
+    /// keys are CacheExtra values and do not need the layout. Like the
+    /// one-tap, this is an explicit user action, so it is not gated by
+    /// the AI staging guard; the checkup surfaces any slot conflict with
+    /// a repair path.
+    @discardableResult
+    func stageChinaAIOnly() -> Bool {
+        guard !isBusy else { return false }
+        for id in ChinaUnlock.aiCapabilityIDs { choices[id] = .enable }
+        return true
+    }
+
+    /// Stages a restore of the AI-only preset: the six AI presets back to
+    /// their recorded originals (`.disable` removes keys that were
+    /// originally absent). eSIM and region are left untouched.
+    @discardableResult
+    func restoreChinaAIOnly() -> Bool {
+        guard !isBusy else { return false }
+        for id in ChinaUnlock.aiCapabilityIDs { choices[id] = .disable }
+        return true
+    }
+
+    /// Stages only the eSIM cache flags and the region code US (LL) — the
+    /// eSIM+region part of the one-tap unlock, without the six AI presets.
+    /// Guarded by the eSIM cache layout exactly like `stageChinaUnlock`:
+    /// if the layout cannot be verified, the preset is stopped and the
+    /// reason is shown (`message`).
+    @discardableResult
+    func stageChinaESIMRegion() -> Bool {
+        guard !isBusy else { return false }
+        if let reason = chinaUnlockESIMLayoutError {
+            message = reason
+            log(reason)
+            return false
+        }
+        guard stageCacheOption(.enable) else { return false }
+        regionCodeID = ChinaUnlock.regionCodeID
+        regionID = "keep"
+        return true
+    }
+
+    /// Stages a restore of the eSIM+region preset: eSIM flags back to the
+    /// recorded originals and region code back to its recorded original.
+    /// The six AI presets are left untouched.
+    @discardableResult
+    func restoreChinaESIMRegion() -> Bool {
+        guard stageCacheOption(.restoreOriginal) else { return false }
+        regionCodeID = "keep"
+        regionID = "keep"
+        if let snapshot, var document = working {
+            // The region overlay is preview-only, so stopping the overlay
+            // alone would leave a previously applied `LL` in `working`.
+            // Reset the working document itself to the recorded original.
+            document.set(snapshot.originalValue(for: GestaltKeys.regionCode), for: GestaltKeys.regionCode)
+            working = document
+        }
         return true
     }
 

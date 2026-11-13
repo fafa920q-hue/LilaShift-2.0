@@ -420,6 +420,14 @@ Lock screen text updated.	锁屏文字已更新。
 China Unlock	国行一键解锁
 One-Tap Restore	一键还原
 One-Tap Unlock	一键解锁
+China AI	国行 AI
+Enable the six Apple Intelligence features on a China-model iPhone.	在国行 iPhone 上启用 6 项 Apple 智能功能。
+Enable China AI	启用国行 AI
+Restore AI	还原 AI
+eSIM & Region	eSIM 与地区
+Enable eSIM and set the region code to US (LL).	启用 eSIM，并将地区代码设为美国 (LL)。
+Enable eSIM & Region	启用 eSIM 与地区
+Restore eSIM & Region	还原 eSIM 与地区
 Device Information	设备信息
 Included AI Features	查看包含的 AI 功能
 Review the changes, apply them, then restart the device.	先查看并应用更改，然后重启设备。

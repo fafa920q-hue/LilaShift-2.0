@@ -60,6 +60,7 @@
 		DA6506CDA83E2C083F2C1C48 /* SharedPlistInboxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300F68E457157F9D858AC087 /* SharedPlistInboxTests.swift */; };
 		038597A87681F8DC1D335263 /* SharedWallpaperImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A683ED87150CEDBF035E3E /* SharedWallpaperImportTests.swift */; };
 		CE7268CB52FB7B02198ECCF0 /* SiriCapabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F95D4CCB08774DA750651F3 /* SiriCapabilityTests.swift */; };
+		9A7C7D4DD36F45B3B9ACFDB2 /* StandalonePresetsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7855C855237441FD9AE48803 /* StandalonePresetsTests.swift */; };
 		B20A12924CF9E683E96DC4EF /* SystemSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848381DE0AD4A5154849284 /* SystemSettingsTests.swift */; };
 		6FE5E41B444361737A6B5CF7 /* SystemVaultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3248D1891FD847DDF066F239 /* SystemVaultTests.swift */; };
 		463E96480D908A56F1FA67EB /* TemporaryExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3267ABB75431ED88EA0E5AF /* TemporaryExportTests.swift */; };
@@ -156,6 +157,7 @@
 		300F68E457157F9D858AC087 /* SharedPlistInboxTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedPlistInboxTests.swift; sourceTree = "<group>"; };
 		A4A683ED87150CEDBF035E3E /* SharedWallpaperImportTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedWallpaperImportTests.swift; sourceTree = "<group>"; };
 		4F95D4CCB08774DA750651F3 /* SiriCapabilityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SiriCapabilityTests.swift; sourceTree = "<group>"; };
+		7855C855237441FD9AE48803 /* StandalonePresetsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StandalonePresetsTests.swift; sourceTree = "<group>"; };
 		F848381DE0AD4A5154849284 /* SystemSettingsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SystemSettingsTests.swift; sourceTree = "<group>"; };
 		3248D1891FD847DDF066F239 /* SystemVaultTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SystemVaultTests.swift; sourceTree = "<group>"; };
 		B3267ABB75431ED88EA0E5AF /* TemporaryExportTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TemporaryExportTests.swift; sourceTree = "<group>"; };
@@ -319,6 +321,7 @@
 				300F68E457157F9D858AC087 /* SharedPlistInboxTests.swift */,
 				A4A683ED87150CEDBF035E3E /* SharedWallpaperImportTests.swift */,
 				4F95D4CCB08774DA750651F3 /* SiriCapabilityTests.swift */,
+				7855C855237441FD9AE48803 /* StandalonePresetsTests.swift */,
 				F848381DE0AD4A5154849284 /* SystemSettingsTests.swift */,
 				3248D1891FD847DDF066F239 /* SystemVaultTests.swift */,
 				B3267ABB75431ED88EA0E5AF /* TemporaryExportTests.swift */,
@@ -522,6 +525,7 @@
 				DA6506CDA83E2C083F2C1C48 /* SharedPlistInboxTests.swift in Sources */,
 				038597A87681F8DC1D335263 /* SharedWallpaperImportTests.swift in Sources */,
 				CE7268CB52FB7B02198ECCF0 /* SiriCapabilityTests.swift in Sources */,
+				9A7C7D4DD36F45B3B9ACFDB2 /* StandalonePresetsTests.swift in Sources */,
 				B20A12924CF9E683E96DC4EF /* SystemSettingsTests.swift in Sources */,
 				6FE5E41B444361737A6B5CF7 /* SystemVaultTests.swift in Sources */,
 				463E96480D908A56F1FA67EB /* TemporaryExportTests.swift in Sources */,
