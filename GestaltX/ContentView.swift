@@ -376,6 +376,14 @@ struct ContentView: View {
 
                 RestoreIntelligenceCard()
 
+                SystemHealthScoreCard()
+
+                DependencyAnalyzerCard()
+
+                DeviceFingerprintCard()
+
+                PostModificationAcceptanceCard()
+
                 if model.isReading {
                     GlassReadProgressCard(title: L("Reading device data…"))
                 }
