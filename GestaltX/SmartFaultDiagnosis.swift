@@ -106,17 +106,27 @@ enum FaultCause: Equatable, Sendable {
 
 // MARK: - Operation events (structured session log input)
 
-/// The kind of a structured operation event. Only kinds the engine
-/// has a rule for are listed: a success event carries no diagnosis,
-/// so there is no `.readSucceeded` / `.writeVerified` kind here.
-/// The app does not yet record these events (see
-/// `FaultDiagnosisReport.eventsConnected`); the engine accepts them
-/// so the rules are testable and ready when the recorder lands.
+/// The kind of a structured operation event. Failure and guard
+/// kinds are the ones the diagnosis engine has a rule for: a
+/// success event carries no diagnosis. The four success kinds
+/// (`readSucceeded`, `writeVerified`, `restoreSucceeded`,
+/// `backupCreated`) exist for the operation log viewer (P4): they
+/// record what happened, and the engine ignores them. Only the
+/// kinds the manager layer actually records are ever produced —
+/// in P4 that is `readSucceeded`, `readFailed` and
+/// `backupCreated`; write, restore and guard events are not
+/// connected yet (see `OperationEventRecorder`).
 enum OperationEventKind: String, Equatable, Codable, Sendable {
+    /// A read attempt succeeded.
+    case readSucceeded
     /// A read attempt failed.
     case readFailed
+    /// A write attempt verified.
+    case writeVerified
     /// A write attempt did not verify.
     case writeFailed
+    /// A restore attempt succeeded.
+    case restoreSucceeded
     /// A restore attempt failed.
     case restoreFailed
     /// The eSIM layout guard refused staging: the layout could not
@@ -130,10 +140,33 @@ enum OperationEventKind: String, Equatable, Codable, Sendable {
     case guardNativeConflict
     /// An AdvAI CacheData slot (#178/#266) could not be located.
     case slotUnresolvable
+    /// A backup was created.
+    case backupCreated
     /// A backup failed verification.
     case backupFailed
     /// The region reverted after a restart.
     case regionReverted
+
+    /// The user-facing title for the operation log viewer. Success
+    /// kinds state what happened; failure and guard kinds reuse the
+    /// diagnosis titles.
+    var title: String {
+        switch self {
+        case .readSucceeded: return L("Read succeeded")
+        case .readFailed: return L("Read failed")
+        case .writeVerified: return L("File write verified")
+        case .writeFailed: return L("Write did not verify")
+        case .restoreSucceeded: return L("Restore succeeded")
+        case .restoreFailed: return L("Restore failed")
+        case .guardLayoutUnresolved: return L("eSIM layout could not be resolved")
+        case .guardHardwareIdentity: return L("Hardware-identity change refused")
+        case .guardNativeConflict: return L("Apple Intelligence slot could not be resolved")
+        case .slotUnresolvable: return L("Apple Intelligence slot could not be resolved")
+        case .backupCreated: return L("Backup saved")
+        case .backupFailed: return L("Backup could not be verified")
+        case .regionReverted: return L("Region reverted after restart")
+        }
+    }
 }
 
 /// One structured operation event: what happened, when, to which

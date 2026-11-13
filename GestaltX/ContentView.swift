@@ -31,6 +31,11 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @State private var didStart = false
     @State private var didAutoRead = false
+    /// The persisted personalization settings (Tools page card
+    /// visibility). Loaded on appear and reloaded whenever the
+    /// Personalization Center saves, via
+    /// `.personalizationSettingsDidChange`.
+    @State private var personalizationSettings = PersonalizationSettings.defaults
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     #if targetEnvironment(simulator)
     @State private var previewCategory: CapabilityCategory?
@@ -388,6 +393,10 @@ struct ContentView: View {
 
                 PresetCatalogCard()
 
+                PersonalizationCenterCard()
+
+                DiagnosticsExpansionCard()
+
                 if model.isReading {
                     GlassReadProgressCard(title: L("Reading device data…"))
                 }
@@ -397,7 +406,7 @@ struct ContentView: View {
                         .font(.headline)
                     GlassEffectContainer(spacing: 12) {
                         LazyVGrid(columns: gridColumns, spacing: 12) {
-                            ForEach(ToolGroup.categories) { group in
+                            ForEach(visibleToolGroups) { group in
                                 NavigationLink {
                                     ToolGroupView(group: group, systemSettings: systemSettings, customizations: customizations, launchCatalog: launchCatalog)
                                 } label: {
@@ -415,6 +424,11 @@ struct ContentView: View {
                                 .disabled(model.isBusy || (group.requiresDocument && !model.hasDocument))
                             }
                         }
+                    }
+                    if visibleToolGroups.isEmpty {
+                        Text(L("All Tools cards are hidden. Re-enable them in the Personalization Center."))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                     NavigationLink {
                         ToolGroupView(group: .advancedDiagnostics, systemSettings: systemSettings, customizations: customizations, launchCatalog: launchCatalog)
@@ -471,6 +485,10 @@ struct ContentView: View {
         .background(GlassBackground())
         .navigationTitle(L("Tools LilaShift"))
         .navigationBarTitleDisplayMode(.large)
+        .onAppear { loadPersonalizationSettings() }
+        .onReceive(NotificationCenter.default.publisher(for: .personalizationSettingsDidChange)) { _ in
+            loadPersonalizationSettings()
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 8) {
@@ -499,6 +517,24 @@ struct ContentView: View {
         } else {
             [GridItem(.adaptive(minimum: 160), spacing: 12)]
         }
+    }
+
+    /// The Tools page category cards the user's settings show, in
+    /// grid order. The Personalization Center owns the toggles; this
+    /// page only applies them. The Advanced & Diagnostics card is
+    /// not part of this setting: it is always shown below the grid.
+    private var visibleToolGroups: [ToolGroup] {
+        let visibleIDs = PersonalizationCenter.visibleToolCardIDs(personalizationSettings)
+        return ToolGroup.categories.filter { visibleIDs.contains($0.rawValue) }
+    }
+
+    /// Loads the persisted personalization settings for the Tools
+    /// page grid. A missing history id means the defaults stay.
+    private func loadPersonalizationSettings() {
+        guard let deviceID = RestoreIntelligence.installationDeviceID else { return }
+        let store = PersonalizationSettingsStore(
+            directory: RestoreIntelligence.historyDirectory, deviceID: deviceID)
+        personalizationSettings = store.load().settings
     }
 
     private var readStatusText: String {

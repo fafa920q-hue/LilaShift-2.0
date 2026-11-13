@@ -25,7 +25,9 @@ struct PresetCatalogCard: View {
     @State private var selectedCategory: PresetCategory?
     @State private var selectedRisk: CapabilityRiskLevel?
     @State private var selectedEligibility: FeatureEligibility?
-    @State private var favoritesFirst = false
+    @State private var settings = PersonalizationSettings.defaults
+    @State private var lastSavedSettings = PersonalizationSettings.defaults
+    @State private var settingsError: String?
     @State private var expandedEntryID: String?
     @State private var records: [RecordedChange] = []
     @State private var historyError: String?
@@ -67,17 +69,18 @@ struct PresetCatalogCard: View {
         return map
     }
 
-    /// The visible entries: search, then filters, then favorites
-    /// first when the toggle is on.
+    /// The visible entries: search, then filters, then the user's
+    /// persisted catalog sort and favorites-first setting. The sort
+    /// and the toggle live in the Personalization Center; this card
+    /// applies them, so changing the setting takes effect here.
     private var visibleEntries: [PresetEntry] {
         let searched = PresetCatalog.search(searchText)
         let filtered = PresetCatalog.filtered(
             searched, category: selectedCategory, riskLevel: selectedRisk,
             eligibility: selectedEligibility, evaluations: evaluations)
-        if favoritesFirst {
-            return PresetCatalog.favoritesFirst(filtered, favoriteIDs: Set(favoriteIDs))
-        }
-        return filtered
+        return PersonalizationCenter.sortedEntries(
+            filtered, by: settings.catalogSort,
+            favoriteIDs: Set(favoriteIDs), favoritesFirst: settings.favoritesFirst)
     }
 
     /// The dependency + simulation check for each saved combination,
@@ -135,8 +138,21 @@ struct PresetCatalogCard: View {
                     .pickerStyle(.menu)
                 }
 
-                Toggle(L("Favorites first"), isOn: $favoritesFirst)
-                    .font(.subheadline)
+                Picker(L("Catalog Sort"), selection: Binding(
+                    get: { settings.catalogSort },
+                    set: { newValue in updateSettings { $0.catalogSort = newValue } }
+                )) {
+                    ForEach(CatalogSort.allCases, id: \.self) { sort in
+                        Text(sort.title).tag(sort)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Toggle(L("Favorites first"), isOn: Binding(
+                    get: { settings.favoritesFirst },
+                    set: { newValue in updateSettings { $0.favoritesFirst = newValue } }
+                ))
+                .font(.subheadline)
 
                 if model.snapshot == nil {
                     Text(L("Read the device first to see eligibility on this device."))
@@ -180,6 +196,11 @@ struct PresetCatalogCard: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
+                if let settingsError {
+                    Text(settingsError)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
                 if let combinationsError {
                     Text(combinationsError)
                         .font(.caption)
@@ -197,7 +218,10 @@ struct PresetCatalogCard: View {
                 }
             }
         }
-        .onAppear { reloadHistory(); reloadFavorites(); reloadCombinations() }
+        .onAppear { reloadHistory(); reloadFavorites(); reloadCombinations(); reloadSettings() }
+        .onReceive(NotificationCenter.default.publisher(for: .personalizationSettingsDidChange)) { _ in
+            reloadSettings()
+        }
         .onChange(of: model.working != nil) { _, _ in
             reloadHistory(); reloadFavorites(); reloadCombinations()
         }
@@ -310,6 +334,48 @@ struct PresetCatalogCard: View {
         combinations = loaded.combinations
         droppedMemberIDs = loaded.droppedMemberIDs
         combinationsError = loaded.error
+    }
+
+    /// Loads the persisted personalization settings (sort and
+    /// favorites-first). The Personalization Center owns the
+    /// settings UI; this card only applies them.
+    private func reloadSettings() {
+        guard let deviceID = RestoreIntelligence.installationDeviceID else {
+            settings = .defaults
+            lastSavedSettings = .defaults
+            settingsError = L("History is unavailable: no installation ID has been recorded yet.")
+            return
+        }
+        let store = PersonalizationSettingsStore(
+            directory: RestoreIntelligence.historyDirectory, deviceID: deviceID)
+        let loaded = store.load()
+        settings = loaded.settings
+        lastSavedSettings = loaded.settings
+        settingsError = loaded.error
+    }
+
+    /// Applies a settings change from this card (sort or
+    /// favorites-first), persists it, and reverts the UI on a failed
+    /// save instead of showing a setting that did not stick.
+    private func updateSettings(_ change: (inout PersonalizationSettings) -> Void) {
+        var updated = settings
+        change(&updated)
+        settings = updated
+        guard let deviceID = RestoreIntelligence.installationDeviceID else {
+            settings = lastSavedSettings
+            settingsError = L("History is unavailable: no installation ID has been recorded yet.")
+            return
+        }
+        let store = PersonalizationSettingsStore(
+            directory: RestoreIntelligence.historyDirectory, deviceID: deviceID)
+        do {
+            try store.save(updated)
+            lastSavedSettings = updated
+            settingsError = nil
+        } catch {
+            settings = lastSavedSettings
+            settingsError = L("The settings could not be saved and verified. No system changes were made.")
+        }
     }
 }
 
