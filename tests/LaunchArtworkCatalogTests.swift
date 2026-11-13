@@ -77,4 +77,23 @@ final class LaunchArtworkCatalogTests: XCTestCase {
         LaunchArtworkAppOrder.upsert(.init(id: large.app.id, name: "large", byteCount: 1), in: &sorted)
         expect(sorted.map(\.id) == [large.app.id, small.app.id], "An updated row duplicated instead of moving to its new size position")
     }
+    func testAppAppearanceResearchPreviewFailsClosed() {
+        let proposal = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX")
+        XCTAssertEqual(proposal.check, .previewOnly)
+        XCTAssertFalse(proposal.canApplyNatively, "A preview may never claim native editing succeeded")
+
+        let whitespace = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "   ")
+        XCTAssertEqual(whitespace.check, .invalidName)
+
+        let tooLong = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信",
+                                            proposedName: String(repeating: "A", count: 33))
+        XCTAssertEqual(tooLong.check, .invalidName)
+
+        let invalidID = AppAppearanceProposal(bundleID: "../invalid", currentName: "微信", proposedName: "WX")
+        XCTAssertEqual(invalidID.check, .invalidIdentifier)
+
+        let controls = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX\\nBad")
+        XCTAssertEqual(controls.check, .invalidName)
+    }
+
 }
