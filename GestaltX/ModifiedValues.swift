@@ -82,19 +82,19 @@ enum ModifiedValues {
         // guessed.
         if let originalFlags = snapshot.cachedOptionsOriginal,
            let currentFlags = try? DeviceCacheOptions.flags(in: snapshot.document) {
-            if originalFlags.greenTea != currentFlags.greenTea {
+            if originalFlags.flags.greenTea != currentFlags.greenTea {
                 rows.append(ModifiedValueRow(
                     key: "esim-green-tea",
                     title: "eSIM (green-tea)",
-                    originalText: boolText(originalFlags.greenTea),
+                    originalText: boolText(originalFlags.flags.greenTea),
                     currentText: boolText(currentFlags.greenTea),
                     wasAbsent: false))
             }
-            if originalFlags.notGreenTea != currentFlags.notGreenTea {
+            if originalFlags.flags.notGreenTea != currentFlags.notGreenTea {
                 rows.append(ModifiedValueRow(
                     key: "esim-not-green-tea",
                     title: "eSIM (not-green-tea)",
-                    originalText: boolText(originalFlags.notGreenTea),
+                    originalText: boolText(originalFlags.flags.notGreenTea),
                     currentText: boolText(currentFlags.notGreenTea),
                     wasAbsent: false))
             }
