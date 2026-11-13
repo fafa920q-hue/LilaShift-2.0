@@ -1,0 +1,41 @@
+# Apply the Lila core modules fix patch (one-shot)
+#
+# Manually dispatched once, on the feature/lila-core-modules-20261114
+# branch: applies lilashift-core-modules-fix1.patch (FIX for the P0
+# core modules: Equatable/Identifiable conformances for Capabilities,
+# GestaltDocument and SafePatch) on top of the branch HEAD and
+# commits the result to the current branch. No logic, strings,
+# localization or write-path code is changed. Do NOT re-run after
+# the patch is applied: git apply --check fails when the changes
+# are already in the tree, and the run stops before committing.
+name: Apply core modules fix patch
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+      - name: Apply the core modules fix patch and verify localizations
+        run: |
+          git apply --check lilashift-core-modules-fix1.patch
+          git apply lilashift-core-modules-fix1.patch
+          python3 -X utf8 scripts/generate_localization.py
+          python3 -X utf8 tests/LocalizationTests.py
+          python3 -X utf8 tests/ThirdPartyNoticesTests.py
+      - name: Commit the applied patch
+        run: |
+          git config user.name "fafa920q-hue"
+          git config user.email "fafa920q-hue@users.noreply.github.com"
+          git add -A
+          git status --short
+          git commit -m "FIX: core modules Equatable/Identifiable conformances (Capabilities, GestaltDocument, SafePatch)"
+          git push
