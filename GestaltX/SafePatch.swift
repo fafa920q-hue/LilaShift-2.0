@@ -58,7 +58,10 @@ struct SafePatchProposal: Hashable, Sendable {
 // MARK: - Simulation result types
 
 /// One pre-check in the simulation sequence.
-struct SafePatchCheck: Equatable, Sendable {
+struct SafePatchCheck: Equatable, Identifiable, Sendable {
+    /// Stable identity for SwiftUI lists: each check kind is recorded
+    /// exactly once per simulation.
+    var id: Kind { kind }
     enum Kind: String, Equatable, Sendable {
         case trustedOriginal
         case unchangedSinceSnapshot
@@ -104,7 +107,10 @@ enum SafePatchOriginalSource: Equatable, Sendable {
 }
 
 /// One field the proposal would change: original → target.
-struct SafePatchDiff: Equatable, Sendable {
+struct SafePatchDiff: Equatable, Identifiable, Sendable {
+    /// Stable identity for SwiftUI lists: one diff per (layer, key);
+    /// a key never appears twice in a simulation's diff list.
+    var id: String { layer.rawValue + ":" + key }
     let key: String
     let title: String
     let layer: ChangeLayer

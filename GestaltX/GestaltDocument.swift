@@ -252,14 +252,14 @@ struct GestaltDocument: @unchecked Sendable {
     }
 }
 
-enum DocumentSource: String, Codable, Sendable { case device, local }
+enum DocumentSource: String, Codable, Equatable, Sendable { case device, local }
 
 /// Where a stored backup's bytes come from. First-read device state is
 /// explicitly NOT factory state: only `.verifiedFactory` may be presented
 /// to the user as the factory/original state. Every backup write records
 /// one of these cases; a record that predates provenance tracking decodes
 /// as `.unknown` (see `BackupRecord.init(from:)`), never as factory.
-enum BackupProvenance: String, Codable, CaseIterable, Sendable {
+enum BackupProvenance: String, Codable, Equatable, CaseIterable, Sendable {
     /// Passed the system-vault gate (ProductType, CacheVersion, CacheUUID,
     /// CacheData length, non-empty) with a matching SHA-256 digest.
     case verifiedFactory
@@ -382,7 +382,7 @@ struct OriginalValues {
     var unavailableCacheOriginals: [String: Set<String>] = [:]
 }
 
-struct BackupRecord: Identifiable, Codable, Sendable {
+struct BackupRecord: Identifiable, Codable, Equatable, Sendable {
     let id: UUID
     let date: Date
     let reason: String
