@@ -31,7 +31,7 @@ final class CacheDataDiffTests: XCTestCase {
     }
 
     func testCacheDataDiff() throws {
-        let original = try fixture()
+        let original = try Self.fixture()
 
         // A green-tea change explains both eSIM bytes with hex/slot rows.
         var edited = original
@@ -52,7 +52,7 @@ final class CacheDataDiffTests: XCTestCase {
                    "Identical CacheData has no diff")
 
         // One extra changed byte at an unrelated offset is unexplained.
-        let tampered = try tampered(original, offset: 100, value: 1)
+        let tampered = try Self.tampered(original, offset: 100, value: 1)
         guard let diff2 = DeviceCacheOptions.diff(from: original, to: tampered) else {
             throw Failure(message: "Diff exists for a tampered CacheData")
         }

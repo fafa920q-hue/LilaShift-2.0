@@ -29,9 +29,9 @@ final class BackupIntegrityTests: XCTestCase {
         let replacement = try altered.encoded()
         XCTAssert(replacement.count == record.byteCount, "Fixture replacement is a different valid plist of identical size")
         try replacement.write(to: backupURL)
-        await expectRejected(store, record: record)
+        await Self.expectRejected(store, record: record)
         try Data(bytes.dropLast()).write(to: backupURL)
-        await expectRejected(store, record: record)
+        await Self.expectRejected(store, record: record)
         try bytes.write(to: backupURL)
         let metadata = try JSONSerialization.jsonObject(with: Data(contentsOf: backups.appendingPathComponent(record.id.uuidString + ".json"))) as! [String: Any]
         XCTAssert((metadata["sha256"] as? String)?.count == 64, "New backup metadata persists a SHA-256 digest")
@@ -43,12 +43,12 @@ final class BackupIntegrityTests: XCTestCase {
         let legacy = try JSONDecoder().decode(BackupRecord.self, from: JSONSerialization.data(withJSONObject: legacyJSON))
         XCTAssert(try await store.backupData(legacy) == bytes, "Legacy backups of the recorded length remain readable")
         try Data(bytes.dropLast()).write(to: backupURL)
-        await expectRejected(store, record: legacy)
+        await Self.expectRejected(store, record: legacy)
         try bytes.write(to: backupURL)
         var wrongDigestJSON = metadata
         wrongDigestJSON["sha256"] = String(repeating: "0", count: 64)
         let wrongDigest = try JSONDecoder().decode(BackupRecord.self, from: JSONSerialization.data(withJSONObject: wrongDigestJSON))
-        await expectRejected(store, record: wrongDigest)
+        await Self.expectRejected(store, record: wrongDigest)
         XCTAssert(try Data(contentsOf: device) == bytes, "Rejected backup reads never modify the device")
     }
 }

@@ -63,7 +63,7 @@ final class ChinaUnlockTests: XCTestCase {
         XCTAssert(!empty.isChinaUnlockStaged && !empty.isChinaUnlockedInPreview && empty.preview == nil,
                    "No document: China Unlock stages and restores nothing")
 
-        let unsupported = try fixture(cacheUUID: "unsupported-layout")
+        let unsupported = try Self.fixture(cacheUUID: "unsupported-layout")
         let unsupportedSnapshot = try DocumentSnapshot(
             data: unsupported.encoded(), document: unsupported, source: .local, name: "unsupported fixture"
         )
@@ -80,7 +80,7 @@ final class ChinaUnlockTests: XCTestCase {
         XCTAssert(!empty.restoreChinaUnlock(), "Unsupported layout: nothing to restore")
 
         let layout = MobileGestaltCacheLayout.originalProfile
-        let original = try fixture()
+        let original = try Self.fixture()
         let data = try original.encoded()
         let snapshot = DocumentSnapshot(data: data, document: original, source: .local, name: "fixture")
         let manager = GestaltManager()
@@ -106,12 +106,12 @@ final class ChinaUnlockTests: XCTestCase {
         XCTAssert(preview.extra[GestaltKeys.regionInfo] as? String == "CH/A"
                    && preview.extra[GestaltKeys.legacyRegionInfo] as? String == "CH/A",
                    "Sales-region suffixes stay CH/A")
-        for key in aiKeys {
+        for key in Self.aiKeys {
             XCTAssert((preview.extra[key] as? NSNumber)?.intValue == 1,
                        "Preview enables AI key \(key)")
         }
         XCTAssert(manager.chinaUnlockAIEnabledCount == 6, "All six AI presets read as enabled")
-        XCTAssert((preview.extra[siriKey] as? NSNumber)?.intValue == 2,
+        XCTAssert((preview.extra[Self.siriKey] as? NSNumber)?.intValue == 2,
                    "siriOnDevice keeps its device-specific value")
         XCTAssert((manager.choices["siriOnDevice"] ?? .keep) == .keep,
                    "siriOnDevice is never staged by China Unlock")
@@ -127,7 +127,7 @@ final class ChinaUnlockTests: XCTestCase {
             let after = preview.extra[key] as? NSObject
             return (before?.isEqual(after) ?? (after == nil)) == false
         }
-        XCTAssert(changedKeys == Set([GestaltKeys.regionCode] + aiKeys),
+        XCTAssert(changedKeys == Set([GestaltKeys.regionCode] + Self.aiKeys),
                    "Staging changes exactly region + six AI keys, got \(changedKeys.sorted())")
         // 7 CacheExtra keys (region code + 6 AI keys) + 2 cache bytes.
         XCTAssert(manager.changeCount == 9,
@@ -148,10 +148,10 @@ final class ChinaUnlockTests: XCTestCase {
                    "Restore returns the eSIM flags to restricted")
         XCTAssert(restored.extra[GestaltKeys.regionCode] as? String == "CH",
                    "Restore returns RegionCode to CH")
-        for key in aiKeys {
+        for key in Self.aiKeys {
             XCTAssert(restored.extra[key] == nil, "Restore removes AI key \(key)")
         }
-        XCTAssert((restored.extra[siriKey] as? NSNumber)?.intValue == 2,
+        XCTAssert((restored.extra[Self.siriKey] as? NSNumber)?.intValue == 2,
                    "Restore preserves the device-specific Siri value")
         XCTAssert(restored.extra[GestaltKeys.modelNumber] as? String == "A3518",
                    "Restore preserves the model number")

@@ -41,6 +41,7 @@
 		037360E369A261806D52AF31 /* ImportedWallpaperDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A024E2E78DDAAA6677F9E729 /* ImportedWallpaperDeletionTests.swift */; };
 		269052B7A8143F3E82A35BCA /* IntegerValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0F50FD3ADC1929D1CC3B85 /* IntegerValueTests.swift */; };
 		A0F21082FE6CB469422C91B6 /* ItemProviderLoadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475E5A1BC768951D2FB60F63 /* ItemProviderLoadTests.swift */; };
+		0EB36D6A637C4BA2B60DB4DE /* ItemProviderLoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4C01D754C14C8B9BB28F96 /* ItemProviderLoad.swift */; };
 		B5F54A51FFC8657D1005C824 /* LaunchArtworkCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB689D46E45297F0E6E5267 /* LaunchArtworkCatalogTests.swift */; };
 		3F447AFD98A8E7B9E15C9C4E /* LaunchArtworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55CFDC593C9F492C228C6E5C /* LaunchArtworkTests.swift */; };
 		D1688B80E2E84216D418FA7E /* LocalRestoreProvenanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831E94EA9919DED802AA03BD /* LocalRestoreProvenanceTests.swift */; };
@@ -501,6 +502,7 @@
 				443EE49A669EFCA204007C08 /* FieldValuePrecisionTests.swift in Sources */,
 				037360E369A261806D52AF31 /* ImportedWallpaperDeletionTests.swift in Sources */,
 				269052B7A8143F3E82A35BCA /* IntegerValueTests.swift in Sources */,
+				0EB36D6A637C4BA2B60DB4DE /* ItemProviderLoad.swift in Sources */,
 				A0F21082FE6CB469422C91B6 /* ItemProviderLoadTests.swift in Sources */,
 				B5F54A51FFC8657D1005C824 /* LaunchArtworkCatalogTests.swift in Sources */,
 				3F447AFD98A8E7B9E15C9C4E /* LaunchArtworkTests.swift in Sources */,

@@ -67,32 +67,32 @@ final class AIReadinessTests: XCTestCase {
                    "Personal Translator has no forced baseline on iPad")
 
         // All-ready evaluation (LL-only, native hardware, staged unlock).
-        let ready = evaluate(liveRegionCode: "LL", liveAIEnabled: true)
+        let ready = Self.evaluate(liveRegionCode: "LL", liveAIEnabled: true)
         XCTAssert(ready.readyCount == 4 && ready.isReady, "Staged unlock on native hardware is 4/4 ready")
         XCTAssert(ready.factors[0].isLiveActive == true && ready.factors[3].isLiveActive == true,
                    "Live probe answers flow into the region and AI factors")
-        let unknownLive = evaluate()
+        let unknownLive = Self.evaluate()
         XCTAssert(unknownLive.factors[0].isLiveActive == nil,
                    "No probe answer renders live: unknown, never faked")
 
         // LL-only mode passes on any kept factory model; Full US mode
         // requires the mapped US model.
-        let kept = evaluate(regModel: "A3518")
+        let kept = Self.evaluate(regModel: "A3518")
         XCTAssert(kept.factors[1].isReady, "LL-only passes on the kept factory model")
-        let fullUS = evaluate(regionMode: .fullUS, sysconfig: "LL/A", regModel: "A3260",
+        let fullUS = Self.evaluate(sysconfig: "LL/A", regModel: "A3260", regionMode: .fullUS,
                               expectedUSModel: "A3260")
         XCTAssert(fullUS.factors[0].isReady && fullUS.factors[1].isReady,
                    "Full US passes with LL/A and the mapped model")
-        let fullUSWrong = evaluate(regionMode: .fullUS, sysconfig: "LL/A", regModel: "A3518",
+        let fullUSWrong = Self.evaluate(sysconfig: "LL/A", regModel: "A3518", regionMode: .fullUS,
                                    expectedUSModel: "A3260")
         XCTAssert(!fullUSWrong.factors[1].isReady, "Full US fails when the model is not the mapped US model")
 
         // A slot conflict fails the eSIM/conflict factor and names itself.
         let conflict = AIConflict.personalTranslatorSlotDisabled(slot: 266)
-        let conflicted = evaluate(conflicts: [conflict])
+        let conflicted = Self.evaluate(conflicts: [conflict])
         XCTAssert(!conflicted.factors[2].isReady && conflicted.factors[2].detail == conflict.detail,
                    "A conflict fails factor 3 and its detail names the conflict")
-        let locked = evaluate(regionCode: "CH", esimEnabled: false, aiEnabledCount: 0,
+        let locked = Self.evaluate(regionCode: "CH", esimEnabled: false, aiEnabledCount: 0,
                               productType: "iPhone15,4")
         XCTAssert(locked.readyCount == 1, "Locked non-native device is 1/4 ready (regulatory model only)")
 
@@ -123,7 +123,7 @@ final class AIReadinessTests: XCTestCase {
         let blocked = AIStagingGuard.decide(AIStagingRequest(
             productType: "iPhone16,2", audioIntelligenceExtra: true,
             audioIntelligenceSlot: true, audioIntelligenceSlotIndex: 178))
-        let blockedCheckup = evaluate(stagingDecision: blocked)
+        let blockedCheckup = Self.evaluate(stagingDecision: blocked)
         XCTAssert(!blockedCheckup.factors[2].isReady && blockedCheckup.factors[2].detail == blocked.reason,
                    "A blocked staging decision fails factor 3 with its specific reason")
         let warned = AIStagingGuard.decide(AIStagingRequest(
@@ -131,12 +131,12 @@ final class AIReadinessTests: XCTestCase {
             personalTranslatorExtra: true, audioIntelligenceSlot: false,
             personalTranslatorSlot: true, audioIntelligenceSlotIndex: 178,
             personalTranslatorSlotIndex: 266))
-        let warnedCheckup = evaluate(stagingDecision: warned)
+        let warnedCheckup = Self.evaluate(stagingDecision: warned)
         XCTAssert(!warnedCheckup.factors[2].isReady && warnedCheckup.factors[2].detail == warned.reason,
                    "A warned (#178 unverified) decision fails factor 3 with its reason instead of silently staging")
         let allowed = AIStagingGuard.decide(AIStagingRequest(
             productType: "iPhone16,2", personalTranslatorExtra: true, personalTranslatorSlot: true))
-        let allowedCheckup = evaluate(stagingDecision: allowed)
+        let allowedCheckup = Self.evaluate(stagingDecision: allowed)
         XCTAssert(allowedCheckup.factors[2].isReady, "An allowed staging decision leaves factor 3 ready")
 
         // AdvAI slot machinery on a synthetic scanned layout.
@@ -153,9 +153,9 @@ final class AIReadinessTests: XCTestCase {
         }
         var descriptors = Data(repeating: 0, count: keys.count * 64)
         for i in keys.indices {
-            put(pointers[i], into: &descriptors, at: i * 64)
-            put(Int16(i), into: &descriptors, at: i * 64 + 0x3A)
-            put(UInt32(11), into: &descriptors, at: i * 64 + 0x3C)
+            Self.put(pointers[i], into: &descriptors, at: i * 64)
+            Self.put(Int16(i), into: &descriptors, at: i * 64 + 0x3A)
+            Self.put(UInt32(11), into: &descriptors, at: i * 64 + 0x3C)
         }
         let layout = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [descriptors])
         XCTAssert(layout.audioIntellIndex == 4 && layout.personalTranslatorIndex == 5,

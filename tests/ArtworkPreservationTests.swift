@@ -35,9 +35,9 @@ final class ArtworkPreservationTests: XCTestCase {
             // Both an absent value and an existing empty dictionary remain editable.
             let emptyArtwork: [Any?] = [nil, [String: Any]()]
             for initial in emptyArtwork {
-                var edited = try document(artwork: initial, format: format)
+                var edited = try Self.document(artwork: initial, format: format)
                 for (key, value) in edits { _ = edited.setArtwork(value, for: key) }
-                let expected = try document(artwork: Dictionary(uniqueKeysWithValues: edits), format: format)
+                let expected = try Self.document(artwork: Dictionary(uniqueKeysWithValues: edits), format: format)
                 XCTAssert(edited.matches(expected), "Create missing artwork fields without changing other values")
                 XCTAssert(try GestaltDocument(data: edited.encoded()).matches(expected), "New artwork survives serialization")
             }
@@ -47,17 +47,17 @@ final class ArtworkPreservationTests: XCTestCase {
                 "VendorBytes": Data([0, 1, 255]),
                 "VendorValues": ["enabled": true, "count": NSNumber(value: 7), "scale": NSNumber(value: 0.5)],
             ]
-            var edited = try document(artwork: originalArtwork, format: format)
+            var edited = try Self.document(artwork: originalArtwork, format: format)
             for (key, value) in edits { _ = edited.setArtwork(value, for: key) }
             var expectedArtwork = originalArtwork
             expectedArtwork["ArtworkDeviceProductDescription"] = "Edited model"
             expectedArtwork["ArtworkDeviceSubType"] = NSNumber(value: 2556)
-            let expected = try document(artwork: expectedArtwork, format: format)
+            let expected = try Self.document(artwork: expectedArtwork, format: format)
             XCTAssert(edited.matches(expected), "Retain unknown artwork keys and their exact types")
             XCTAssert(try GestaltDocument(data: edited.encoded()).matches(expected), "Existing artwork survives serialization")
 
             for (kind, value) in malformed {
-                let original = try document(artwork: value, format: format)
+                let original = try Self.document(artwork: value, format: format)
                 for (key, replacement) in edits {
                     var unchanged = original
                     // Ignore the return value so this regression also runs against

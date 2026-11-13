@@ -62,13 +62,13 @@ final class CacheLayoutGatingTests: XCTestCase {
         // 47-bit PAC mask: a pointer with bit 47 set still resolves.
         // With the old 48-bit mask the tagged pointer would miss the hash
         // table and the scan would fail.
-        let pac = try table(uuid: uuid, keys: keys, pacBit47: [1])
+        let pac = try Self.table(uuid: uuid, keys: keys, pacBit47: [1])
         let pacLayout = try MobileGestaltCacheLayout.scan(strings: pac.strings, stringAddress: pac.address, constants: pac.constants)
         XCTAssert(pacLayout.greenTeaIndex == 1 && pacLayout.notGreenTeaIndex == 2,
                    "PAC-tagged pointer with bit 47 set resolves under the 47-bit mask")
 
         // cfUUIDs rescue a table whose UUID left `__cstring`.
-        let noUUID = try table(uuid: uuid, keys: keys, includeUUID: false)
+        let noUUID = try Self.table(uuid: uuid, keys: keys, includeUUID: false)
         XCTAssertThrowsError(try MobileGestaltCacheLayout.scan(strings: noUUID.strings, stringAddress: noUUID.address, constants: noUUID.constants), "No UUID anywhere fails the scan")
         let rescued = try MobileGestaltCacheLayout.scan(strings: noUUID.strings, stringAddress: noUUID.address,
                                                          constants: noUUID.constants, cfUUIDs: [uuid])
@@ -79,7 +79,7 @@ final class CacheLayoutGatingTests: XCTestCase {
                                                                cfUUIDs: [uuid, "BBBBBBBB-1111-2222-3333-123456789ABC"]), "Two distinct cfUUIDs are ambiguous")
 
         // Apple Intelligence slots resolve dynamically, like wapi.
-        let full = try table(uuid: uuid, keys: keys)
+        let full = try Self.table(uuid: uuid, keys: keys)
         let layout = try MobileGestaltCacheLayout.scan(strings: full.strings, stringAddress: full.address, constants: full.constants)
         XCTAssert(layout.audioIntellIndex == 4 && layout.personalTranslatorIndex == 5,
                    "Audio Intelligence and Personal Translator slots resolve from their descriptors")
@@ -92,7 +92,7 @@ final class CacheLayoutGatingTests: XCTestCase {
         // the eSIM pair still resolves (unlike wapi, which fails the scan).
         var ambiguous = full.constants[0]
         ambiguous.append(full.constants[0].subdata(in: 5 * 64..<6 * 64))
-        put(Int16(0), into: &ambiguous, at: full.constants[0].count + 0x3A)
+        Self.put(Int16(0), into: &ambiguous, at: full.constants[0].count + 0x3A)
         let partial = try MobileGestaltCacheLayout.scan(strings: full.strings, stringAddress: full.address, constants: [ambiguous])
         XCTAssert(partial.personalTranslatorIndex == nil && partial.audioIntellIndex == 4
                    && partial.greenTeaIndex == 1,
@@ -100,7 +100,7 @@ final class CacheLayoutGatingTests: XCTestCase {
 
         // A wapi descriptor at an index colliding with green-tea fails.
         var colliding = full.constants[0]
-        put(Int16(1), into: &colliding, at: 3 * 64 + 0x3A)
+        Self.put(Int16(1), into: &colliding, at: 3 * 64 + 0x3A)
         XCTAssertThrowsError(try MobileGestaltCacheLayout.scan(strings: full.strings, stringAddress: full.address, constants: [colliding]), "A wapi descriptor colliding with green-tea fails the scan")
 
         // Layout-scan failure locks with a reason instead of falling back.
@@ -108,7 +108,7 @@ final class CacheLayoutGatingTests: XCTestCase {
         XCTAssertThrowsError(try MobileGestaltCacheLayout.scan(strings: Data(), stringAddress: 0x180100000, constants: []), "An empty scan fails rather than resolving a layout")
 
         // A document on the offline profile resolves and has no lock reason.
-        let matching = try fixtureDocument()
+        let matching = try Self.fixtureDocument()
         XCTAssert(MobileGestaltCacheLayout.lockReason(in: matching) == nil,
                    "A document matching the resolved layout has no lock reason")
 
@@ -117,14 +117,14 @@ final class CacheLayoutGatingTests: XCTestCase {
         // show why, instead of silently borrowing the offline profile.
         // (On a device build the same throw comes from the failed runtime
         // scan; the hardcoded profile is never substituted there.)
-        let wrongUUID = try fixtureDocument(cacheUUID: "00000000-0000-0000-0000-000000000000")
+        let wrongUUID = try Self.fixtureDocument(cacheUUID: "00000000-0000-0000-0000-000000000000")
         XCTAssertThrowsError(try MobileGestaltCacheLayout.resolve(in: wrongUUID), "A document with an unknown CacheUUID fails to resolve")
         let uuidReason = MobileGestaltCacheLayout.lockReason(in: wrongUUID)
         XCTAssert(uuidReason != nil && uuidReason!.contains("Unable to resolve"),
                    "An unresolvable layout locks with a reason naming the failure")
 
         // A document with the wrong CacheData length fails the same way.
-        let wrongLength = try fixtureDocument(cacheData: Data(count: 10))
+        let wrongLength = try Self.fixtureDocument(cacheData: Data(count: 10))
         XCTAssertThrowsError(try MobileGestaltCacheLayout.resolve(in: wrongLength), "A document with the wrong CacheData length fails to resolve")
         XCTAssert(MobileGestaltCacheLayout.lockReason(in: wrongLength) != nil,
                    "A wrong-length CacheData locks with a reason")
