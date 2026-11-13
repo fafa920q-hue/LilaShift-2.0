@@ -497,7 +497,7 @@ enum PresetCatalog {
 /// `minSystem` and `restoreMethod` have honest defaults (unknown
 /// scope, unknown minimum, standard capability restore); the name,
 /// description and risk reason are always entry-specific.
-private struct PresetContent {
+fileprivate struct PresetContent {
     let chineseName: String
     let chineseDescription: String
     var scope: PresetScope = .unknown(reason: PresetSharedContent.unknownScopeReason)
