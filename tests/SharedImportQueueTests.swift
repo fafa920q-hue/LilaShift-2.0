@@ -1,13 +1,12 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-@main struct SharedImportQueueTests {
+final class SharedImportQueueTests: XCTestCase {
     struct Failure: Error { let message: String }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
-    }
 
     @MainActor
-    static func main() async throws {
+    func testSharedImportQueue() async throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
@@ -36,23 +35,23 @@ import Foundation
             return validate(inbox, entry)
         }
         guard case .ready(let offer) = selected else { throw Failure(message: "A rejected first entry must not hide the following valid entry") }
-        try expect(offer.id == first.id && attempted == [invalid.id, first.id], "One check skips rejection and stops at the first confirmation")
-        try expect(selected.blocksAutomaticRead, "A pending confirmation defers automatic device reading")
-        try expect(try mixed.entries().map(\.id) == [first.id, second.id, third.id], "Only the rejected file is quarantined before confirmation")
+        XCTAssert(offer.id == first.id && attempted == [invalid.id, first.id], "One check skips rejection and stops at the first confirmation")
+        XCTAssert(selected.blocksAutomaticRead, "A pending confirmation defers automatic device reading")
+        XCTAssert(try mixed.entries().map(\.id) == [first.id, second.id, third.id], "Only the rejected file is quarantined before confirmation")
 
         // Both confirmation actions acknowledge only the displayed entry. A new
         // snapshot then offers the next item, without another foreground event.
         try mixed.acknowledge(offer) // Cancel the first offer.
         let afterCancel = await SharedImportQueue.next(in: try SharedImportQueue.snapshot(in: [mixed]), prepare: validate)
         guard case .ready(let next) = afterCancel else { throw Failure(message: "Cancel must allow the next confirmation") }
-        try expect(next.id == second.id, "Cancellation advances in queue order")
+        XCTAssert(next.id == second.id, "Cancellation advances in queue order")
         try mixed.acknowledge(next) // Accept the second offer.
         let afterAccept = await SharedImportQueue.next(in: try SharedImportQueue.snapshot(in: [mixed]), prepare: validate)
         guard case .ready(let last) = afterAccept else { throw Failure(message: "Acceptance must allow the next confirmation") }
-        try expect(last.id == third.id, "Acceptance advances in queue order")
+        XCTAssert(last.id == third.id, "Acceptance advances in queue order")
         try mixed.acknowledge(last)
         let drained = await SharedImportQueue.next(in: try SharedImportQueue.snapshot(in: [mixed]), prepare: validate)
-        try expect(!drained.blocksAutomaticRead, "A drained queue permits initial automatic reading to resume")
+        XCTAssert(!drained.blocksAutomaticRead, "A drained queue permits initial automatic reading to resume")
 
         let rejected = try inbox("rejected")
         for name in ["one", "two", "three"] {
@@ -61,8 +60,8 @@ import Foundation
         }
         let allInvalid = await SharedImportQueue.next(in: try SharedImportQueue.snapshot(in: [rejected]), prepare: validate)
         guard case .empty(let message) = allInvalid else { throw Failure(message: "An all-invalid queue must finish in this check") }
-        try expect(message != nil && !allInvalid.blocksAutomaticRead, "An all-invalid queue reports rejection without suppressing automatic reading")
-        try expect(try rejected.entries().isEmpty, "All rejected entries leave the visible inbox")
+        XCTAssert(message != nil && !allInvalid.blocksAutomaticRead, "An all-invalid queue reports rejection without suppressing automatic reading")
+        XCTAssert(try rejected.entries().isEmpty, "All rejected entries leave the visible inbox")
 
         let deferred = try inbox("deferred")
         let waiting = try deferred.enqueue(bytes, name: "needs-device-access")
@@ -73,9 +72,9 @@ import Foundation
             return .deferred("Device access is temporarily unavailable")
         }
         guard case .deferred = paused else { throw Failure(message: "Temporary verification failure must defer the queue") }
-        try expect(deferredAttempts == 1 && paused.blocksAutomaticRead, "A deferred item is visited once and stops this pass")
+        XCTAssert(deferredAttempts == 1 && paused.blocksAutomaticRead, "A deferred item is visited once and stops this pass")
         let waitingEntries = try deferred.entries()
-        try expect(waitingEntries.first?.id == waiting.id && waitingEntries.count == 2, "Deferred files remain queued for a later explicit retry")
+        XCTAssert(waitingEntries.first?.id == waiting.id && waitingEntries.count == 2, "Deferred files remain queued for a later explicit retry")
 
         let growing = try inbox("growing")
         _ = try growing.enqueue(bytes, name: "captured")
@@ -89,8 +88,7 @@ import Foundation
             // quarantine operation. The captured snapshot is still finite.
             return .rejected("Could not quarantine")
         }
-        try expect(boundedAttempts == 1 && !bounded.blocksAutomaticRead, "New arrivals and failed quarantine cannot create a retry loop")
-        try expect(try growing.entries().count == 2, "New arrivals are retained for the next snapshot")
-        print("PASS: invalid-to-valid draining, sequential cancellation/acceptance, all-invalid fallback, deferred retention and bounded snapshots.")
+        XCTAssert(boundedAttempts == 1 && !bounded.blocksAutomaticRead, "New arrivals and failed quarantine cannot create a retry loop")
+        XCTAssert(try growing.entries().count == 2, "New arrivals are retained for the next snapshot")
     }
 }

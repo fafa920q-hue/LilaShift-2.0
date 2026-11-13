@@ -21,6 +21,20 @@
                ReferencedContainer = "container:GestaltX.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "C914A5E979C7D4E0C6FCB22F"
+               BuildableName = "GestaltXTests.xctest"
+               BlueprintName = "GestaltXTests"
+               ReferencedContainer = "container:GestaltX.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -30,6 +44,17 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "C914A5E979C7D4E0C6FCB22F"
+               BuildableName = "GestaltXTests.xctest"
+               BlueprintName = "GestaltXTests"
+               ReferencedContainer = "container:GestaltX.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

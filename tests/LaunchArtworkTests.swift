@@ -2,6 +2,8 @@ import Foundation
 import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
+import XCTest
+@testable import GestaltX
 
 private final class WriteCounter: @unchecked Sendable {
     private let lock = NSLock()
@@ -13,25 +15,18 @@ private final class WriteCounter: @unchecked Sendable {
     }
 }
 
-@main enum LaunchArtworkTests {
-    static let fm = FileManager.default
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw NSError(domain: "LaunchArtworkTests", code: 1, userInfo: [NSLocalizedDescriptionKey: message]) }
-    }
-    static func reject(_ operation: () throws -> Void) throws {
-        do { try operation() } catch { return }
-        throw NSError(domain: "LaunchArtworkTests", code: 2)
-    }
-    static func png(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat, width: Int = 80, height: Int = 160) -> Data {
+final class LaunchArtworkTests: XCTestCase {
+    let fm = FileManager.default
+    func png(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat, width: Int = 80, height: Int = 160) -> Data {
         let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
                                 space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
         context.setFillColor(CGColor(red: red, green: green, blue: blue, alpha: 1)); context.fill(CGRect(x: 0, y: 0, width: width, height: height))
         let data = NSMutableData()
         let writer = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)!
-        CGImageDestinationAddImage(writer, context.makeImage()!, nil); precondition(CGImageDestinationFinalize(writer))
+        CGImageDestinationAddImage(writer, context.makeImage()!, nil); XCTAssert(CGImageDestinationFinalize(writer))
         return data as Data
     }
-    static func main() async throws {
+    func testLaunchArtwork() async throws {
         let root = fm.temporaryDirectory.appendingPathComponent("GX-Launch-\(UUID().uuidString)", isDirectory: true)
         defer { try? fm.removeItem(at: root) }
         try fm.createDirectory(at: root, withIntermediateDirectories: false)
@@ -48,33 +43,37 @@ private final class WriteCounter: @unchecked Sendable {
         let storage = root.appendingPathComponent("Saved")
         let store = LaunchArtworkStore(storage: storage, device: "device", resolver: { _ in container })
         let initial = try await store.state(app)
-        try expect(initial.count == 2 && !initial.canRestore && initial.preview != nil, "Initial snapshot discovery failed")
-        try expect(try await store.apply(blue, to: app) == 2, "Apply did not cover default launch variants")
-        try expect(try Data(contentsOf: first) != red, "Image was not changed")
-        try expect(try Data(contentsOf: scene.appendingPathComponent("private.ktx")) == green, "Recent-app snapshot was edited")
-        try expect(try await store.apply(green, to: app) == 2, "Repeated Apply failed")
+        XCTAssert(initial.count == 2 && !initial.canRestore && initial.preview != nil, "Initial snapshot discovery failed")
+        let appliedVariants = try await store.apply(blue, to: app)
+        XCTAssert(appliedVariants == 2, "Apply did not cover default launch variants")
+        XCTAssert(try Data(contentsOf: first) != red, "Image was not changed")
+        XCTAssert(try Data(contentsOf: scene.appendingPathComponent("private.ktx")) == green, "Recent-app snapshot was edited")
+        let reappliedVariants = try await store.apply(green, to: app)
+        XCTAssert(reappliedVariants == 2, "Repeated Apply failed")
         let reopened = LaunchArtworkStore(storage: storage, device: "device", resolver: { _ in container })
-        try expect(try await reopened.restore(app) == 2, "Restore after reopen failed")
-        try expect(try Data(contentsOf: first) == red && Data(contentsOf: second) == red, "Repeated edits lost the earliest original")
+        let restoredVariants = try await reopened.restore(app)
+        XCTAssert(restoredVariants == 2, "Restore after reopen failed")
+        XCTAssert(try Data(contentsOf: first) == red && Data(contentsOf: second) == red, "Repeated edits lost the earliest original")
         let directories = try fm.contentsOfDirectory(atPath: group.path)
-        try expect(!directories.contains(where: { $0.hasPrefix(".GestaltX-") }), "Atomic write staging leaked")
+        XCTAssert(!directories.contains(where: { $0.hasPrefix(".GestaltX-") }), "Atomic write staging leaked")
 
         _ = try await store.apply(blue, to: app)
         let foreign = LaunchArtworkStore(storage: storage, device: "other-device", resolver: { _ in container })
         do { _ = try await foreign.restore(app); throw CocoaError(.coderInvalidValue) } catch is CustomizationFailure {}
         try fm.removeItem(at: first)
         try green.write(to: second, options: .atomic)
-        try expect(try await store.restore(app) == 0, "Restore overwrote OS-generated data")
-        try expect(!fm.fileExists(atPath: first.path), "Restore recreated a deleted snapshot")
-        try expect(try Data(contentsOf: second) == green, "OS-refreshed data was overwritten")
+        let restoredAfterDelete = try await store.restore(app)
+        XCTAssert(restoredAfterDelete == 0, "Restore overwrote OS-generated data")
+        XCTAssert(!fm.fileExists(atPath: first.path), "Restore recreated a deleted snapshot")
+        XCTAssert(try Data(contentsOf: second) == green, "OS-refreshed data was overwritten")
 
         try red.write(to: first); try red.write(to: second)
         let counter = WriteCounter()
         let interrupted = LaunchArtworkStore(storage: root.appendingPathComponent("Interrupted"), device: "device", resolver: { _ in container }, beforeWrite: { try counter.failSecond() })
         var interruptedWriteFailed = false
         do { _ = try await interrupted.apply(blue, to: app) } catch { interruptedWriteFailed = true }
-        try expect(interruptedWriteFailed, "Write-failure injection was ignored")
-        try expect(try Data(contentsOf: first) == red && Data(contentsOf: second) == red, "Interrupted write did not roll back")
+        XCTAssert(interruptedWriteFailed, "Write-failure injection was ignored")
+        XCTAssert(try Data(contentsOf: first) == red && Data(contentsOf: second) == red, "Interrupted write did not roll back")
 
         _ = try await store.apply(blue, to: app)
         let activeURL = storage.appendingPathComponent(app.id).appendingPathComponent("Originals.plist")
@@ -85,7 +84,7 @@ private final class WriteCounter: @unchecked Sendable {
         corrupt["files"] = savedFiles
         try PropertyListSerialization.data(fromPropertyList: corrupt, format: .binary, options: 0).write(to: activeURL)
         do { _ = try await store.restore(app); throw CocoaError(.coderInvalidValue) } catch is CustomizationFailure {}
-        try expect(try Data(contentsOf: first) != red, "A corrupted backup was restored")
+        XCTAssert(try Data(contentsOf: first) != red, "A corrupted backup was restored")
         try goodRecord.write(to: activeURL)
         _ = try await store.restore(app)
 
@@ -98,13 +97,13 @@ private final class WriteCounter: @unchecked Sendable {
         do { _ = try await newStore.restore(app); throw CocoaError(.coderInvalidValue) } catch is CustomizationFailure {}
         _ = try await newStore.apply(blue, to: app)
         _ = try await newStore.restore(app)
-        try expect(try Data(contentsOf: newGroup.appendingPathComponent("new.ktx")) == green, "Reinstallation reused another container's originals")
+        XCTAssert(try Data(contentsOf: newGroup.appendingPathComponent("new.ktx")) == green, "Reinstallation reused another container's originals")
 
         let directory = try LaunchArtworkDirectory(container: container, identifier: app.id)
         let expected = try directory.read(first.lastPathComponent)!
         try green.write(to: first, options: .atomic)
-        try reject { try directory.replace(first.lastPathComponent, expected: expected, data: blue) }
-        try expect(try Data(contentsOf: first) == green, "Stale write changed the current file")
+        XCTAssertThrowsError(try directory.replace(first.lastPathComponent, expected: expected, data: blue))
+        XCTAssert(try Data(contentsOf: first) == green, "Stale write changed the current file")
         try red.write(to: first)
         let beforeLink = try directory.read(first.lastPathComponent)!
         let moved = group.deletingLastPathComponent().appendingPathComponent("moved")
@@ -113,20 +112,19 @@ private final class WriteCounter: @unchecked Sendable {
         try fm.createDirectory(at: outside, withIntermediateDirectories: false)
         try red.write(to: outside.appendingPathComponent(first.lastPathComponent))
         try fm.createSymbolicLink(at: group, withDestinationURL: outside)
-        try reject { try directory.replace(first.lastPathComponent, expected: beforeLink, data: blue) }
-        try expect(try Data(contentsOf: outside.appendingPathComponent(first.lastPathComponent)) == red, "A swapped parent redirected the write")
-        try reject { _ = try LaunchArtworkDirectory(container: container, identifier: app.id) }
+        XCTAssertThrowsError(try directory.replace(first.lastPathComponent, expected: beforeLink, data: blue))
+        XCTAssert(try Data(contentsOf: outside.appendingPathComponent(first.lastPathComponent)) == red, "A swapped parent redirected the write")
+        XCTAssertThrowsError(try LaunchArtworkDirectory(container: container, identifier: app.id))
         try fm.removeItem(at: group); try fm.moveItem(at: moved, to: group)
 
         let rendered = try LaunchArtworkImages.render(blue, width: 160, height: 80)
         let size = try LaunchArtworkImages.dimensions(rendered)
-        try expect(size.width == 160 && size.height == 80, "Aspect-fill output dimensions are wrong")
-        try reject { _ = try LaunchArtworkImages.render(Data("invalid".utf8), width: 160, height: 80) }
-        try reject { _ = try LaunchArtworkImages.render(blue, width: 10000, height: 80) }
+        XCTAssert(size.width == 160 && size.height == 80, "Aspect-fill output dimensions are wrong")
+        XCTAssertThrowsError(try LaunchArtworkImages.render(Data("invalid".utf8), width: 160, height: 80))
+        XCTAssertThrowsError(try LaunchArtworkImages.render(blue, width: 10000, height: 80))
         let originalLarge = png(0, 1, 0, width: 1200, height: 2400)
         let exportedSize = try LaunchArtworkImages.dimensions(LaunchArtworkImages.export(originalLarge)!)
         let thumbnailSize = try LaunchArtworkImages.dimensions(LaunchArtworkImages.preview(originalLarge)!)
-        try expect(exportedSize.width == 1200 && exportedSize.height == 2400 && thumbnailSize.height <= 900, "Saving used a preview instead of the full-resolution current image")
-        print("PASS: launch variants, exact original restoration, reopen, device binding, OS regeneration, rollback, stale writes, pinned parents and image bounds.")
+        XCTAssert(exportedSize.width == 1200 && exportedSize.height == 2400 && thumbnailSize.height <= 900, "Saving used a preview instead of the full-resolution current image")
     }
 }

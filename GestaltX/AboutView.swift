@@ -108,10 +108,14 @@ struct CreditsView: View {
                 credit("Ketamine", author: "Nouvborne", url: "https://github.com/Nouvborne/Ketamine")
                 credit("MGKeys", author: "PoomSmart", url: "https://github.com/PoomSmart/MGKeys")
                 credit("Nugget", author: "leminlimez", url: "https://github.com/leminlimez/Nugget")
+                credit("mond", author: "rooootdev", url: "https://github.com/rooootdev/mond")
                 credit("GestaltEdit", author: "frs0n", url: "https://github.com/frs0n/GestaltEdit")
+                credit("LCSign", author: "huamidev", url: "https://sign.lc")
                 licensedCredit("Gester", author: "sasobhabha · KAMUI contributors", license: "MIT", file: "Gester-MIT", url: "https://github.com/sasobhabha/Gester")
                 licensedCredit("Erosion", author: "lunginspector · jailbreak.party", license: "GPL v3", file: "Erosion-GPL-3.0", url: "https://github.com/jailbreakdotparty/Erosion")
+                licensedCredit("Erosion-CN", author: "Kianuni", license: "GPL v3", file: "Erosion-GPL-3.0", url: "https://github.com/Kianuni/Erosion-CN")
                 licensedCredit("ZIPFoundation", author: "Thomas Zoechling", license: "MIT", file: "ZIPFoundation-MIT", url: "https://github.com/weichsel/ZIPFoundation")
+                licensedCredit("Primer Octicons", author: "GitHub", license: "MIT", file: "Primer-Octicons-MIT", url: "https://github.com/primer/octicons")
             }
         }
         .navigationTitle(L("Credits & Licenses"))

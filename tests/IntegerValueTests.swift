@@ -1,12 +1,14 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-@main struct IntegerValueTests {
+final class IntegerValueTests: XCTestCase {
     struct Failure: Error { let message: String }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
+    func expect(_ condition: Bool, _ message: String) {
+        XCTAssert(condition, message)
     }
 
-    static func main() async throws {
+    func testIntegerValue() async throws {
         let values: [NSNumber] = [
             NSNumber(value: Int64.min), NSNumber(value: Int64(-1)),
             NSNumber(value: Int64(0)), NSNumber(value: Int64.max),
@@ -15,10 +17,10 @@ import Foundation
         for number in values {
             let text = PlistValueKind.integer.text(for: number)
             let parsed = try PlistValueKind.integer.parse(text)
-            try expect(GestaltDocument.valuesEqual(number, parsed), "Integer text preserves every 64-bit boundary: " + text)
+            expect(GestaltDocument.valuesEqual(number, parsed), "Integer text preserves every 64-bit boundary: " + text)
             let bytes = try PropertyListSerialization.data(fromPropertyList: ["CacheExtra": ["identifier": number]], format: .binary, options: 0)
             let document = try GestaltDocument(data: bytes)
-            try expect(GestaltDocument.valuesEqual(number, document.extra["identifier"]!), "Binary plist roundtrip preserves " + text)
+            expect(GestaltDocument.valuesEqual(number, document.extra["identifier"]!), "Binary plist roundtrip preserves " + text)
         }
         for invalid in ["18446744073709551616", "-9223372036854775809", "1.5", "NaN"] {
             do {
@@ -27,11 +29,11 @@ import Foundation
             } catch is GestaltFailure {}
         }
         let unsigned = NSNumber(value: UInt64.max), signed = NSNumber(value: Int64(-1))
-        try expect(!GestaltDocument.valuesEqual(unsigned, signed), "Unsigned maximum must not alias signed -1")
-        try expect(!GestaltDocument.valuesEqual([unsigned], [signed]), "Array comparison preserves signedness at the boundary")
-        try expect(!GestaltDocument.valuesEqual(["id": unsigned], ["id": signed]), "Dictionary comparison preserves signedness at the boundary")
-        try expect(GestaltDocument.valuesEqual(NSNumber(value: UInt64(42)), NSNumber(value: Int64(42))), "Equal positive signed and unsigned integers compare equally")
-        try expect(!GestaltDocument.valuesEqual(NSNumber(value: true), NSNumber(value: 1)), "Boolean and integer remain distinct")
+        expect(!GestaltDocument.valuesEqual(unsigned, signed), "Unsigned maximum must not alias signed -1")
+        expect(!GestaltDocument.valuesEqual([unsigned], [signed]), "Array comparison preserves signedness at the boundary")
+        expect(!GestaltDocument.valuesEqual(["id": unsigned], ["id": signed]), "Dictionary comparison preserves signedness at the boundary")
+        expect(GestaltDocument.valuesEqual(NSNumber(value: UInt64(42)), NSNumber(value: Int64(42))), "Equal positive signed and unsigned integers compare equally")
+        expect(!GestaltDocument.valuesEqual(NSNumber(value: true), NSNumber(value: 1)), "Boolean and integer remain distinct")
 
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -51,7 +53,6 @@ import Foundation
             _ = try await store.commit(edited, expected: initial)
             throw Failure(message: "Readback must reject replacement of UInt64.max with -1")
         } catch is GestaltFailure {}
-        try expect(try Data(contentsOf: device) == original, "Mismatched integer readback restores the previous file")
-        print("PASS: full 64-bit integer parsing, exact comparisons, binary roundtrips and readback rollback.")
+        expect(try Data(contentsOf: device) == original, "Mismatched integer readback restores the previous file")
     }
 }

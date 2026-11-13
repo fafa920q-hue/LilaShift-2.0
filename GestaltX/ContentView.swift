@@ -742,10 +742,14 @@ private struct AppleIntelligenceCheckupCard: View {
         }
     }
 
+    /// The live line names the probe, not the feature: the AI factor's
+    /// probe reads the CacheExtra `ai` key (see `refreshLiveProbe`), so
+    /// "on" means the key reads on — it is not proof Apple Intelligence
+    /// is actually working on the device.
     private func liveStatusText(for factor: AIReadinessFactor) -> String {
         switch factor.isLiveActive {
-        case true: return L("Live on device")
-        case false: return L("Ready — restart to apply")
+        case true: return L("Live probe: on")
+        case false: return L("Live probe: off — restart to apply")
         case nil: return L("Live status unknown")
         }
     }
@@ -1855,6 +1859,7 @@ struct BackupsView: View {
                             Spacer()
                         }
                         Text(record.date, format: .dateTime.year().month().day().hour().minute().second()).font(.subheadline)
+                        Text(record.provenanceLabel).font(.caption).foregroundStyle(.secondary)
                         Text(L(record.source == .device ? "Device Backup" : "Local File Backup") + " · " + ByteCountFormatter.string(fromByteCount: Int64(record.byteCount), countStyle: .file))
                             .font(.caption).foregroundStyle(.secondary)
                         HStack {
@@ -1877,7 +1882,13 @@ struct BackupsView: View {
             Button(L("Cancel"), role: .cancel) { restores = nil }
             Button(L("Restore")) { if let record = restores { Task { await model.restore(record) } }; restores = nil }
                 .disabled(model.isBusy || model.changeCount > 0)
-        } message: { Text(L("The current document is backed up first. Device restores are verified after writing.")) }
+        } message: {
+            if let record = restores {
+                Text(record.provenanceLabel + "\n" + L("The current document is backed up first. Device restores are verified after writing."))
+            } else {
+                Text(L("The current document is backed up first. Device restores are verified after writing."))
+            }
+        }
         .alert(L("Delete this backup?"), isPresented: Binding(get: { deletes != nil }, set: { if !$0 { deletes = nil } })) {
             Button(L("Cancel"), role: .cancel) { deletes = nil }
             Button(L("Delete"), role: .destructive) { if let record = deletes { Task { await model.deleteBackup(record) } }; deletes = nil }

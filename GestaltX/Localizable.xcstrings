@@ -33473,70 +33473,6 @@
         }
       }
     },
-    "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "需要重新启动设备。Apple 智能还取决于机型与地区。具体入口取决于设备和系统版本。"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reinicio requerido. Apple Intelligence también depende del dispositivo y de la región. El punto de entrada exacto depende del dispositivo y de la versión del sistema."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "راه‌اندازی مجدد لازم است. Apple Intelligence به دستگاه و منطقه نیز بستگی دارد. نقطهٔ ورود دقیق به دستگاه و نسخهٔ سیستم بستگی دارد."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "再起動が必要です。Apple Intelligenceはデバイスと地域にも依存します。実際の入口はデバイスとOSバージョンによって異なります。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "재시동이 필요합니다. Apple Intelligence는 기기 모델 및 지역 제한의 영향을 받습니다. 실제 진입 위치는 기기와 OS 버전에 따라 달라집니다."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Требуется перезагрузка. Доступность Apple Intelligence также зависит от устройства и региона. Точная точка входа зависит от устройства и версии ОС."
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cần khởi động lại. Apple Intelligence còn tùy thuộc vào thiết bị và vùng. Điểm truy cập chính xác tùy thuộc vào thiết bị và phiên bản hệ điều hành."
-          }
-        },
-        "zh-Hant-HK": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "需要重新啓動設備。Apple 智能還取決於機型與地區。確切入口取決於設備與系統版本。"
-          }
-        },
-        "zh-Hant-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "需要重新啟動裝置。Apple 智慧還取決於機型與地區。確切入口取決於裝置與系統版本。"
-          }
-        }
-      }
-    },
     "Restart required. Apple Intelligence also depends on device and region. Results depend on the app and system support.": {
       "localizations": {
         "en": {
@@ -35137,134 +35073,6 @@
         }
       }
     },
-    "Live on device": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Live on device"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "本机已生效"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activo en el dispositivo"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "روی دستگاه فعال است"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デバイスで有効"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "기기에서 적용됨"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Активно на устройстве"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Đang hoạt động trên thiết bị"
-          }
-        },
-        "zh-Hant-HK": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "本機已生效"
-          }
-        },
-        "zh-Hant-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "本機已生效"
-          }
-        }
-      }
-    },
-    "Ready — restart to apply": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ready — restart to apply"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已配齐，重启后生效"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Listo; reinicia para aplicar"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "آماده است — برای اعمال راه‌اندازی مجدد کنید"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "準備完了。再起動すると適用されます"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "준비 완료. 적용하려면 재시동하세요"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Готово — перезагрузите, чтобы применить"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Đã sẵn sàng — khởi động lại để áp dụng"
-          }
-        },
-        "zh-Hant-HK": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已配齊，重新啟動後生效"
-          }
-        },
-        "zh-Hant-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已配齊，重新啟動後生效"
-          }
-        }
-      }
-    },
     "Live status unknown": {
       "localizations": {
         "en": {
@@ -35837,6 +35645,1862 @@
           "stringUnit": {
             "state": "translated",
             "value": "音訊智能槽位處於開啟狀態，照片高品質消除可能失敗。"
+          }
+        }
+      }
+    },
+    "Personal Translator CacheData slot #%d reads 0 on a native-AI iPhone — its native baseline is 1. Photos Clean Up and Camera Siri may fail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Translator CacheData slot #%d reads 0 on a native-AI iPhone — its native baseline is 1. Photos Clean Up and Camera Siri may fail."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原生 AI iPhone 上个人翻译 CacheData 槽位 #%d 读数为 0，原生基线为 1。照片消除与相机 Siri 可能失败。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData #%d del Traductor personal lee 0 en un iPhone con IA nativa; su línea base nativa es 1. Limpieza de Fotos y Siri de la cámara podrían fallar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData #%d مترجم شخصی در آیفون با هوش مصنوعی بومی مقدار 0 را می‌خواند؛ مقدار پایه بومی آن 1 است. پاک‌سازی عکس‌ها و سیری دوربین ممکن است از کار بیفتد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネイティブ AI 対応 iPhone でパーソナル翻訳 CacheData スロット #%d の読み取り値が 0 です。ネイティブのベースラインは 1 です。写真クリーンアップとカメラ Siri が失敗する可能性があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네이티브 AI iPhone에서 개인 번역 CacheData 슬롯 #%d의 읽은 값이 0입니다. 네이티브 기준값은 1입니다. 사진 클린업과 카메라 Siri가 실패할 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData #%d личного переводчика показывает 0 на iPhone с нативным ИИ; его базовое значение — 1. «Очистка фото» и Siri камеры могут не работать."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData #%d của Trình dịch cá nhân đọc được 0 trên iPhone có AI gốc; giá trị gốc của nó là 1. Dọn ảnh và Siri máy ảnh có thể lỗi."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原生 Apple 智能 iPhone 上個人翻譯 CacheData 插槽 #%d 讀數為 0，原生基線為 1。照片消除與相機 Siri 可能失效。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原生 Apple 智能 iPhone 上個人翻譯 CacheData 插槽 #%d 讀數為 0，原生基線為 1。照片消除與相機 Siri 可能失效。"
+          }
+        }
+      }
+    },
+    "Audio Intelligence CacheData slot #%d reads 1 — its native baseline is 0. Photos high-quality Clean Up may fail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Intelligence CacheData slot #%d reads 1 — its native baseline is 0. Photos high-quality Clean Up may fail."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频智能 CacheData 槽位 #%d 读数为 1，原生基线为 0。照片高质量消除可能失败。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData #%d de Inteligencia de audio lee 1; su línea base nativa es 0. La Limpieza de Fotos de alta calidad podría fallar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData #%d هوش صوتی مقدار 1 را می‌خواند؛ مقدار پایه بومی آن 0 است. پاک‌سازی باکیفیت عکس‌ها ممکن است از کار بیفتد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオインテリジェンス CacheData スロット #%d の読み取り値が 1 です。ネイティブのベースラインは 0 です。写真の高品質クリーンアップが失敗する可能性があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 인텔리전스 CacheData 슬롯 #%d의 읽은 값이 1입니다. 네이티브 기준값은 0입니다. 사진 고품질 클린업이 실패할 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData #%d аудиоинтеллекта показывает 1; его базовое значение — 0. Высококачественная «Очистка фото» может не работать."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData #%d của Trí tuệ âm thanh đọc được 1; giá trị gốc của nó là 0. Dọn ảnh chất lượng cao có thể lỗi."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽 #%d 讀數為 1，原生基線為 0。照片高品質消除可能失效。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽 #%d 讀數為 1，原生基線為 0。照片高品質消除可能失效。"
+          }
+        }
+      }
+    },
+    "Audio Intelligence CacheData slot reads 1 — its native baseline is 0. Photos high-quality Clean Up may fail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Intelligence CacheData slot reads 1 — its native baseline is 0. Photos high-quality Clean Up may fail."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频智能 CacheData 槽位读数为 1，原生基线为 0。照片高质量消除可能失败。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData de Inteligencia de audio lee 1; su línea base nativa es 0. La Limpieza de Fotos de alta calidad podría fallar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData هوش صوتی مقدار 1 را می‌خواند؛ مقدار پایه بومی آن 0 است. پاک‌سازی باکیفیت عکس‌ها ممکن است از کار بیفتد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオインテリジェンス CacheData スロットの読み取り値が 1 です。ネイティブのベースラインは 0 です。写真の高品質クリーンアップが失敗する可能性があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 인텔리전스 CacheData 슬롯의 읽은 값이 1입니다. 네이티브 기준값은 0입니다. 사진 고품질 클린업이 실패할 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData аудиоинтеллекта показывает 1; его базовое значение — 0. Высококачественная «Очистка фото» может не работать."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData của Trí tuệ âm thanh đọc được 1; giá trị gốc của nó là 0. Dọn ảnh chất lượng cao có thể lỗi."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽讀數為 1，原生基線為 0。照片高品質消除可能失效。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽讀數為 1，原生基線為 0。照片高品質消除可能失效。"
+          }
+        }
+      }
+    },
+    "Audio Intelligence CacheData slot #%d reads 1, but its native baseline is 0. Repair the slot to 0 before staging Audio Intelligence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Intelligence CacheData slot #%d reads 1, but its native baseline is 0. Repair the slot to 0 before staging Audio Intelligence."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频智能 CacheData 槽位 #%d 读数为 1，但其原生基线为 0。请先将槽位修复为 0，再暂存音频智能。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData #%d de Inteligencia de audio lee 1, pero su línea base nativa es 0. Repara la ranura a 0 antes de preparar Inteligencia de audio."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData #%d هوش صوتی مقدار 1 را می‌خواند، اما مقدار پایه بومی آن 0 است. پیش از آماده‌سازی هوش صوتی، شیار را به 0 برگردانید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオインテリジェンス CacheData スロット #%d の読み取り値が 1 ですが、ネイティブのベースラインは 0 です。オーディオインテリジェンスをステージングする前に、スロットを 0 に修復してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 인텔리전스 CacheData 슬롯 #%d의 읽은 값이 1이지만 네이티브 기준값은 0입니다. 오디오 인텔리전스를 스테이징하기 전에 슬롯을 0으로 복구하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData #%d аудиоинтеллекта показывает 1, но его базовое значение — 0. Восстановите слот на 0 перед подготовкой аудиоинтеллекта."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData #%d của Trí tuệ âm thanh đọc được 1 nhưng giá trị gốc của nó là 0. Hãy sửa khe về 0 trước khi chuẩn bị Trí tuệ âm thanh."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽 #%d 讀數為 1，但其原生基線為 0。請先將插槽修復為 0，再暫存音訊智慧。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽 #%d 讀數為 1，但其原生基線為 0。請先將插槽修復為 0，再暫存音訊智慧。"
+          }
+        }
+      }
+    },
+    "Audio Intelligence CacheData slot reads 1, but its native baseline is 0. Repair the slot to 0 before staging Audio Intelligence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Intelligence CacheData slot reads 1, but its native baseline is 0. Repair the slot to 0 before staging Audio Intelligence."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频智能 CacheData 槽位读数为 1，但其原生基线为 0。请先将槽位修复为 0，再暂存音频智能。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData de Inteligencia de audio lee 1, pero su línea base nativa es 0. Repara la ranura a 0 antes de preparar Inteligencia de audio."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData هوش صوتی مقدار 1 را می‌خواند، اما مقدار پایه بومی آن 0 است. پیش از آماده‌سازی هوش صوتی، شیار را به 0 برگردانید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオインテリジェンス CacheData スロットの読み取り値が 1 ですが、ネイティブのベースラインは 0 です。オーディオインテリジェンスをステージングする前に、スロットを 0 に修復してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 인텔리전스 CacheData 슬롯의 읽은 값이 1이지만 네이티브 기준값은 0입니다. 오디오 인텔리전스를 스테이징하기 전에 슬롯을 0으로 복구하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData аудиоинтеллекта показывает 1, но его базовое значение — 0. Восстановите слот на 0 перед подготовкой аудиоинтеллекта."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData của Trí tuệ âm thanh đọc được 1 nhưng giá trị gốc của nó là 0. Hãy sửa khe về 0 trước khi chuẩn bị Trí tuệ âm thanh."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽讀數為 1，但其原生基線為 0。請先將插槽修復為 0，再暫存音訊智慧。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽讀數為 1，但其原生基線為 0。請先將插槽修復為 0，再暫存音訊智慧。"
+          }
+        }
+      }
+    },
+    "Personal Translator CacheData slot #%d reads 0, but its native baseline on a native-AI iPhone is 1. Repair the slot to 1 before staging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Translator CacheData slot #%d reads 0, but its native baseline on a native-AI iPhone is 1. Repair the slot to 1 before staging."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人翻译 CacheData 槽位 #%d 读数为 0，但其在原生 AI iPhone 上的原生基线为 1。请先将槽位修复为 1，再暂存。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData #%d del Traductor personal lee 0, pero su línea base nativa en un iPhone con IA nativa es 1. Repara la ranura a 1 antes de preparar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData #%d مترجم شخصی مقدار 0 را می‌خواند، اما مقدار پایه بومی آن در آیفون با هوش مصنوعی بومی 1 است. پیش از آماده‌سازی، شیار را به 1 برگردانید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パーソナル翻訳 CacheData スロット #%d の読み取り値が 0 ですが、ネイティブ AI 対応 iPhone でのベースラインは 1 です。ステージングする前に、スロットを 1 に修復してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인 번역 CacheData 슬롯 #%d의 읽은 값이 0이지만 네이티브 AI iPhone에서의 기준값은 1입니다. 스테이징하기 전에 슬롯을 1로 복구하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData #%d личного переводчика показывает 0, но его базовое значение на iPhone с нативным ИИ — 1. Восстановите слот на 1 перед подготовкой."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData #%d của Trình dịch cá nhân đọc được 0 nhưng giá trị gốc của nó trên iPhone có AI gốc là 1. Hãy sửa khe về 1 trước khi chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯 CacheData 插槽 #%d 讀數為 0，但其在原生 Apple 智能 iPhone 上的原生基線為 1。請先將插槽修復為 1，再暫存。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯 CacheData 插槽 #%d 讀數為 0，但其在原生 Apple 智能 iPhone 上的原生基線為 1。請先將插槽修復為 1，再暫存。"
+          }
+        }
+      }
+    },
+    "Personal Translator CacheData slot reads 0, but its native baseline on a native-AI iPhone is 1. Repair the slot to 1 before staging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Translator CacheData slot reads 0, but its native baseline on a native-AI iPhone is 1. Repair the slot to 1 before staging."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人翻译 CacheData 槽位读数为 0，但其在原生 AI iPhone 上的原生基线为 1。请先将槽位修复为 1，再暂存。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData del Traductor personal lee 0, pero su línea base nativa en un iPhone con IA nativa es 1. Repara la ranura a 1 antes de preparar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData مترجم شخصی مقدار 0 را می‌خواند، اما مقدار پایه بومی آن در آیفون با هوش مصنوعی بومی 1 است. پیش از آماده‌سازی، شیار را به 1 برگردانید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パーソナル翻訳 CacheData スロットの読み取り値が 0 ですが、ネイティブ AI 対応 iPhone でのベースラインは 1 です。ステージングする前に、スロットを 1 に修復してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인 번역 CacheData 슬롯의 읽은 값이 0이지만 네이티브 AI iPhone에서의 기준값은 1입니다. 스테이징하기 전에 슬롯을 1로 복구하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData личного переводчика показывает 0, но его базовое значение на iPhone с нативным ИИ — 1. Восстановите слот на 1 перед подготовкой."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData của Trình dịch cá nhân đọc được 0 nhưng giá trị gốc của nó trên iPhone có AI gốc là 1. Hãy sửa khe về 1 trước khi chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯 CacheData 插槽讀數為 0，但其在原生 Apple 智能 iPhone 上的原生基線為 1。請先將插槽修復為 1，再暫存。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯 CacheData 插槽讀數為 0，但其在原生 Apple 智能 iPhone 上的原生基線為 1。請先將插槽修復為 1，再暫存。"
+          }
+        }
+      }
+    },
+    "Personal Translator CacheExtra key is explicitly 0 on a native-AI iPhone, but its native CacheData slot baseline is 1. Restore the CacheExtra key before staging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Translator CacheExtra key is explicitly 0 on a native-AI iPhone, but its native CacheData slot baseline is 1. Restore the CacheExtra key before staging."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原生 AI iPhone 上个人翻译 CacheExtra 键明确为 0，但其原生 CacheData 槽位基线为 1。请先恢复 CacheExtra 键，再暂存。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clave CacheExtra del Traductor personal es explícitamente 0 en un iPhone con IA nativa, pero la línea base de su ranura CacheData nativa es 1. Restaura la clave CacheExtra antes de preparar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کلید CacheExtra مترجم شخصی در آیفون با هوش مصنوعی بومی صراحتاً 0 است، اما مقدار پایه شیار CacheData بومی آن 1 است. پیش از آماده‌سازی، کلید CacheExtra را بازیابی کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネイティブ AI 対応 iPhone でパーソナル翻訳の CacheExtra キーが明示的に 0 ですが、ネイティブ CacheData スロットのベースラインは 1 です。ステージングする前に CacheExtra キーを復元してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네이티브 AI iPhone에서 개인 번역 CacheExtra 키가 명시적으로 0이지만 네이티브 CacheData 슬롯 기준값은 1입니다. 스테이징하기 전에 CacheExtra 키를 복원하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ CacheExtra личного переводчика явно равен 0 на iPhone с нативным ИИ, но базовое значение его нативного слота CacheData — 1. Восстановите ключ CacheExtra перед подготовкой."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khóa CacheExtra của Trình dịch cá nhân rõ ràng bằng 0 trên iPhone có AI gốc, nhưng giá trị gốc của khe CacheData gốc của nó là 1. Hãy khôi phục khóa CacheExtra trước khi chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原生 Apple 智能 iPhone 上個人翻譯 CacheExtra 鍵明確為 0，但其原生 CacheData 插槽基線為 1。請先還原 CacheExtra 鍵，再暫存。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原生 Apple 智能 iPhone 上個人翻譯 CacheExtra 鍵明確為 0，但其原生 CacheData 插槽基線為 1。請先還原 CacheExtra 鍵，再暫存。"
+          }
+        }
+      }
+    },
+    "Audio Intelligence CacheData slot did not resolve, so its native baseline cannot be verified. Auto-staging is refused until the slot is verified on-device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Intelligence CacheData slot did not resolve, so its native baseline cannot be verified. Auto-staging is refused until the slot is verified on-device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频智能 CacheData 槽位未能解析，无法验证其原生基线。在真机上验证槽位之前，拒绝自动暂存。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo resolver la ranura CacheData de Inteligencia de audio, por lo que no se puede verificar su línea base nativa. Se rechaza la preparación automática hasta que la ranura se verifique en el dispositivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData هوش صوتی مشخص نشد، بنابراین مقدار پایه بومی آن قابل تأیید نیست. تا زمانی که شیار روی دستگاه تأیید شود، آماده‌سازی خودکار رد می‌شود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオインテリジェンス CacheData スロットを解決できなかったため、ネイティブのベースラインを確認できません。デバイス上でスロットが検証されるまで、自動ステージングは拒否されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 인텔리전스 CacheData 슬롯을 확인할 수 없어 네이티브 기준값을 검증할 수 없습니다. 기기에서 슬롯이 확인될 때까지 자동 스테이징이 거부됩니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData аудиоинтеллекта не определён, поэтому его базовое значение проверить нельзя. Автоматическая подготовка отклонена, пока слот не будет проверен на устройстве."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không xác định được khe CacheData của Trí tuệ âm thanh nên không thể xác minh giá trị gốc của nó. Từ chối tự động chuẩn bị cho đến khi khe được xác minh trên thiết bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽未能解析，無法驗證其原生基線。在裝置上驗證插槽之前，拒絕自動暫存。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽未能解析，無法驗證其原生基線。在裝置上驗證插槽之前，拒絕自動暫存。"
+          }
+        }
+      }
+    },
+    "Personal Translator CacheData slot did not resolve, so its native baseline cannot be verified. Auto-staging is refused until the slot is verified on-device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Translator CacheData slot did not resolve, so its native baseline cannot be verified. Auto-staging is refused until the slot is verified on-device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人翻译 CacheData 槽位未能解析，无法验证其原生基线。在真机上验证槽位之前，拒绝自动暂存。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo resolver la ranura CacheData del Traductor personal, por lo que no se puede verificar su línea base nativa. Se rechaza la preparación automática hasta que la ranura se verifique en el dispositivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData مترجم شخصی مشخص نشد، بنابراین مقدار پایه بومی آن قابل تأیید نیست. تا زمانی که شیار روی دستگاه تأیید شود، آماده‌سازی خودکار رد می‌شود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パーソナル翻訳 CacheData スロットを解決できなかったため、ネイティブのベースラインを確認できません。デバイス上でスロットが検証されるまで、自動ステージングは拒否されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인 번역 CacheData 슬롯을 확인할 수 없어 네이티브 기준값을 검증할 수 없습니다. 기기에서 슬롯이 확인될 때까지 자동 스테이징이 거부됩니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData личного переводчика не определён, поэтому его базовое значение проверить нельзя. Автоматическая подготовка отклонена, пока слот не будет проверен на устройстве."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không xác định được khe CacheData của Trình dịch cá nhân nên không thể xác minh giá trị gốc của nó. Từ chối tự động chuẩn bị cho đến khi khe được xác minh trên thiết bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯 CacheData 插槽未能解析，無法驗證其原生基線。在裝置上驗證插槽之前，拒絕自動暫存。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯 CacheData 插槽未能解析，無法驗證其原生基線。在裝置上驗證插槽之前，拒絕自動暫存。"
+          }
+        }
+      }
+    },
+    "CacheExtra audioIntelligence is staged as 1 while CacheData slot #%d reads its native 0. Whether the CacheExtra key alone is safe on native-AI hardware is unverified — confirm explicitly before staging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence is staged as 1 while CacheData slot #%d reads its native 0. Whether the CacheExtra key alone is safe on native-AI hardware is unverified — confirm explicitly before staging."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence 已暂存为 1，而 CacheData 槽位 #%d 读数为原生 0。仅 CacheExtra 键在原生 AI 硬件上是否安全尚未验证——暂存前请明确确认。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence está preparado como 1 mientras la ranura CacheData #%d lee su 0 nativo. No está verificado si la clave CacheExtra por sí sola es segura en hardware con IA nativa; confirme explícitamente antes de preparar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence به‌عنوان 1 آماده شده است، در حالی که شیار CacheData #%d مقدار 0 بومی خود را می‌خواند. این‌که آیا کلید CacheExtra به‌تنهایی روی سخت‌افزار هوش مصنوعی بومی امن است یا نه، تأیید نشده است — پیش از آماده‌سازی صراحتاً تأیید کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra の audioIntelligence が 1 としてステージングされていますが、CacheData スロット #%d の読み取り値はネイティブの 0 です。CacheExtra キー単独でネイティブ AI ハードウェア上安全かどうかは未検証です。ステージングする前に明示的に確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence가 1로 스테이징되어 있지만 CacheData 슬롯 #%d의 읽은 값은 네이티브 0입니다. CacheExtra 키만으로 네이티브 AI 하드웨어에서 안전한지는 검증되지 않았습니다. 스테이징하기 전에 명시적으로 확인하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence подготовлен как 1, а слот CacheData #%d показывает свой нативный 0. Не проверено, безопасен ли один ключ CacheExtra на оборудовании с нативным ИИ, — подтвердите явно перед подготовкой."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence đã được chuẩn bị là 1 trong khi khe CacheData #%d đọc được 0 gốc của nó. Việc chỉ riêng khóa CacheExtra có an toàn trên phần cứng AI gốc hay không chưa được xác minh — hãy xác nhận rõ ràng trước khi chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence 已暫存為 1，而 CacheData 插槽 #%d 讀數為原生 0。僅 CacheExtra 鍵在原生 AI 硬體上是否安全尚未驗證——暫存前請明確確認。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence 已暫存為 1，而 CacheData 插槽 #%d 讀數為原生 0。僅 CacheExtra 鍵在原生 AI 硬體上是否安全尚未驗證——暫存前請明確確認。"
+          }
+        }
+      }
+    },
+    "CacheExtra audioIntelligence is staged as 1 while its CacheData slot reads its native 0. Whether the CacheExtra key alone is safe on native-AI hardware is unverified — confirm explicitly before staging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence is staged as 1 while its CacheData slot reads its native 0. Whether the CacheExtra key alone is safe on native-AI hardware is unverified — confirm explicitly before staging."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence 已暂存为 1，而其 CacheData 槽位读数为原生 0。仅 CacheExtra 键在原生 AI 硬件上是否安全尚未验证——暂存前请明确确认。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence está preparado como 1 mientras su ranura CacheData lee su 0 nativo. No está verificado si la clave CacheExtra por sí sola es segura en hardware con IA nativa; confirme explícitamente antes de preparar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence به‌عنوان 1 آماده شده است، در حالی که شیار CacheData آن مقدار 0 بومی خود را می‌خواند. این‌که آیا کلید CacheExtra به‌تنهایی روی سخت‌افزار هوش مصنوعی بومی امن است یا نه، تأیید نشده است — پیش از آماده‌سازی صراحتاً تأیید کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra の audioIntelligence が 1 としてステージングされていますが、CacheData スロットの読み取り値はネイティブの 0 です。CacheExtra キー単独でネイティブ AI ハードウェア上安全かどうかは未検証です。ステージングする前に明示的に確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence가 1로 스테이징되어 있지만 CacheData 슬롯의 읽은 값은 네이티브 0입니다. CacheExtra 키만으로 네이티브 AI 하드웨어에서 안전한지는 검증되지 않았습니다. 스테이징하기 전에 명시적으로 확인하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence подготовлен как 1, а его слот CacheData показывает свой нативный 0. Не проверено, безопасен ли один ключ CacheExtra на оборудовании с нативным ИИ, — подтвердите явно перед подготовкой."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence đã được chuẩn bị là 1 trong khi khe CacheData của nó đọc được 0 gốc của nó. Việc chỉ riêng khóa CacheExtra có an toàn trên phần cứng AI gốc hay không chưa được xác minh — hãy xác nhận rõ ràng trước khi chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence 已暫存為 1，而其 CacheData 插槽讀數為原生 0。僅 CacheExtra 鍵在原生 AI 硬體上是否安全尚未驗證——暫存前請明確確認。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheExtra audioIntelligence 已暫存為 1，而其 CacheData 插槽讀數為原生 0。僅 CacheExtra 鍵在原生 AI 硬體上是否安全尚未驗證——暫存前請明確確認。"
+          }
+        }
+      }
+    },
+    "The live probe reports Apple Intelligence off on this native-AI iPhone, which conflicts with staging AI capabilities. Confirm explicitly before staging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The live probe reports Apple Intelligence off on this native-AI iPhone, which conflicts with staging AI capabilities. Confirm explicitly before staging."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时检测报告此原生 AI iPhone 的 Apple 智能为关闭，与暂存 AI 能力冲突。暂存前请明确确认。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La comprobación en vivo indica que Apple Intelligence está desactivado en este iPhone con IA nativa, lo que entra en conflicto con la preparación de funciones de IA. Confirme explícitamente antes de preparar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بررسی زنده گزارش می‌دهد که Apple Intelligence در این آیفون با هوش مصنوعی بومی خاموش است، که با آماده‌سازی قابلیت‌های هوش مصنوعی در تضاد است. پیش از آماده‌سازی صراحتاً تأیید کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブ検出によると、このネイティブ AI 対応 iPhone では Apple Intelligence がオフになっており、AI 機能のステージングと競合します。ステージングする前に明示的に確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 검사에서 이 네이티브 AI iPhone의 Apple Intelligence가 꺼져 있어 AI 기능 스테이징과 충돌한다고 보고합니다. 스테이징하기 전에 명시적으로 확인하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Живая проверка сообщает, что Apple Intelligence выключена на этом iPhone с нативным ИИ, что противоречит подготовке возможностей ИИ. Подтвердите явно перед подготовкой."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiểm tra trực tiếp báo cáo Apple Intelligence đang tắt trên iPhone có AI gốc này, mâu thuẫn với việc chuẩn bị các khả năng AI. Hãy xác nhận rõ ràng trước khi chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時檢測報告此原生 Apple 智能 iPhone 的 Apple 智慧為關閉，與暫存 AI 能力衝突。暫存前請明確確認。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時檢測報告此原生 Apple 智能 iPhone 的 Apple 智慧為關閉，與暫存 AI 能力衝突。暫存前請明確確認。"
+          }
+        }
+      }
+    },
+    "Audio Intelligence CacheData slot #%d reads 1, but the recorded iPhone/iPad baseline is 0. This hardware has no native-AI baseline — confirm explicitly before staging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Intelligence CacheData slot #%d reads 1, but the recorded iPhone/iPad baseline is 0. This hardware has no native-AI baseline — confirm explicitly before staging."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频智能 CacheData 槽位 #%d 读数为 1，但记录的 iPhone/iPad 基线为 0。此硬件没有原生 AI 基线——暂存前请明确确认。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData #%d de Inteligencia de audio lee 1, pero la línea base registrada de iPhone/iPad es 0. Este hardware no tiene línea base de IA nativa; confirme explícitamente antes de preparar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData #%d هوش صوتی مقدار 1 را می‌خواند، اما مقدار پایه ثبت‌شده آیفون/آیپد 0 است. این سخت‌افزار مقدار پایه هوش مصنوعی بومی ندارد — پیش از آماده‌سازی صراحتاً تأیید کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオインテリジェンス CacheData スロット #%d の読み取り値が 1 ですが、記録されている iPhone/iPad のベースラインは 0 です。このハードウェアにはネイティブ AI のベースラインがありません。ステージングする前に明示的に確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 인텔리전스 CacheData 슬롯 #%d의 읽은 값이 1이지만 기록된 iPhone/iPad 기준값은 0입니다. 이 하드웨어에는 네이티브 AI 기준값이 없습니다. 스테이징하기 전에 명시적으로 확인하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData #%d аудиоинтеллекта показывает 1, но записанное базовое значение iPhone/iPad — 0. У этого оборудования нет базового значения нативного ИИ; подтвердите явно перед подготовкой."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData #%d của Trí tuệ âm thanh đọc được 1 nhưng giá trị gốc đã ghi của iPhone/iPad là 0. Phần cứng này không có giá trị gốc AI gốc; hãy xác nhận rõ ràng trước khi chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽 #%d 讀數為 1，但記錄的 iPhone/iPad 基線為 0。此硬體沒有原生 AI 基線——暫存前請明確確認。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽 #%d 讀數為 1，但記錄的 iPhone/iPad 基線為 0。此硬體沒有原生 AI 基線——暫存前請明確確認。"
+          }
+        }
+      }
+    },
+    "Audio Intelligence CacheData slot reads 1, but the recorded iPhone/iPad baseline is 0. This hardware has no native-AI baseline — confirm explicitly before staging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Intelligence CacheData slot reads 1, but the recorded iPhone/iPad baseline is 0. This hardware has no native-AI baseline — confirm explicitly before staging."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频智能 CacheData 槽位读数为 1，但记录的 iPhone/iPad 基线为 0。此硬件没有原生 AI 基线——暂存前请明确确认。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ranura CacheData de Inteligencia de audio lee 1, pero la línea base registrada de iPhone/iPad es 0. Este hardware no tiene línea base de IA nativa; confirme explícitamente antes de preparar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیار CacheData هوش صوتی مقدار 1 را می‌خواند، اما مقدار پایه ثبت‌شده آیفون/آیپد 0 است. این سخت‌افزار مقدار پایه هوش مصنوعی بومی ندارد — پیش از آماده‌سازی صراحتاً تأیید کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオインテリジェンス CacheData スロットの読み取り値が 1 ですが、記録されている iPhone/iPad のベースラインは 0 です。このハードウェアにはネイティブ AI のベースラインがありません。ステージングする前に明示的に確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 인텔리전스 CacheData 슬롯의 읽은 값이 1이지만 기록된 iPhone/iPad 기준값은 0입니다. 이 하드웨어에는 네이티브 AI 기준값이 없습니다. 스테이징하기 전에 명시적으로 확인하세요."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData аудиоинтеллекта показывает 1, но записанное базовое значение iPhone/iPad — 0. У этого оборудования нет базового значения нативного ИИ; подтвердите явно перед подготовкой."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khe CacheData của Trí tuệ âm thanh đọc được 1 nhưng giá trị gốc đã ghi của iPhone/iPad là 0. Phần cứng này không có giá trị gốc AI gốc; hãy xác nhận rõ ràng trước khi chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽讀數為 1，但記錄的 iPhone/iPad 基線為 0。此硬體沒有原生 AI 基線——暫存前請明確確認。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音訊智慧 CacheData 插槽讀數為 1，但記錄的 iPhone/iPad 基線為 0。此硬體沒有原生 AI 基線——暫存前請明確確認。"
+          }
+        }
+      }
+    },
+    "CacheData slots match their native baselines; staging is verified-safe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheData slots match their native baselines; staging is verified-safe."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheData 槽位与原生基线一致，暂存已验证安全。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las ranuras CacheData coinciden con sus líneas base nativas; la preparación está verificada y es segura."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیارهای CacheData با مقادیر پایه بومی خود مطابقت دارند؛ آماده‌سازی تأیید شده و امن است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheData スロットがネイティブのベースラインと一致しています。ステージングは検証済みで安全です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheData 슬롯이 네이티브 기준값과 일치합니다. 스테이징은 검증되어 안전합니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слоты CacheData соответствуют своим базовым значениям; подготовка проверена и безопасна."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Các khe CacheData khớp với giá trị gốc của chúng; việc chuẩn bị đã được xác minh là an toàn."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheData 插槽與原生基線一致，暫存已驗證安全。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CacheData 插槽與原生基線一致，暫存已驗證安全。"
+          }
+        }
+      }
+    },
+    "No native-AI baseline applies to this hardware; the unlock enables AI capabilities.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No native-AI baseline applies to this hardware; the unlock enables AI capabilities."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此硬件不适用原生 AI 基线；一键解锁将启用 AI 能力。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna línea base de IA nativa se aplica a este hardware; el desbloqueo de un toque habilita las funciones de IA."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ مقدار پایه هوش مصنوعی بومی برای این سخت‌افزار اعمال نمی‌شود؛ باز کردن قفل با یک ضربه قابلیت‌های هوش مصنوعی را فعال می‌کند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このハードウェアに適用されるネイティブ AI のベースラインはありません。一鍵アンロックにより AI 機能が有効になります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 하드웨어에는 적용되는 네이티브 AI 기준값이 없습니다. 원탭 잠금 해제가 AI 기능을 활성화합니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "К этому оборудованию не применяется базовое значение нативного ИИ; разблокировка в одно касание включает возможности ИИ."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có giá trị gốc AI gốc nào áp dụng cho phần cứng này; mở khóa một chạm sẽ bật các khả năng AI."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此硬體不適用原生 AI 基線；一鍵解鎖將啟用 AI 能力。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此硬體不適用原生 AI 基線；一鍵解鎖將啟用 AI 能力。"
+          }
+        }
+      }
+    },
+    "Unverified combination explicitly confirmed by the user; staging proceeds.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unverified combination explicitly confirmed by the user; staging proceeds."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用户已明确确认该未验证组合，继续暂存。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El usuario confirmó explícitamente la combinación no verificada; la preparación continúa."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترکیب تأییدنشده صراحتاً توسط کاربر تأیید شد؛ آماده‌سازی ادامه می‌یابد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未検証の組み合わせはユーザーによって明示的に確認されました。ステージングを続行します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검증되지 않은 조합은 사용자가 명시적으로 확인했습니다. 스테이징을 계속합니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Непроверенная комбинация явно подтверждена пользователем; подготовка продолжается."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tổ hợp chưa xác minh đã được người dùng xác nhận rõ ràng; tiếp tục chuẩn bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用者已明確確認該未驗證組合，繼續暫存。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用者已明確確認該未驗證組合，繼續暫存。"
+          }
+        }
+      }
+    },
+    "Verified factory backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verified factory backup"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已验证的出厂备份"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de seguridad de fábrica verificada"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان کارخانه تأییدشده"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検証済み出荷時バックアップ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검증된 출하 백업"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверенная заводская резервная копия"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu gốc đã xác minh"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已驗證的出廠備份"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已驗證的出廠備份"
+          }
+        }
+      }
+    },
+    "First-read device state": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First-read device state"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "首次读取的设备状态"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado del dispositivo en la primera lectura"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعیت دستگاه در اولین خواندن"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "初回読み取り時のデバイス状態"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최초 읽기 당시 기기 상태"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Состояние устройства при первом чтении"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trạng thái thiết bị lúc đọc lần đầu"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "首次讀取的裝置狀態"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "首次讀取的裝置狀態"
+          }
+        }
+      }
+    },
+    "State before change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "State before change"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改前的状态"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado anterior al cambio"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعیت پیش از تغییر"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更前の状態"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경 전 상태"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Состояние до изменения"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trạng thái trước khi thay đổi"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改前的狀態"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改前的狀態"
+          }
+        }
+      }
+    },
+    "Imported backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported backup"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导入的备份"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de seguridad importada"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان واردشده"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "インポートされたバックアップ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가져온 백업"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импортированная резервная копия"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu đã nhập"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "匯入的備份"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "匯入的備份"
+          }
+        }
+      }
+    },
+    "Unknown source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown source"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源未知"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Origen desconocido"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منبع نامشخص"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出所不明"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알 수 없는 출처"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неизвестный источник"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không rõ nguồn"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "來源未知"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "來源未知"
+          }
+        }
+      }
+    },
+    "Personal Translator CacheExtra key is explicitly 0 on a native-AI iPhone — its native CacheData slot baseline is 1. Photos Clean Up and Camera Siri may fail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Translator CacheExtra key is explicitly 0 on a native-AI iPhone — its native CacheData slot baseline is 1. Photos Clean Up and Camera Siri may fail."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人翻译 CacheExtra 键在原生 AI iPhone 上明确为 0——其原生 CacheData 槽位基线为 1。照片消除与相机 Siri 可能失效。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clave CacheExtra de Traductor personal es explícitamente 0 en un iPhone con IA nativa; su base nativa de slot de CacheData es 1. La limpieza de fotos y Siri de la cámara pueden fallar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کلید CacheExtra مترجم شخصی در آیفون با هوش مصنوعی بومی صراحتاً 0 است؛ مقدار پایه شکاف CacheData آن 1 است. پاک‌سازی عکس و Siri دوربین ممکن است از کار بیفتد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パーソナル翻訳の CacheExtra キーがネイティブ AI iPhone で明示的に 0 です。ネイティブ CacheData スロットのベースラインは 1 です。写真クリーンアップとカメラ Siri が失敗する可能性があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인 번역 CacheExtra 키가 네이티브 AI iPhone에서 명시적으로 0입니다. 네이티브 CacheData 슬롯 기준값은 1입니다. 사진 정리 및 카메라 Siri가 실패할 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ CacheExtra «Личный переводчик» явно равен 0 на iPhone с нативным ИИ, хотя базовое значение его слота CacheData равно 1. Очистка фото и Siri камеры могут не работать."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khóa CacheExtra của Trình dịch cá nhân đang là 0 một cách rõ ràng trên iPhone có AI gốc; giá trị gốc của khe CacheData là 1. Tính năng dọn ảnh và Siri máy ảnh có thể không hoạt động."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯 CacheExtra 鍵在原生 AI iPhone 上明確為 0——其原生 CacheData 槽位基線為 1。照片消除與相機 Siri 可能失效。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯 CacheExtra 鍵在原生 AI iPhone 上明確為 0——其原生 CacheData 槽位基線為 1。照片消除與相機 Siri 可能失效。"
+          }
+        }
+      }
+    },
+    "Personal Translator is off on a native-AI iPhone — its CacheData slot reads 0. Photos Clean Up and Camera Siri may fail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Translator is off on a native-AI iPhone — its CacheData slot reads 0. Photos Clean Up and Camera Siri may fail."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人翻译在原生 AI iPhone 上处于关闭状态——其 CacheData 槽位读数为 0。照片消除与相机 Siri 可能失效。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traductor personal está desactivado en un iPhone con IA nativa: su slot de CacheData marca 0. La limpieza de fotos y Siri de la cámara pueden fallar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مترجم شخصی در آیفون با هوش مصنوعی بومی خاموش است؛ شکاف CacheData آن 0 است. پاک‌سازی عکس و Siri دوربین ممکن است از کار بیفتد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パーソナル翻訳はネイティブ AI iPhone でオフです。CacheData スロットの読み取り値は 0 です。写真クリーンアップとカメラ Siri が失敗する可能性があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인 번역이 네이티브 AI iPhone에서 꺼져 있습니다. CacheData 슬롯 값이 0입니다. 사진 정리 및 카메라 Siri가 실패할 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Личный переводчик» выключен на iPhone с нативным ИИ: его слот CacheData равен 0. Очистка фото и Siri камеры могут не работать."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trình dịch cá nhân đang tắt trên iPhone có AI gốc: khe CacheData của nó là 0. Tính năng dọn ảnh và Siri máy ảnh có thể không hoạt động."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯在原生 AI iPhone 上處於關閉狀態——其 CacheData 槽位讀數為 0。照片消除與相機 Siri 可能失效。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人翻譯在原生 AI iPhone 上處於關閉狀態——其 CacheData 槽位讀數為 0。照片消除與相機 Siri 可能失效。"
+          }
+        }
+      }
+    },
+    "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要重启。Apple 智能还取决于设备与地区。此操作暂存 CacheExtra 键；CacheData 槽位是另一个独立值。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es necesario reiniciar. Apple Intelligence también depende del dispositivo y la región. Esto prepara la clave CacheExtra; el slot de CacheData es un valor independiente."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راه‌اندازی مجدد لازم است. Apple Intelligence به دستگاه و منطقه نیز بستگی دارد. این کار کلید CacheExtra را آماده می‌کند؛ شکاف CacheData مقدار جداگانه‌ای است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再起動が必要です。Apple Intelligence はデバイスと地域にも依存します。これは CacheExtra キーをステージします。CacheData スロットは別の値です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 시작해야 합니다. Apple Intelligence는 기기와 지역에도 따라 다릅니다. 이 작업은 CacheExtra 키를 스테이징합니다. CacheData 슬롯은 별개의 값입니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Требуется перезагрузка. Apple Intelligence также зависит от устройства и региона. При этом подготавливается ключ CacheExtra; слот CacheData — отдельное значение."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cần khởi động lại. Apple Intelligence còn phụ thuộc vào thiết bị và khu vực. Thao tác này chuẩn bị khóa CacheExtra; khe CacheData là một giá trị riêng biệt."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要重新啟動。Apple 智能還取決於裝置與地區。此操作會暫存 CacheExtra 鍵；CacheData 槽位是另一個獨立值。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要重新啟動。Apple 智能還取決於裝置與地區。此操作會暫存 CacheExtra 鍵；CacheData 槽位是另一個獨立值。"
+          }
+        }
+      }
+    },
+    "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要重启。Apple 智能还取决于设备与地区。具体入口取决于设备与系统版本。此操作暂存 CacheExtra 键；CacheData 槽位是另一个独立值。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es necesario reiniciar. Apple Intelligence también depende del dispositivo y la región. El punto de entrada exacto depende del dispositivo y la versión del sistema. Esto prepara la clave CacheExtra; el slot de CacheData es un valor independiente."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راه‌اندازی مجدد لازم است. Apple Intelligence به دستگاه و منطقه نیز بستگی دارد. نقطه ورود دقیق به دستگاه و نسخه سیستم‌عامل بستگی دارد. این کار کلید CacheExtra را آماده می‌کند؛ شکاف CacheData مقدار جداگانه‌ای است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再起動が必要です。Apple Intelligence はデバイスと地域にも依存します。正確な入口はデバイスと OS バージョンによって異なります。これは CacheExtra キーをステージします。CacheData スロットは別の値です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 시작해야 합니다. Apple Intelligence는 기기와 지역에도 따라 다릅니다. 정확한 진입점은 기기와 OS 버전에 따라 다릅니다. 이 작업은 CacheExtra 키를 스테이징합니다. CacheData 슬롯은 별개의 값입니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Требуется перезагрузка. Apple Intelligence также зависит от устройства и региона. Точная точка входа зависит от устройства и версии ОС. При этом подготавливается ключ CacheExtra; слот CacheData — отдельное значение."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cần khởi động lại. Apple Intelligence còn phụ thuộc vào thiết bị và khu vực. Điểm vào chính xác phụ thuộc vào thiết bị và phiên bản hệ điều hành. Thao tác này chuẩn bị khóa CacheExtra; khe CacheData là một giá trị riêng biệt."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要重新啟動。Apple 智能還取決於裝置與地區。確切入口取決於裝置與系統版本。此操作會暫存 CacheExtra 鍵；CacheData 槽位是另一個獨立值。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要重新啟動。Apple 智能還取決於裝置與地區。確切入口取決於裝置與系統版本。此操作會暫存 CacheExtra 鍵；CacheData 槽位是另一個獨立值。"
+          }
+        }
+      }
+    },
+    "Live probe: on": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live probe: on"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时探针：开启"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonda en vivo: activada"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پروب زنده: روشن"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブプローブ：オン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 프로브: 켜짐"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Живой опрос: включено"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đầu dò trực tiếp: bật"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時探針：開啟"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時探針：開啟"
+          }
+        }
+      }
+    },
+    "Live probe: off — restart to apply": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live probe: off — restart to apply"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时探针：关闭 — 重启后生效"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonda en vivo: desactivada — reinicia para aplicar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پروب زنده: خاموش — برای اعمال راه‌اندازی مجدد کنید"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブプローブ：オフ — 再起動後に適用"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 프로브: 꺼짐 — 다시 시작하면 적용됨"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Живой опрос: выключено — перезагрузите устройство"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đầu dò trực tiếp: tắt — khởi động lại để áp dụng"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時探針：關閉 — 重新啟動後生效"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時探針：關閉 — 重新啟動後生效"
           }
         }
       }

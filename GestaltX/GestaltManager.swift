@@ -39,6 +39,13 @@ final class GestaltManager: ObservableObject {
     /// known for this device. `nil` means the mode stages region +
     /// sales region only (see `regionModeNote`).
     @Published var fullUSModelNumber: String?
+    /// The user explicitly confirmed an unverified (warned) AI staging
+    /// combination after reading its reason on the checkup card, by
+    /// tapping Fix. In-memory only, never persisted: a fresh launch
+    /// re-surfaces the warning. Reset whenever a new document is loaded.
+    /// Only ever converts a `.warn` decision into `.allow` (see
+    /// `AIStagingGuard`); a `.block` is never overridden by it.
+    @Published var userConfirmedUnverifiedAICombination = false
     /// Shown under the region-mode picker when Full US cannot map this
     /// device to a US regulatory model.
     @Published var regionModeNote: String?
@@ -87,7 +94,9 @@ final class GestaltManager: ObservableObject {
             }
             throw GestaltFailure("MobileGestalt access was denied. Check the OS version and App Group signing.")
             #endif
-        }, release: { worse_query_release($0) }, eventSink: { text in
+        }, release: { worse_query_release($0) },
+        expectedDeviceURL: URL(fileURLWithPath: GestaltKeys.devicePath),
+        eventSink: { text in
             NotificationCenter.default.post(name: Notification.Name("GestaltX.worse_query.log"), object: nil,
                                             userInfo: ["message": text])
         })
@@ -174,6 +183,7 @@ final class GestaltManager: ObservableObject {
         snapshot = loaded; working = loaded.document
         choices = [:]; regionID = "keep"; regionCodeID = "keep"; modelID = "keep"; changesName = false; subtype = 0
         fullUSModelNumber = nil; regionModeNote = nil
+        userConfirmedUnverifiedAICombination = false
         cacheOptionChoice = .keep
         wapiChoice = .keep
         modelName = loaded.document.artwork["ArtworkDeviceProductDescription"] as? String ?? ""
@@ -274,13 +284,14 @@ final class GestaltManager: ObservableObject {
         }
     }
 
-    /// Slot-only conflicts on native-AI hardware, computed from the staged
-    /// preview: a CacheData slot disagrees with its native baseline. The
-    /// CacheExtra key is deliberately NOT consulted here (see the #178
-    /// note in AIReadinessCheckup.swift): the unlock sets CacheExtra
-    /// `audioIntelligence` = 1 by definition, and whether that key alone
-    /// harms native-AI iPhones is unverified. An unresolvable slot means
-    /// "unknown", never a conflict.
+    /// Slot and key conflicts on native-AI hardware, computed from the staged
+    /// preview. The Personal Translator case is split per layer: a CacheData
+    /// slot reading 0 against its native baseline of 1, and a CacheExtra key
+    /// explicitly 0, are separate conflicts. The Audio Intelligence case
+    /// stays slot-only (see the #178 note in AIReadinessCheckup.swift): the
+    /// unlock sets CacheExtra `audioIntelligence` = 1 by definition, and
+    /// whether that key alone harms native-AI iPhones is unverified. An
+    /// unresolvable slot means "unknown", never a conflict.
     var aiConflicts: [AIConflict] {
         guard let preview,
               let productType = preview.extra[GestaltKeys.productType] as? String,
@@ -292,10 +303,12 @@ final class GestaltManager: ObservableObject {
         if ptBaseline == true {
             let slotValue = DeviceCacheOptions.advAISlotValue(
                 DeviceCacheOptions.personalTranslatorKey, in: preview, using: layout)
-            let extraDisabled = (preview.extra[DeviceCacheOptions.personalTranslatorKey] as? NSNumber)?.intValue == 0
-            if slotValue == false || extraDisabled {
-                conflicts.append(.personalTranslatorDisabled(
+            if slotValue == false {
+                conflicts.append(.personalTranslatorSlotDisabled(
                     slot: layout.slotIndex(forKey: DeviceCacheOptions.personalTranslatorKey)))
+            }
+            if (preview.extra[DeviceCacheOptions.personalTranslatorKey] as? NSNumber)?.intValue == 0 {
+                conflicts.append(.personalTranslatorKeyDisabled)
             }
         }
         let audioBaseline = DeviceAIEligibility.nativeAdvAISlotValue(
@@ -307,6 +320,77 @@ final class GestaltManager: ObservableObject {
                 slot: layout.slotIndex(forKey: DeviceCacheOptions.audioIntelligenceKey)))
         }
         return conflicts
+    }
+
+    /// The staging-guard decision for a document, or `nil` when the guard
+    /// has no input. `nil` has two distinct causes, and callers must not
+    /// treat them as a block: the layout did not resolve at all (the
+    /// eSIM layout gate is the fail-closed enforcement for that case), or
+    /// the layout carries no resolved AdvAI slot index at all — the
+    /// offline profile and the simulator, where the slots are
+    /// unobservable rather than conflicting. The pure guard
+    /// (`AIStagingGuard.decide`) still fails closed on an unresolvable
+    /// slot when a caller can establish the slot should have resolved;
+    /// the manager cannot establish that (a real device scan can
+    /// legitimately find no AdvAI descriptors), so it reports no decision
+    /// instead of blocking the unlock on unobservable slots. `nil` is
+    /// therefore "no guard input", never "safe" and never "blocked".
+    /// `proposedUnlock` evaluates the China Unlock proposal (both guarded
+    /// CacheExtra keys staged as 1) instead of the document's current
+    /// staged values — what Fix is about to stage, rather than what is
+    /// already staged.
+    static func stagingDecision(for document: GestaltDocument,
+                                layout: MobileGestaltCacheLayout,
+                                liveAIEnabled: Bool?,
+                                userConfirmedUnverifiedCombination: Bool,
+                                proposedUnlock: Bool) -> AIStagingDecision? {
+        let audioIndex = layout.slotIndex(forKey: DeviceCacheOptions.audioIntelligenceKey)
+        let translatorIndex = layout.slotIndex(forKey: DeviceCacheOptions.personalTranslatorKey)
+        guard audioIndex != nil || translatorIndex != nil else { return nil }
+        let productType = document.extra[GestaltKeys.productType] as? String ?? ""
+        var request = AIStagingRequest(productType: productType)
+        if proposedUnlock {
+            request.audioIntelligenceExtra = true
+            request.personalTranslatorExtra = true
+        } else {
+            request.audioIntelligenceExtra = (document.extra[DeviceCacheOptions.audioIntelligenceKey] as? NSNumber)?.boolValue
+            request.personalTranslatorExtra = (document.extra[DeviceCacheOptions.personalTranslatorKey] as? NSNumber)?.boolValue
+        }
+        request.audioIntelligenceSlot = DeviceCacheOptions.advAISlotValue(
+            DeviceCacheOptions.audioIntelligenceKey, in: document, using: layout)
+        request.personalTranslatorSlot = DeviceCacheOptions.advAISlotValue(
+            DeviceCacheOptions.personalTranslatorKey, in: document, using: layout)
+        request.audioIntelligenceSlotIndex = audioIndex
+        request.personalTranslatorSlotIndex = translatorIndex
+        request.liveAIEnabled = liveAIEnabled
+        request.userConfirmedUnverifiedCombination = userConfirmedUnverifiedCombination
+        return AIStagingGuard.decide(request)
+    }
+
+    /// The guard decision for the combination currently staged in the
+    /// preview, or `nil` when the slots are unobservable (see
+    /// `stagingDecision(for:layout:...)`). The checkup surfaces a
+    /// `.block`/`.warn` decision in its eSIM/conflict factor with the
+    /// decision's specific reason.
+    var aiStagingDecision: AIStagingDecision? {
+        guard let preview,
+              let layout = try? MobileGestaltCacheLayout.resolve(in: preview) else { return nil }
+        return Self.stagingDecision(for: preview, layout: layout, liveAIEnabled: liveAIEnabled,
+                                    userConfirmedUnverifiedCombination: userConfirmedUnverifiedAICombination,
+                                    proposedUnlock: false)
+    }
+
+    /// The guard decision for the China Unlock proposal (all six AI keys
+    /// staged as 1), evaluated on the current preview, or `nil` when the
+    /// slots are unobservable. Fix evaluates this before staging: it
+    /// answers whether the combination Fix is about to stage is blocked,
+    /// warned, or allowed.
+    var proposedUnlockStagingDecision: AIStagingDecision? {
+        guard let preview,
+              let layout = try? MobileGestaltCacheLayout.resolve(in: preview) else { return nil }
+        return Self.stagingDecision(for: preview, layout: layout, liveAIEnabled: liveAIEnabled,
+                                    userConfirmedUnverifiedCombination: userConfirmedUnverifiedAICombination,
+                                    proposedUnlock: true)
     }
 
     /// The 4-factor readiness checkup for the staged preview, or `nil`
@@ -328,7 +412,8 @@ final class GestaltManager: ObservableObject {
             productType: productType,
             liveRegionCode: liveRegionCode,
             liveRegModel: liveRegModel,
-            liveAIEnabled: liveAIEnabled)
+            liveAIEnabled: liveAIEnabled,
+            stagingDecision: aiStagingDecision)
     }
 
     /// Stages slot-only repairs for the detected AI conflicts: each slot
@@ -343,7 +428,7 @@ final class GestaltManager: ObservableObject {
         var staged = false
         for conflict in aiConflicts {
             switch conflict {
-            case .personalTranslatorDisabled:
+            case .personalTranslatorSlotDisabled:
                 if let baseline = DeviceAIEligibility.nativeAdvAISlotValue(
                        key: DeviceCacheOptions.personalTranslatorKey, productType: productType),
                    let current = DeviceCacheOptions.advAISlotValue(
@@ -354,6 +439,7 @@ final class GestaltManager: ObservableObject {
                         staged = true
                     } catch { /* Layout changed under us; leave it unstaged. */ }
                 }
+            case .personalTranslatorKeyDisabled:
                 if (document.extra[DeviceCacheOptions.personalTranslatorKey] as? NSNumber)?.intValue == 0 {
                     document.set(snapshot.originalValue(for: DeviceCacheOptions.personalTranslatorKey),
                                  for: DeviceCacheOptions.personalTranslatorKey)
@@ -376,15 +462,34 @@ final class GestaltManager: ObservableObject {
         return staged
     }
 
-    /// One-tap fix for the AI readiness checkup: stages the China Unlock
-    /// when it is not already unlocked in the preview, then repairs any
-    /// slot conflicts. Never writes directly; the caller opens the
-    /// existing review sheet (same as the unlock card's path).
+    /// One-tap fix for the AI readiness checkup: repairs any slot
+    /// conflicts first, then evaluates the staging guard on the China
+    /// Unlock proposal before staging it. A `.block` decision holds the
+    /// staging — the reason is shown, while a repair staged above stays
+    /// staged for review. A `.warn` decision proceeds: tapping Fix on
+    /// the checkup card, after the reason was shown there, is the
+    /// explicit confirmation, and it is recorded so the checkup stops
+    /// reporting the warned combination as not ready. Never writes
+    /// directly; the caller opens the existing review sheet (same as the
+    /// unlock card's path).
     @discardableResult
     func fixAIReadiness() -> Bool {
         var didSomething = false
-        if !isChinaUnlockedInPreview, stageChinaUnlock() { didSomething = true }
         if repairAIConflicts() { didSomething = true }
+        // Re-evaluate on the (possibly repaired) preview: a slot repaired
+        // to its native baseline no longer blocks staging.
+        if let decision = proposedUnlockStagingDecision {
+            if decision.requiresSlotRepair {
+                message = decision.reason
+                log(decision.reason)
+                return didSomething
+            }
+            if decision.requiresExplicitConfirmation {
+                userConfirmedUnverifiedAICombination = true
+                didSomething = true
+            }
+        }
+        if !isChinaUnlockedInPreview, stageChinaUnlock() { didSomething = true }
         return didSomething
     }
 
@@ -425,6 +530,13 @@ final class GestaltManager: ObservableObject {
     /// (LL/A) and the mapped US regulatory model are staged as well; when
     /// no US model is known for this device the model number is left
     /// untouched and the reason is shown under the mode picker.
+    ///
+    /// This is an explicit user action, so it is deliberately not gated
+    /// by the AI staging guard (see `AIStagingGuard`): it stages
+    /// CacheExtra keys only and never writes a CacheData slot, so a
+    /// pre-existing slot conflict is surfaced by the checkup with a
+    /// repair path instead of disabling the unlock. The guard is enforced
+    /// on the checkup card's Fix path (`fixAIReadiness`).
     ///
     /// If the eSIM cache layout cannot be verified, the whole group is
     /// stopped and the reason is shown (`message`); region code and AI
@@ -885,7 +997,7 @@ final class GestaltManager: ObservableObject {
         isBusy = true; defer { isBusy = false }
         do {
             let data = try await files.backupData(record)
-            accept(try await files.loadLocal(data: data, name: record.filename)); status = "Local file opened"
+            accept(try await files.loadLocal(data: data, name: record.filename, provenance: record.provenance)); status = "Local file opened"
         } catch { failed(error) }
     }
     func deleteBackup(_ record: BackupRecord) async {

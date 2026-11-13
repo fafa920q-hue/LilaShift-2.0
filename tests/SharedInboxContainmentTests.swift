@@ -1,17 +1,11 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-@main struct SharedInboxContainmentTests {
+final class SharedInboxContainmentTests: XCTestCase {
     struct Failure: Error { let message: String }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
-    }
-    static func rejects(_ message: String, _ action: () throws -> Void) throws {
-        do { try action() }
-        catch { return }
-        throw Failure(message: message)
-    }
 
-    static func main() throws {
+    func testSharedInboxContainment() throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent("GestaltX-inbox-boundaries-" + UUID().uuidString)
         defer { try? fm.removeItem(at: root) }
@@ -31,14 +25,14 @@ import Foundation
             }
             try fm.createDirectory(at: link.deletingLastPathComponent(), withIntermediateDirectories: true)
             try fm.createSymbolicLink(at: link, withDestinationURL: destination)
-            try rejects("Reject a linked ancestor during enumeration") { _ = try inbox.entries() }
-            try rejects("Reject a linked ancestor before writing") { _ = try inbox.enqueue(bytes, name: "must-not-publish.plist") }
-            try rejects("Reject a linked ancestor before reading") { _ = try inbox.read(entry) }
-            try rejects("Reject a linked ancestor before acknowledgement") { try inbox.acknowledge(entry) }
+            XCTAssertThrowsError(try inbox.entries(), "Reject a linked ancestor during enumeration")
+            XCTAssertThrowsError(try inbox.enqueue(bytes, name: "must-not-publish.plist"), "Reject a linked ancestor before writing")
+            XCTAssertThrowsError(try inbox.read(entry), "Reject a linked ancestor before reading")
+            XCTAssertThrowsError(try inbox.acknowledge(entry), "Reject a linked ancestor before acknowledgement")
             inbox.reject(entry)
-            try expect(try protected.entries().map(\.id) == [entry.id], "Another namespace's entry must remain published")
-            try expect(try protected.read(entry) == bytes, "Another namespace's bytes must remain unchanged")
-            try expect(try fm.contentsOfDirectory(atPath: protected.directory.path) == [entry.id.uuidString],
+            XCTAssert(try protected.entries().map(\.id) == [entry.id], "Another namespace's entry must remain published")
+            XCTAssert(try protected.read(entry) == bytes, "Another namespace's bytes must remain unchanged")
+            XCTAssert(try fm.contentsOfDirectory(atPath: protected.directory.path) == [entry.id.uuidString],
                        "No staging or quarantine files may be created outside the inbox")
         }
 
@@ -51,11 +45,10 @@ import Foundation
         try fm.createDirectory(at: batch.appendingPathComponent("extra"), withIntermediateDirectories: false)
         try fm.createSymbolicLink(at: batch.appendingPathComponent("extra/link"), withDestinationURL: external)
         try control.acknowledge(first)
-        try expect(try Data(contentsOf: external) == Data("keep".utf8), "Cleanup unlinks nested links without following them")
-        try expect(try control.entries().map(\.id) == [second.id], "Acknowledgement removes only its own batch")
-        try expect(try control.read(second) == bytes, "Normal queued documents remain readable")
+        XCTAssert(try Data(contentsOf: external) == Data("keep".utf8), "Cleanup unlinks nested links without following them")
+        XCTAssert(try control.entries().map(\.id) == [second.id], "Acknowledgement removes only its own batch")
+        XCTAssert(try control.read(second) == bytes, "Normal queued documents remain readable")
         control.reject(second)
-        try expect(try control.entries().isEmpty, "Quarantine still removes the selected entry from enumeration")
-        print("PASS: all inbox ancestors reject links; descriptor-relative publish/read/quarantine/cleanup preserve other namespaces.")
+        XCTAssert(try control.entries().isEmpty, "Quarantine still removes the selected entry from enumeration")
     }
 }

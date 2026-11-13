@@ -6,17 +6,40 @@
 // style). The table must be reviewed on every new iPhone generation:
 // unknown models are refused (nil), never guessed, and the mode then
 // stages region + sales region only.
+//
+// Fail-closed rules (P0-4): matching is by exact dictionary entry only.
+// There is no family/prefix fallback — an unlisted variant such as
+// iPhone19,9 maps to nil even though the iPhone19 family is known.
+// The device family is checked BEFORE the regulatory-model lookup, so a
+// known A-number can never smuggle a non-iPhone (for example an iPad)
+// into a US iPhone model. A known A-number is itself a verified entry,
+// so it still wins over the product-type fallback on an iPhone.
 import Foundation
 
 enum USRegulatoryModelMapping {
     /// US regulatory model for a device, or `nil` when unknown. Tries the
     /// recorded original regulatory model first, then the product type.
-    /// iPads return `nil`: the unlock is iPhone-focused and an iPad has
-    /// no eSIM group.
+    /// iPads and any non-iPhone return `nil`: the unlock is iPhone-focused
+    /// and an iPad has no eSIM group.
     static func usRegulatoryModel(originalRegModel: String?, productType: String) -> String? {
+        guard productType.hasPrefix("iPhone") else { return nil }
         if let originalRegModel, let mapped = regModelMap[originalRegModel] { return mapped }
-        guard !productType.hasPrefix("iPad") else { return nil }
         return productTypeMap[productType]
+    }
+
+    /// Whether the product type has a verified entry in the mapping table.
+    /// An unlisted variant of a known family (for example iPhone19,9) is
+    /// NOT known: family membership never implies a mapping.
+    static func isKnownProductType(_ productType: String) -> Bool {
+        productTypeMap[productType] != nil
+    }
+
+    /// The reason no US regulatory model is known for this device, or
+    /// `nil` when a mapping exists. Callers that stage region-only for an
+    /// unknown model show this instead of silently dropping the model.
+    static func unknownModelReason(originalRegModel: String?, productType: String) -> String? {
+        guard usRegulatoryModel(originalRegModel: originalRegModel, productType: productType) == nil else { return nil }
+        return L("No US regulatory model known for this device — region code only.")
     }
 
     // Original regulatory model -> US model.

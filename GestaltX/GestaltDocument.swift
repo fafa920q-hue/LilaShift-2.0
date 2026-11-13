@@ -253,6 +253,44 @@ struct GestaltDocument: @unchecked Sendable {
 }
 
 enum DocumentSource: String, Codable, Sendable { case device, local }
+
+/// Where a stored backup's bytes come from. First-read device state is
+/// explicitly NOT factory state: only `.verifiedFactory` may be presented
+/// to the user as the factory/original state. Every backup write records
+/// one of these cases; a record that predates provenance tracking decodes
+/// as `.unknown` (see `BackupRecord.init(from:)`), never as factory.
+enum BackupProvenance: String, Codable, CaseIterable, Sendable {
+    /// Passed the system-vault gate (ProductType, CacheVersion, CacheUUID,
+    /// CacheData length, non-empty) with a matching SHA-256 digest.
+    case verifiedFactory
+    /// The device plist as first read by this app. It may already have been
+    /// modified by another tool, an earlier install, or the system itself,
+    /// so it proves nothing about the factory state.
+    case firstRead
+    /// State recorded immediately before this app wrote the device file
+    /// ("Before applying" / "Before restoring" / "Original values snapshot").
+    case preModification
+    /// User-imported bytes: an earlier export or another tool's file.
+    case importedHistory
+    /// Origin not recorded (legacy backups written before provenance
+    /// tracking, or a record constructed without provenance).
+    case unknown
+
+    var isFactory: Bool { self == .verifiedFactory }
+
+    /// User-facing label. First-read state is labelled as what it is, never
+    /// as factory/original state.
+    var displayLabel: String {
+        switch self {
+        case .verifiedFactory: return L("Verified factory backup")
+        case .firstRead: return L("First-read device state")
+        case .preModification: return L("State before change")
+        case .importedHistory: return L("Imported backup")
+        case .unknown: return L("Unknown source")
+        }
+    }
+}
+
 struct OriginalField: @unchecked Sendable {
     // A stored nil means the field was absent. It must not fall back to the
     // now-modified document's value when resolving a restore.
@@ -272,6 +310,12 @@ struct DocumentSnapshot: @unchecked Sendable {
     var cachedOptionsOriginal: CachedOptionsOriginal?
     var wapiOriginal: WAPIOriginal?
     var ownershipVerified = false
+    /// Where this snapshot's bytes came from. A live device snapshot is
+    /// `.firstRead`, never factory state; a locally opened file is
+    /// `.importedHistory`. A snapshot produced by writing is `.unknown`
+    /// unless it restores a backup, in which case it carries that backup's
+    /// provenance.
+    var provenance: BackupProvenance = .unknown
 
     func originalWAPI() throws -> Bool {
         if let wapiOriginal { return try wapiOriginal.value(in: document) }
@@ -346,11 +390,43 @@ struct BackupRecord: Identifiable, Codable, Sendable {
     let deviceID: String
     let byteCount: Int
     let sha256: String?
+    /// Where the stored bytes came from. Never inferred from the reason or
+    /// the source alone for newly written records; see `saveBackup`.
+    let provenance: BackupProvenance
     var filename: String { id.uuidString + ".plist" }
+    /// User-facing provenance label, e.g. "First-read device state".
+    var provenanceLabel: String { provenance.displayLabel }
 
-    init(id: UUID, date: Date, reason: String, source: DocumentSource, deviceID: String, byteCount: Int, sha256: String? = nil) {
+    init(id: UUID, date: Date, reason: String, source: DocumentSource, deviceID: String, byteCount: Int, sha256: String? = nil, provenance: BackupProvenance = .unknown) {
         self.id = id; self.date = date; self.reason = reason; self.source = source
         self.deviceID = deviceID; self.byteCount = byteCount; self.sha256 = sha256
+        self.provenance = provenance
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        date = try container.decode(Date.self, forKey: .date)
+        reason = try container.decode(String.self, forKey: .reason)
+        source = try container.decode(DocumentSource.self, forKey: .source)
+        deviceID = try container.decode(String.self, forKey: .deviceID)
+        byteCount = try container.decode(Int.self, forKey: .byteCount)
+        sha256 = try container.decodeIfPresent(String.self, forKey: .sha256)
+        // Records written before provenance tracking have no provenance key.
+        // Infer only what the reason proves; an initial backup is .unknown,
+        // never factory state, because a first read cannot prove the device
+        // was unmodified.
+        provenance = try container.decodeIfPresent(BackupProvenance.self, forKey: .provenance)
+            ?? Self.inferredProvenance(reason: reason, source: source)
+    }
+
+    static func inferredProvenance(reason: String, source: DocumentSource) -> BackupProvenance {
+        switch reason {
+        case "Before applying", "Before restoring": return .preModification
+        case "Verified import", "Before editing": return .importedHistory
+        case "Manual backup": return source == .local ? .importedHistory : .firstRead
+        default: return .unknown
+        }
     }
 }
 
@@ -360,19 +436,22 @@ actor GestaltFileStore {
     private let deviceID: String
     private let acquire: @Sendable () throws -> Int64
     private let release: @Sendable (Int64) -> Void
-    private let writeData: @Sendable (Data, URL) throws -> Void
+    private let writeData: (@Sendable (Data, URL) throws -> Void)?
+    private let expectedDeviceURL: URL?
     private let removeBackupItem: @Sendable (URL) throws -> Void
     private let eventSink: @Sendable (String) -> Void
 
     init(deviceURL: URL, backupDirectory: URL, deviceID: String,
          acquire: @escaping @Sendable () throws -> Int64,
          release: @escaping @Sendable (Int64) -> Void,
-         writeData: @escaping @Sendable (Data, URL) throws -> Void = { try DevicePlistWriter.write($0, to: $1) },
+         writeData: (@Sendable (Data, URL) throws -> Void)? = nil,
+         expectedDeviceURL: URL? = nil,
          removeBackupItem: @escaping @Sendable (URL) throws -> Void = { try FileManager.default.removeItem(at: $0) },
          eventSink: @escaping @Sendable (String) -> Void = { _ in }) {
         self.deviceURL = deviceURL; self.backupDirectory = backupDirectory; self.deviceID = deviceID
         self.acquire = acquire; self.release = release; self.writeData = writeData; self.eventSink = eventSink
         self.removeBackupItem = removeBackupItem
+        self.expectedDeviceURL = expectedDeviceURL
     }
 
     private func withAccess<T>(_ operation: () throws -> T) throws -> T {
@@ -391,15 +470,23 @@ actor GestaltFileStore {
             let document = try GestaltDocument(data: data)
             let originals = try loadOriginals(for: document)
             if try !backups().contains(where: { $0.source == .device && $0.deviceID == deviceID }) {
-                // Fresh install or reinstall: try to recover the factory
-                // backup from the system vault before creating a fresh
+                // Fresh install or reinstall: try to recover the earliest
+                // known backup from the system vault before creating a fresh
                 // initial backup. The vault is best-effort redundancy,
                 // never the only backup; a failed recovery falls through
-                // to the existing fresh-backup path below.
+                // to the existing fresh-backup path below. Recovery requires
+                // the vault digest (see recoverFromSystemVault), and the
+                // recovered bytes keep the vault's recorded provenance:
+                // a first read recovered here is first-read state, not
+                // factory state.
                 if let recovered = recoverFromSystemVault(live: document) {
-                    _ = try saveBackup(recovered, source: .device, reason: "Initial backup")
-                    eventSink("Factory backup recovered from system vault.")
-                    syncSystemVault(data: recovered, live: document)
+                    _ = try saveBackup(recovered.data, source: .device, reason: "Initial backup", provenance: recovered.provenance)
+                    if recovered.provenance == .verifiedFactory {
+                        eventSink("Factory backup recovered from system vault.")
+                    } else {
+                        eventSink("System vault backup recovered; it is the earliest known state, not a verified factory backup.")
+                    }
+                    syncSystemVault(data: recovered.data, live: document, provenance: recovered.provenance)
                 } else {
                     var baseline = document
                     for (key, original) in originals.fields { baseline.set(original.value, for: key) }
@@ -409,19 +496,26 @@ actor GestaltFileStore {
                     if let wapi = originals.wapi, let value = try? wapi.value(in: baseline) { try baseline.setWAPI(value) }
                     let hasOriginals = !originals.fields.isEmpty || originals.cachedOptions != nil || originals.wapi != nil
                     let initialData = hasOriginals ? try baseline.encoded() : data
-                    try saveBackup(initialData, source: .device, reason: hasOriginals ? "Original values snapshot" : "Initial backup")
-                    // Mirror only the factory/initial backup, so the vault
-                    // always means "earliest known-good state".
-                    syncSystemVault(data: initialData, live: document)
+                    // A baseline rebuilt from recorded pre-write originals is
+                    // pre-modification state; a plain first read is first-read
+                    // state. Neither is factory state: this app cannot prove
+                    // the device was unmodified before its first read.
+                    let initialProvenance: BackupProvenance = hasOriginals ? .preModification : .firstRead
+                    try saveBackup(initialData, source: .device, reason: hasOriginals ? "Original values snapshot" : "Initial backup", provenance: initialProvenance)
+                    // Mirror the earliest known state with its provenance
+                    // recorded in the vault sidecar, so a later reinstall
+                    // recovers it as what it is, never as factory state.
+                    syncSystemVault(data: initialData, live: document, provenance: initialProvenance)
                 }
             }
             return DocumentSnapshot(data: data, document: document, source: .device, name: "MobileGestalt",
-                                    originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions, wapiOriginal: originals.wapi)
+                                    originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions, wapiOriginal: originals.wapi,
+                                    provenance: .firstRead)
         }
     }
 
-    func loadLocal(data: Data, name: String) throws -> DocumentSnapshot {
-        DocumentSnapshot(data: data, document: try GestaltDocument(data: data), source: .local, name: name)
+    func loadLocal(data: Data, name: String, provenance: BackupProvenance = .importedHistory) throws -> DocumentSnapshot {
+        DocumentSnapshot(data: data, document: try GestaltDocument(data: data), source: .local, name: name, provenance: provenance)
     }
 
     func backups() throws -> [BackupRecord] {
@@ -542,8 +636,14 @@ actor GestaltFileStore {
     }
 
     private func recoverCacheBaseline(from current: GestaltDocument) throws -> OriginalValues {
+        // Only pre-modification history counts as evidence of the original
+        // values. Records whose provenance is unknown (legacy JSON, or a
+        // record constructed without provenance) are admitted only when
+        // their reason is a pre-write reason; a record explicitly marked
+        // with any other provenance is never treated as original history.
         let records = try backups().filter {
             $0.source == .device && $0.deviceID == deviceID && ["Before applying", "Before restoring"].contains($0.reason)
+                && ($0.provenance == .preModification || $0.provenance == .unknown)
         }.sorted { $0.date < $1.date }
         for record in records {
             // If an earlier payload cannot be verified, its layout and baseline
@@ -567,8 +667,14 @@ actor GestaltFileStore {
     private func recoverOriginals(from current: GestaltDocument) throws -> OriginalValues {
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: backupDirectory.path, isDirectory: &isDirectory), isDirectory.boolValue else { return OriginalValues() }
+        // Only pre-modification history counts as evidence of the original
+        // values. Records whose provenance is unknown (legacy JSON, or a
+        // record constructed without provenance) are admitted only when
+        // their reason is a pre-write reason; a record explicitly marked
+        // with any other provenance is never treated as original history.
         let records = try backups().filter {
             $0.source == .device && $0.deviceID == deviceID && ["Before applying", "Before restoring"].contains($0.reason)
+                && ($0.provenance == .preModification || $0.provenance == .unknown)
         }.sorted { $0.date < $1.date }
         var previous: GestaltDocument?
         var originals = OriginalValues()
@@ -615,12 +721,15 @@ actor GestaltFileStore {
         }
     }
 
+    /// Every backup is a new file (a fresh UUID filename); an existing backup
+    /// is never overwritten in place. Callers must pass the provenance of the
+    /// bytes being saved: a first read is `.firstRead`, never factory state.
     @discardableResult
-    private func saveBackup(_ data: Data, source: DocumentSource, reason: String) throws -> BackupRecord {
+    private func saveBackup(_ data: Data, source: DocumentSource, reason: String, provenance: BackupProvenance = .unknown) throws -> BackupRecord {
         _ = try GestaltDocument(data: data)
         try FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
         let record = BackupRecord(id: UUID(), date: Date(), reason: reason, source: source, deviceID: deviceID,
-                                  byteCount: data.count, sha256: backupDigest(data))
+                                  byteCount: data.count, sha256: backupDigest(data), provenance: provenance)
         let url = backupDirectory.appendingPathComponent(record.filename)
         try data.write(to: url, options: .atomic)
         // A failed backup must stop a write. Verify the backup before creating its metadata.
@@ -632,8 +741,10 @@ actor GestaltFileStore {
 
     func backup(_ snapshot: DocumentSnapshot) throws {
         if snapshot.source == .device {
-            _ = try withAccess { try saveBackup(Data(contentsOf: deviceURL), source: .device, reason: "Manual backup") }
-        } else { try saveBackup(snapshot.data, source: .local, reason: "Manual backup") }
+            // A manual backup re-reads the live device: a read of current
+            // state, not factory state.
+            _ = try withAccess { try saveBackup(Data(contentsOf: deviceURL), source: .device, reason: "Manual backup", provenance: .firstRead) }
+        } else { try saveBackup(snapshot.data, source: .local, reason: "Manual backup", provenance: .importedHistory) }
     }
 
     func backupData(_ record: BackupRecord) throws -> Data {
@@ -697,19 +808,53 @@ actor GestaltFileStore {
         return vault.extra[GestaltKeys.productType] as? String == live.extra[GestaltKeys.productType] as? String
     }
 
-    /// Mirrors the factory (initial) backup into the system vault with a
-    /// SHA-256 sidecar. Best-effort: failures are logged, never fatal.
-    /// Never overwrites a vault that already matches the live build, and
-    /// never mirrors data that fails the 4-check gate.
-    private func syncSystemVault(data: Data, live: GestaltDocument) {
+    /// Provenance sidecar for the vault: the `BackupProvenance` raw value of
+    /// the vault bytes (for example "firstRead" or "verifiedFactory").
+    /// Vaults written before provenance tracking have no sidecar and read
+    /// back as `.unknown` — never assumed to be factory state.
+    private var systemVaultProvenanceURL: URL {
+        systemVaultPlistURL.appendingPathExtension("provenance")
+    }
+
+    private func readVaultProvenance() -> BackupProvenance {
+        guard let text = try? String(contentsOf: systemVaultProvenanceURL, encoding: .utf8) else { return .unknown }
+        return BackupProvenance(rawValue: text.trimmingCharacters(in: .whitespacesAndNewlines)) ?? .unknown
+    }
+
+    private func excludeFromBackup(_ url: URL) {
+        var mutableURL = url
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? mutableURL.setResourceValues(values)
+    }
+
+    /// Mirrors the earliest known backup into the system vault with a
+    /// SHA-256 sidecar and a provenance sidecar. Best-effort: failures are
+    /// logged, never fatal.
+    ///
+    /// No-overwrite rule: a vault whose digest verifies is an earlier valid
+    /// backup and is never silently replaced — not by a newer state, not by
+    /// lower-provenance state, and not when it no longer matches the live
+    /// cache generation (stale is not invalid; the factory copy for an older
+    /// generation must survive a system update). Only a missing, unreadable
+    /// or corrupt-digest vault may be replaced, and only by data that passes
+    /// the 4-check gate. The "Factory backup saved" log is emitted only for
+    /// `.verifiedFactory` data; first-read data is logged as what it is.
+    private func syncSystemVault(data: Data, live: GestaltDocument, provenance: BackupProvenance) {
         do {
             if let existing = try? Data(contentsOf: systemVaultPlistURL),
                let digest = try? String(contentsOf: systemVaultSHA256URL, encoding: .utf8),
-               digest.trimmingCharacters(in: .whitespacesAndNewlines) == Self.sha256Hex(of: existing),
-               Self.vaultMatchesLive(vaultData: existing, live: live) {
+               digest.trimmingCharacters(in: .whitespacesAndNewlines) == Self.sha256Hex(of: existing) {
+                excludeFromBackup(systemVaultPlistURL)
+                excludeFromBackup(systemVaultSHA256URL)
+                excludeFromBackup(systemVaultProvenanceURL)
+                eventSink("System vault backup kept: an earlier valid backup already exists.")
                 return
             }
-            guard Self.vaultMatchesLive(vaultData: data, live: live) else { return }
+            guard Self.vaultMatchesLive(vaultData: data, live: live) else {
+                eventSink("System vault backup skipped: the state does not match the live device.")
+                return
+            }
             do {
                 try data.write(to: systemVaultPlistURL, options: .atomic)
             } catch {
@@ -719,33 +864,40 @@ actor GestaltFileStore {
                 try data.write(to: systemVaultPlistURL)
             }
             try Self.sha256Hex(of: data).write(to: systemVaultSHA256URL, atomically: true, encoding: .utf8)
+            try provenance.rawValue.write(to: systemVaultProvenanceURL, atomically: true, encoding: .utf8)
             guard try Data(contentsOf: systemVaultPlistURL) == data,
                   (try? String(contentsOf: systemVaultSHA256URL, encoding: .utf8))?
                     .trimmingCharacters(in: .whitespacesAndNewlines) == Self.sha256Hex(of: data) else {
                 throw GestaltFailure("The backup could not be verified. No system write was started.")
             }
-            var plistURL = systemVaultPlistURL
-            var shaURL = systemVaultSHA256URL
-            var values = URLResourceValues()
-            values.isExcludedFromBackup = true
-            try? plistURL.setResourceValues(values)
-            try? shaURL.setResourceValues(values)
-            eventSink("Factory backup saved to system vault.")
+            if (try? String(contentsOf: systemVaultProvenanceURL, encoding: .utf8))?
+                .trimmingCharacters(in: .whitespacesAndNewlines) != provenance.rawValue {
+                eventSink("System vault provenance could not be verified.")
+            }
+            excludeFromBackup(systemVaultPlistURL)
+            excludeFromBackup(systemVaultSHA256URL)
+            excludeFromBackup(systemVaultProvenanceURL)
+            eventSink(provenance == .verifiedFactory
+                      ? "Factory backup saved to system vault."
+                      : "System vault backup saved (\(provenance.rawValue)).")
         } catch {
             eventSink("System vault backup skipped: " + error.localizedDescription)
         }
     }
 
     /// Attempts vault recovery for a fresh install/reinstall (no local
-    /// device backup for this installation). Returns the vault bytes only
-    /// when the digest file exists and verifies and all four checks pass
-    /// against the live document.
-    private func recoverFromSystemVault(live: GestaltDocument) -> Data? {
+    /// device backup for this installation). Returns the vault bytes and
+    /// their recorded provenance only when the digest file exists and
+    /// verifies and all four checks pass against the live document. A
+    /// missing or mismatched digest refuses recovery: a fresh first-read
+    /// backup is made instead. A legacy vault without a provenance sidecar
+    /// recovers as `.unknown`, never as factory state.
+    private func recoverFromSystemVault(live: GestaltDocument) -> (data: Data, provenance: BackupProvenance)? {
         guard let vault = try? Data(contentsOf: systemVaultPlistURL),
               let digest = try? String(contentsOf: systemVaultSHA256URL, encoding: .utf8),
               digest.trimmingCharacters(in: .whitespacesAndNewlines) == Self.sha256Hex(of: vault),
               Self.vaultMatchesLive(vaultData: vault, live: live) else { return nil }
-        return vault
+        return (vault, readVaultProvenance())
     }
 
     func deleteBackup(_ record: BackupRecord) throws {
@@ -793,7 +945,7 @@ actor GestaltFileStore {
                 return expected
             }
         }
-        let record = try saveBackup(imported.data, source: .device, reason: "Verified import")
+        let record = try saveBackup(imported.data, source: .device, reason: "Verified import", provenance: .importedHistory)
         return try commit(imported.document, expected: expected, restoring: record)
     }
 
@@ -814,14 +966,17 @@ actor GestaltFileStore {
         }
         let output = try edited.encoded()
         guard expected.source == .device else {
-            try saveBackup(expected.data, source: .local, reason: "Before editing")
+            // The pre-edit state of a locally opened file is imported
+            // history, even when the file was previously verified.
+            try saveBackup(expected.data, source: .local, reason: "Before editing", provenance: .importedHistory)
             var originals = expected.recordingOriginals(to: edited)
             for key in originallyAbsentKeys { originals.fields[key] = OriginalField(value: nil) }
             // A backup replaces the imported payload. Its ownership has not been
             // verified merely because the previously open document was verified.
             let ownershipVerified = record == nil && expected.ownershipVerified
             return DocumentSnapshot(data: output, document: edited, source: .local, name: expected.name,
-                                    originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions, wapiOriginal: originals.wapi, ownershipVerified: ownershipVerified)
+                                    originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions, wapiOriginal: originals.wapi, ownershipVerified: ownershipVerified,
+                                    provenance: expected.provenance)
         }
         if let record {
             guard record.source == .device, record.deviceID == deviceID, edited.matchesIdentity(expected.document) else {
@@ -843,7 +998,8 @@ actor GestaltFileStore {
             let saved = try loadOriginals(for: expected.document)
             // Resolve old history before creating today's pre-write backup, so
             // this current (possibly already modified) state cannot migrate it.
-            try saveBackup(current, source: .device, reason: record == nil ? "Before applying" : "Before restoring")
+            // The pre-write state is pre-modification state by definition.
+            try saveBackup(current, source: .device, reason: record == nil ? "Before applying" : "Before restoring", provenance: .preModification)
             baseline.originals.merge(saved.fields) { _, saved in saved }
             if let audio = saved.cachedOptions { baseline.cachedOptionsOriginal = audio }
             if let wapi = saved.wapi { baseline.wapiOriginal = wapi }
@@ -856,31 +1012,47 @@ actor GestaltFileStore {
             // This record is separate from deletable full-file backups.
             try saveOriginals(originals, for: expected.document)
             guard try Data(contentsOf: deviceURL) == current else { throw GestaltFailure("MobileGestalt changed since it was loaded. Refresh before applying your edits.") }
-            do {
-                // Atomic replacement needs directory-create access which some extensions lack.
-                // Keep the device file's existing inode; backups are already durable.
-                // `writeData` is the hardened in-place writer (pwrite, no
-                // pre-truncate, F_FULLFSYNC, descriptor readback, rollback).
-                eventSink("Write: \(output.count) bytes")
-                try writeData(output, deviceURL)
-                eventSink("Readback: comparing full plist and value types")
-                let readback = try Data(contentsOf: deviceURL)
-                guard try edited.matches(GestaltDocument(data: readback)) else { throw GestaltFailure("The write did not match the readback.") }
-                eventSink("Readback: verified")
-                return DocumentSnapshot(data: readback, document: edited, source: .device, name: expected.name, originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions, wapiOriginal: originals.wapi)
-            } catch {
-                eventSink("Write/readback failed: " + error.localizedDescription)
-                eventSink("Recovery: restoring previous bytes")
+            let readback: Data
+            eventSink("Write: \(output.count) bytes")
+            if let writeData {
+                readback = try writeInjected(output, edited: edited, original: current, using: writeData)
+            } else {
+                // The production writer checks exact readback and, on failure,
+                // rolls back through its existing descriptor.
                 do {
-                    // The recovery write uses the same hardened in-place
-                    // writer: the old `current.write(to:)` was itself a
-                    // truncating write with the same 0-byte window.
-                    try writeData(current, deviceURL)
-                    guard try Data(contentsOf: deviceURL) == current else { throw GestaltFailure("The original file could not be restored.") }
-                } catch { throw GestaltFailure("Write verification and recovery failed. Keep the backup and recover the device file before trying again.") }
-                eventSink("Recovery: previous bytes restored and verified")
-                throw GestaltFailure("The write failed. The previous file was restored and verified.")
+                    try DevicePlistWriter.write(output, to: deviceURL, expectedURL: expectedDeviceURL,
+                                                expectedOriginal: current)
+                    readback = output
+                } catch let failure as DevicePlistWriter.WriteError {
+                    eventSink("Write/readback failed: " + failure.localizedDescription)
+                    throw GestaltFailure(failure.localizedDescription)
+                }
             }
+            eventSink("Readback: verified")
+            return DocumentSnapshot(data: readback, document: edited, source: .device, name: expected.name,
+                                    originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions,
+                                    wapiOriginal: originals.wapi, provenance: record?.provenance ?? .unknown)
+        }
+    }
+
+    private func writeInjected(_ output: Data, edited: GestaltDocument, original: Data,
+                               using writeData: (Data, URL) throws -> Void) throws -> Data {
+        do {
+            try writeData(output, deviceURL)
+            let readback = try Data(contentsOf: deviceURL)
+            guard try edited.matches(GestaltDocument(data: readback)) else {
+                throw GestaltFailure("The write did not match the readback.")
+            }
+            return readback
+        } catch {
+            eventSink("Write/readback failed: " + error.localizedDescription)
+            do {
+                try DevicePlistWriter.write(original, to: deviceURL, expectedURL: expectedDeviceURL)
+            } catch {
+                throw GestaltFailure("Write verification and recovery failed. Keep the backup and recover the device file before trying again.")
+            }
+            eventSink("Recovery: previous bytes restored and verified")
+            throw GestaltFailure("The write failed. The previous file was restored and verified.")
         }
     }
 }

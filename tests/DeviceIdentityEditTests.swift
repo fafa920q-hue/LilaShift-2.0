@@ -1,13 +1,15 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-@main struct DeviceIdentityEditTests {
+final class DeviceIdentityEditTests: XCTestCase {
     struct Failure: Error { let message: String }
     final class Trace: @unchecked Sendable { var writes = 0; var acquisitions = 0 }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
+    func expect(_ condition: Bool, _ message: String) {
+        XCTAssert(condition, message)
     }
 
-    static func main() async throws {
+    func testDeviceIdentityEdit() async throws {
         let fm = FileManager.default
         let directory = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -40,7 +42,7 @@ import Foundation
                         _ = try await store.commit(edited, expected: initial, restoring: restore ? record : nil)
                         throw Failure(message: "A device identity edit was accepted: " + key)
                     } catch let failure as GestaltFailure {
-                        try expect(failure.key == "Device identity fields cannot be changed in the system plist. Open a local file to edit these fields.", "Reject at the device identity preflight")
+                        expect(failure.key == "Device identity fields cannot be changed in the system plist. Open a local file to edit these fields.", "Reject at the device identity preflight")
                     }
                 }
             }
@@ -53,23 +55,23 @@ import Foundation
             _ = try await store.commit(normalized, expected: initial)
             throw Failure(message: "Identifier normalization silently changed the system field")
         } catch is GestaltFailure {}
-        try expect(trace.writes == 0 && trace.acquisitions == 0, "Rejected identity changes precede sandbox access and system writes")
-        try expect(try Data(contentsOf: device) == bytes, "Rejected identity changes preserve device bytes")
-        try expect(try await store.backups().count == 1, "Rejected identity changes do not create backups")
-        try expect(!fm.fileExists(atPath: backups.appendingPathComponent("OriginalValues.plist").path), "Rejected identity changes do not poison the journal")
+        expect(trace.writes == 0 && trace.acquisitions == 0, "Rejected identity changes precede sandbox access and system writes")
+        expect(try Data(contentsOf: device) == bytes, "Rejected identity changes preserve device bytes")
+        expect(try await store.backups().count == 1, "Rejected identity changes do not create backups")
+        expect(!fm.fileExists(atPath: backups.appendingPathComponent("OriginalValues.plist").path), "Rejected identity changes do not poison the journal")
 
         var unrelated = initial.document
         unrelated.set("allowed", for: "setting")
         _ = try await store.commit(unrelated, expected: initial)
         let reopened = try await store.loadDevice()
-        try expect(reopened.document.extra["setting"] as? String == "allowed", "Other edits still commit and reopen with their original identity")
-        try expect(trace.writes == 1, "Only the permitted edit reaches the writer")
+        expect(reopened.document.extra["setting"] as? String == "allowed", "Other edits still commit and reopen with their original identity")
+        expect(trace.writes == 1, "Only the permitted edit reaches the writer")
 
         let local = try await store.loadLocal(data: bytes, name: "local.plist")
         var localEdit = local.document
         for key in identifiers.keys { localEdit.set(nil, for: key) }
         let savedLocal = try await store.commit(localEdit, expected: local)
-        try expect(savedLocal.document.extra.isEmpty && trace.writes == 1, "Local documents remain freely editable")
+        expect(savedLocal.document.extra.isEmpty && trace.writes == 1, "Local documents remain freely editable")
 
         let emptyDevice = directory.appendingPathComponent("missing-identifiers.plist")
         let emptyBytes = try PropertyListSerialization.data(fromPropertyList: ["CacheExtra": [String: Any]()], format: .binary, options: 0)
@@ -85,7 +87,6 @@ import Foundation
                 throw Failure(message: "A previously absent system identity field was added: " + key)
             } catch is GestaltFailure {}
         }
-        try expect(try Data(contentsOf: emptyDevice) == emptyBytes, "Absent identity fields remain absent on the device")
-        print("PASS: actual device identity values, types and presence are preserved across edits and restores; local editing remains unrestricted.")
+        expect(try Data(contentsOf: emptyDevice) == emptyBytes, "Absent identity fields remain absent on the device")
     }
 }

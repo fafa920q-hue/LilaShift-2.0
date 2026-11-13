@@ -1,12 +1,8 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-struct ArtworkTestFailure: Error { let message: String }
-
-func expectArtwork(_ condition: Bool, _ message: String) throws {
-    guard condition else { throw ArtworkTestFailure(message: message) }
-}
-
-@main struct ArtworkPreservationTests {
+final class ArtworkPreservationTests: XCTestCase {
     static func document(artwork: Any?, format: PropertyListSerialization.PropertyListFormat) throws -> GestaltDocument {
         var extra: [String: Any] = [
             "Unrelated": ["bytes": Data([3, 1, 4]), "enabled": true],
@@ -19,7 +15,7 @@ func expectArtwork(_ condition: Bool, _ message: String) throws {
         return try GestaltDocument(data: PropertyListSerialization.data(fromPropertyList: root, format: format, options: 0))
     }
 
-    static func main() throws {
+    func testArtworkPreservation() throws {
         let malformed: [(String, Any)] = [
             ("string", "legacy artwork"),
             ("data", Data([0, 255, 17])),
@@ -39,11 +35,11 @@ func expectArtwork(_ condition: Bool, _ message: String) throws {
             // Both an absent value and an existing empty dictionary remain editable.
             let emptyArtwork: [Any?] = [nil, [String: Any]()]
             for initial in emptyArtwork {
-                var edited = try document(artwork: initial, format: format)
+                var edited = try Self.document(artwork: initial, format: format)
                 for (key, value) in edits { _ = edited.setArtwork(value, for: key) }
-                let expected = try document(artwork: Dictionary(uniqueKeysWithValues: edits), format: format)
-                try expectArtwork(edited.matches(expected), "Create missing artwork fields without changing other values")
-                try expectArtwork(try GestaltDocument(data: edited.encoded()).matches(expected), "New artwork survives serialization")
+                let expected = try Self.document(artwork: Dictionary(uniqueKeysWithValues: edits), format: format)
+                XCTAssert(edited.matches(expected), "Create missing artwork fields without changing other values")
+                XCTAssert(try GestaltDocument(data: edited.encoded()).matches(expected), "New artwork survives serialization")
             }
 
             let originalArtwork: [String: Any] = [
@@ -51,28 +47,27 @@ func expectArtwork(_ condition: Bool, _ message: String) throws {
                 "VendorBytes": Data([0, 1, 255]),
                 "VendorValues": ["enabled": true, "count": NSNumber(value: 7), "scale": NSNumber(value: 0.5)],
             ]
-            var edited = try document(artwork: originalArtwork, format: format)
+            var edited = try Self.document(artwork: originalArtwork, format: format)
             for (key, value) in edits { _ = edited.setArtwork(value, for: key) }
             var expectedArtwork = originalArtwork
             expectedArtwork["ArtworkDeviceProductDescription"] = "Edited model"
             expectedArtwork["ArtworkDeviceSubType"] = NSNumber(value: 2556)
-            let expected = try document(artwork: expectedArtwork, format: format)
-            try expectArtwork(edited.matches(expected), "Retain unknown artwork keys and their exact types")
-            try expectArtwork(try GestaltDocument(data: edited.encoded()).matches(expected), "Existing artwork survives serialization")
+            let expected = try Self.document(artwork: expectedArtwork, format: format)
+            XCTAssert(edited.matches(expected), "Retain unknown artwork keys and their exact types")
+            XCTAssert(try GestaltDocument(data: edited.encoded()).matches(expected), "Existing artwork survives serialization")
 
             for (kind, value) in malformed {
-                let original = try document(artwork: value, format: format)
+                let original = try Self.document(artwork: value, format: format)
                 for (key, replacement) in edits {
                     var unchanged = original
                     // Ignore the return value so this regression also runs against
                     // the original void-returning setter and fails on data loss.
                     _ = unchanged.setArtwork(replacement, for: key)
-                    try expectArtwork(unchanged.matches(original), "Preserve malformed \(kind) artwork when editing \(key)")
-                    try expectArtwork(try GestaltDocument(data: unchanged.encoded()).matches(original), "Preserve malformed \(kind) artwork through serialization")
+                    XCTAssert(unchanged.matches(original), "Preserve malformed \(kind) artwork when editing \(key)")
+                    XCTAssert(try GestaltDocument(data: unchanged.encoded()).matches(original), "Preserve malformed \(kind) artwork through serialization")
                     rejectedEdits += 1
                 }
             }
         }
-        print("PASS: \(rejectedEdits) malformed artwork edits preserve the complete document; XML/binary missing, empty and unknown-key dictionary controls pass.")
     }
 }

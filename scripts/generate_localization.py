@@ -49,7 +49,6 @@ Disable WAPI	关闭 WAPI
 Disabling may show Wi-Fi and change some network options. Restart to apply.	关闭后可显示为 Wi-Fi，部分联网选项可能随之变化。重启后生效。
 Restore Original	恢复原值
 Special Thanks	特别鸣谢
-
 Supported	支持
 Unsupported	不支持
 Welcome	欢迎
@@ -63,14 +62,11 @@ Back up your device before making changes, and export a copy of the original pli
 Capability flags cannot add missing hardware. Some changes require a device restart.	功能标记无法增加设备缺少的硬件，部分更改需要重新启动设备才能生效。
 Use only devices you own or are authorized to manage. You are responsible for the changes you choose to apply.	仅在你拥有或获授权管理的设备上使用，并自行承担所选修改带来的风险。
 This software is provided without warranty. Read the included license before use.	本软件不提供任何担保，使用前请阅读随附的开源许可证。
-
 GitHub Repository	GitHub 仓库
-
 Credits & Licenses	鸣谢与许可
 License	许可证
 Respring Technique	注销方法
 Read Again	重新读取
-
 A device restart may be required.	可能需要重新启动设备才能生效。
 Restart the device after changing the region.	更改地区后需要重新启动设备。
 Some changes require a device restart.	部分更改需要重新启动设备。
@@ -78,7 +74,6 @@ Restart required. Apple Intelligence also depends on device and region.	需要�
 Restart the device, then reopen Settings. Pencil hardware support is still required.	重新启动设备后再打开“设置”，仍需要 Apple Pencil 硬件支持。
 Respring first. Restart the device if the change does not appear.	先执行注销，若未生效则重新启动设备。
 Write verified. Some features require a device restart.	写入已验证。部分功能需要重新启动设备才能生效。
-
 Model	机型
 Status	状态
 Connected	已连接
@@ -97,7 +92,6 @@ A backup is created before each write.	每次写入前会自动备份。
 This will attempt to restart SpringBoard using NeoSpring.	将通过 NeoSpring 尝试重新启动 SpringBoard。
 GitHub Projects	GitHub 项目
 GNU GPL v3	GNU GPL v3
-
 Date	日期
 Enter an ISO 8601 date, such as 2026-11-09T12:00:00Z.	请输入 ISO 8601 日期，例如 2026-11-09T12:00:00Z。
 Tools	工具
@@ -531,7 +525,6 @@ A device restart may be required. This does not add a physical button.	可能需
 A device restart may be required. Hardware support is still required.	可能需要重新启动设备才能生效。仍需要硬件支持。
 A device restart may be required. Layout behavior varies by device.	可能需要重新启动设备才能生效。布局效果因设备而异。
 Restart required. Siri uses a device-specific capability type; changing it may affect the Apple Intelligence Siri interface. Keep the current value or restore the recorded original.	需要重新启动设备。Siri 使用机型相关的能力类型，修改此类型可能影响 Apple 智能 Siri 界面，请保持当前值或还原已记录的原始值。
-Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version.	需要重新启动设备。Apple 智能还取决于机型与地区。具体入口取决于设备和系统版本。
 Restart required. Apple Intelligence also depends on device and region. Results depend on the app and system support.	需要重新启动设备。Apple 智能还取决于机型与地区。效果取决于 App 和系统支持。
 A device restart may be required. Some system services may behave differently.	可能需要重新启动设备才能生效。部分系统服务的行为可能发生变化。
 A device restart may be required. This changes the system-wide InternalBuild flag, not just storage information. System services may behave differently. Revert restores the recorded original value.	可能需要重新启动设备才能生效。此操作修改系统全局的 InternalBuild 标记，并非仅调整存储信息。系统服务的行为可能发生变化。“还原”会恢复已记录的原始值。
@@ -557,8 +550,6 @@ Keeps the CH/A suffix and factory model — safest for dual-SIM phones.	保留 C
 Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.	同时设置销售地区与美国型号，最一致，但可能与双卡硬件冲突。
 Apple Intelligence readiness	Apple 智能就绪检查
 Ready %d/4	就绪 %d/4
-Live on device	本机已生效
-Ready — restart to apply	已配齐，重启后生效
 Live status unknown	本机状态未知
 Fix	修复
 Regulatory model	监管型号
@@ -568,6 +559,35 @@ On-device AI eligibility	本机 AI 资格
 Native Apple Intelligence hardware	原生 Apple 智能硬件
 Personal Translator slot is off on a native-AI iPhone — Photos Clean Up and Camera Siri may fail.	个人翻译槽位在原生 Apple 智能 iPhone 上处于关闭状态，照片消除与相机 Siri 可能失效。
 Audio Intelligence slot is on — Photos high-quality Clean Up may fail.	音频智能槽位处于开启状态，照片高质量消除可能失败。
+Personal Translator CacheData slot #%d reads 0 on a native-AI iPhone — its native baseline is 1. Photos Clean Up and Camera Siri may fail.	原生 AI iPhone 上个人翻译 CacheData 槽位 #%d 读数为 0，原生基线为 1。照片消除与相机 Siri 可能失败。
+Audio Intelligence CacheData slot #%d reads 1 — its native baseline is 0. Photos high-quality Clean Up may fail.	音频智能 CacheData 槽位 #%d 读数为 1，原生基线为 0。照片高质量消除可能失败。
+Audio Intelligence CacheData slot reads 1 — its native baseline is 0. Photos high-quality Clean Up may fail.	音频智能 CacheData 槽位读数为 1，原生基线为 0。照片高质量消除可能失败。
+Audio Intelligence CacheData slot #%d reads 1, but its native baseline is 0. Repair the slot to 0 before staging Audio Intelligence.	音频智能 CacheData 槽位 #%d 读数为 1，但其原生基线为 0。请先将槽位修复为 0，再暂存音频智能。
+Audio Intelligence CacheData slot reads 1, but its native baseline is 0. Repair the slot to 0 before staging Audio Intelligence.	音频智能 CacheData 槽位读数为 1，但其原生基线为 0。请先将槽位修复为 0，再暂存音频智能。
+Personal Translator CacheData slot #%d reads 0, but its native baseline on a native-AI iPhone is 1. Repair the slot to 1 before staging.	个人翻译 CacheData 槽位 #%d 读数为 0，但其在原生 AI iPhone 上的原生基线为 1。请先将槽位修复为 1，再暂存。
+Personal Translator CacheData slot reads 0, but its native baseline on a native-AI iPhone is 1. Repair the slot to 1 before staging.	个人翻译 CacheData 槽位读数为 0，但其在原生 AI iPhone 上的原生基线为 1。请先将槽位修复为 1，再暂存。
+Personal Translator CacheExtra key is explicitly 0 on a native-AI iPhone, but its native CacheData slot baseline is 1. Restore the CacheExtra key before staging.	原生 AI iPhone 上个人翻译 CacheExtra 键明确为 0，但其原生 CacheData 槽位基线为 1。请先恢复 CacheExtra 键，再暂存。
+Audio Intelligence CacheData slot did not resolve, so its native baseline cannot be verified. Auto-staging is refused until the slot is verified on-device.	音频智能 CacheData 槽位未能解析，无法验证其原生基线。在真机上验证槽位之前，拒绝自动暂存。
+Personal Translator CacheData slot did not resolve, so its native baseline cannot be verified. Auto-staging is refused until the slot is verified on-device.	个人翻译 CacheData 槽位未能解析，无法验证其原生基线。在真机上验证槽位之前，拒绝自动暂存。
+CacheExtra audioIntelligence is staged as 1 while CacheData slot #%d reads its native 0. Whether the CacheExtra key alone is safe on native-AI hardware is unverified — confirm explicitly before staging.	CacheExtra audioIntelligence 已暂存为 1，而 CacheData 槽位 #%d 读数为原生 0。仅 CacheExtra 键在原生 AI 硬件上是否安全尚未验证——暂存前请明确确认。
+CacheExtra audioIntelligence is staged as 1 while its CacheData slot reads its native 0. Whether the CacheExtra key alone is safe on native-AI hardware is unverified — confirm explicitly before staging.	CacheExtra audioIntelligence 已暂存为 1，而其 CacheData 槽位读数为原生 0。仅 CacheExtra 键在原生 AI 硬件上是否安全尚未验证——暂存前请明确确认。
+The live probe reports Apple Intelligence off on this native-AI iPhone, which conflicts with staging AI capabilities. Confirm explicitly before staging.	实时检测报告此原生 AI iPhone 的 Apple 智能为关闭，与暂存 AI 能力冲突。暂存前请明确确认。
+Audio Intelligence CacheData slot #%d reads 1, but the recorded iPhone/iPad baseline is 0. This hardware has no native-AI baseline — confirm explicitly before staging.	音频智能 CacheData 槽位 #%d 读数为 1，但记录的 iPhone/iPad 基线为 0。此硬件没有原生 AI 基线——暂存前请明确确认。
+Audio Intelligence CacheData slot reads 1, but the recorded iPhone/iPad baseline is 0. This hardware has no native-AI baseline — confirm explicitly before staging.	音频智能 CacheData 槽位读数为 1，但记录的 iPhone/iPad 基线为 0。此硬件没有原生 AI 基线——暂存前请明确确认。
+CacheData slots match their native baselines; staging is verified-safe.	CacheData 槽位与原生基线一致，暂存已验证安全。
+No native-AI baseline applies to this hardware; the unlock enables AI capabilities.	此硬件不适用原生 AI 基线；一键解锁将启用 AI 能力。
+Unverified combination explicitly confirmed by the user; staging proceeds.	用户已明确确认该未验证组合，继续暂存。
+Verified factory backup	已验证的出厂备份
+First-read device state	首次读取的设备状态
+State before change	修改前的状态
+Imported backup	导入的备份
+Unknown source	来源未知
+Personal Translator CacheExtra key is explicitly 0 on a native-AI iPhone — its native CacheData slot baseline is 1. Photos Clean Up and Camera Siri may fail.	个人翻译 CacheExtra 键在原生 AI iPhone 上明确为 0——其原生 CacheData 槽位基线为 1。照片消除与相机 Siri 可能失效。
+Personal Translator is off on a native-AI iPhone — its CacheData slot reads 0. Photos Clean Up and Camera Siri may fail.	个人翻译在原生 AI iPhone 上处于关闭状态——其 CacheData 槽位读数为 0。照片消除与相机 Siri 可能失效。
+Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.	需要重启。Apple 智能还取决于设备与地区。此操作暂存 CacheExtra 键；CacheData 槽位是另一个独立值。
+Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.	需要重启。Apple 智能还取决于设备与地区。具体入口取决于设备与系统版本。此操作暂存 CacheExtra 键；CacheData 槽位是另一个独立值。
+Live probe: on	实时探针：开启
+Live probe: off — restart to apply	实时探针：关闭 — 重启后生效
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():
