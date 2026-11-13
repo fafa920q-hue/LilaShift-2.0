@@ -86,7 +86,7 @@ final class OriginalCacheGenerationTests: XCTestCase {
         XCTAssert(loaded.originalValue(for: "setting") as? String == "remembered-original", "Cache migration preserves separately recorded CacheExtra originals")
         XCTAssert(loaded.cachedOptionsOriginal?.layoutUUID == layout.uuid && loaded.wapiOriginal?.layoutUUID == layout.uuid, "Incompatible cache entries are replaced only by matching-layout evidence")
         let archives = try fm.contentsOfDirectory(at: backups, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("OriginalValues-") }
-        XCTAssert(archives.count == 1 && (try Data(contentsOf: archives[0])) == legacy, "Migration preserves the complete legacy journal as an exact archive")
+        XCTAssert(try archives.count == 1 && Data(contentsOf: archives[0]) == legacy, "Migration preserves the complete legacy journal as an exact archive")
         XCTAssert(try Data(contentsOf: device) == current.encoded(), "Journal migration does not change the device file")
         let reloaded = try await makeStore(device: device, backups: backups).loadDevice()
         XCTAssert(try reloaded.originalCachedOptionFlags() == .restricted && reloaded.originalWAPI(), "Migrated cache originals survive reopen")
@@ -131,7 +131,7 @@ final class OriginalCacheGenerationTests: XCTestCase {
         let unavailable = metadata["unavailableCacheOriginals"] as? [String: [String]]
         XCTAssert(unavailable?["faceTimeAudio"] == [layout.uuid] && unavailable?["wapi"] == [layout.uuid], "The unavailable baseline survives subsequent journal writes")
         let archives = try fm.contentsOfDirectory(at: backups, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("OriginalValues-") }
-        XCTAssert(archives.count == 1 && (try Data(contentsOf: archives[0])) == legacy, "The original evidence is retained without creating a new archive on every edit")
+        XCTAssert(try archives.count == 1 && Data(contentsOf: archives[0]) == legacy, "The original evidence is retained without creating a new archive on every edit")
 
         // Exercise the old on-disk single-UUID marker as well as a layout cycle.
         // B's pre-write backups were made after its origin became unknown.

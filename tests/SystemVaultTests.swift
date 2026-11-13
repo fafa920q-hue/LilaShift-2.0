@@ -66,7 +66,8 @@ final class SystemVaultTests: XCTestCase {
         XCTAssert(try String(contentsOf: digestURL, encoding: .utf8)
                    == GestaltFileStore.sha256Hex(of: liveBytes),
                    "Vault sidecar holds the SHA-256 of the vault bytes")
-        XCTAssert(try await first.backups().count == 1, "First load saves one initial backup")
+        let firstLoadBackups = try await first.backups()
+        XCTAssert(firstLoadBackups.count == 1, "First load saves one initial backup")
         let firstBackups = try await first.backups()
         XCTAssert(firstBackups[0].provenance == .firstRead,
                    "The first backup is recorded as first-read state, never factory state")
@@ -86,7 +87,8 @@ final class SystemVaultTests: XCTestCase {
                    "Reinstall restores one initial backup from the vault")
         XCTAssert(recovered[0].provenance == .firstRead,
                    "A vault recovery of a first-read mirror stays first-read state, never factory state")
-        XCTAssert(try await second.backupData(recovered[0]) == liveBytes,
+        let recoveredData = try await second.backupData(recovered[0])
+        XCTAssert(recoveredData == liveBytes,
                    "Recovered backup bytes match the live bytes")
 
         // Corrupt digest: recovery fails, a fresh initial backup is made
@@ -96,7 +98,8 @@ final class SystemVaultTests: XCTestCase {
                                      backupDirectory: directory.appendingPathComponent("backups3"),
                                      deviceID: "install-3", acquire: { 1 }, release: { _ in })
         _ = try await third.loadDevice()
-        XCTAssert(try await third.backups().count == 1, "Corrupt digest still yields a fresh initial backup")
+        let thirdBackups = try await third.backups()
+        XCTAssert(thirdBackups.count == 1, "Corrupt digest still yields a fresh initial backup")
         XCTAssert(try String(contentsOf: digestURL, encoding: .utf8)
                    == GestaltFileStore.sha256Hex(of: liveBytes),
                    "A corrupt digest is replaced by a re-synced vault sidecar")

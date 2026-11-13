@@ -43,7 +43,7 @@ final class NonFinitePlistTests: XCTestCase {
         let key = Data(repeating: 19, count: 32)
         let sealed = try DeviceBoundPlist.seal(binary, key: key)
         let verified = try DeviceBoundPlist.verify(sealed, key: key)
-        XCTAssert(document.matches(GestaltDocument(data: verified)), "A device proof verifies its own payload containing NaN")
+        XCTAssert(try document.matches(GestaltDocument(data: verified)), "A device proof verifies its own payload containing NaN")
         var tampered = try PropertyListSerialization.propertyList(from: sealed, format: nil) as! [String: Any]
         var extra = tampered["CacheExtra"] as! [String: Any]
         extra["measurement"] = NSNumber(value: 0.0)

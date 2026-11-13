@@ -100,7 +100,7 @@ extension DocumentTests {
             let original = doc
             try doc.setWAPI(!value); try DeviceCacheOptions.validateEdit(from: original, to: doc)
             try doc.setWAPI(value)
-            XCTAssert(doc.matches(original) && Data(contentsOf: url) == bytes, "Real device export round-trips without changing the source file")
+            XCTAssert(try doc.matches(original) && Data(contentsOf: url) == bytes, "Real device export round-trips without changing the source file")
         }
     }
 }

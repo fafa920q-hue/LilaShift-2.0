@@ -28,8 +28,9 @@ final class UnchangedRestoreTests: XCTestCase {
         let identical = try GestaltDocument(data: initial.document.encoded())
         let result = try await store.commit(identical, expected: initial, restoring: record)
         XCTAssert(trace.writes == 0, "Restoring identical values must not write the device")
-        XCTAssert(result.data == bytes && (try Data(contentsOf: device)) == bytes, "No-op restoration preserves the original file encoding and snapshot bytes")
-        XCTAssert(try await store.backups().count == 1, "No-op restoration must not create a duplicate backup")
+        XCTAssert(try result.data == bytes && Data(contentsOf: device) == bytes, "No-op restoration preserves the original file encoding and snapshot bytes")
+        let backupsAfterNoOp = try await store.backups()
+        XCTAssert(backupsAfterNoOp.count == 1, "No-op restoration must not create a duplicate backup")
         XCTAssert(!fm.fileExists(atPath: backups.appendingPathComponent("OriginalValues.plist").path), "No-op restoration must not create a journal")
         XCTAssert(trace.acquisitions == 2 && trace.releases == 2, "No-op restoration still checks the live file within a balanced access scope")
 

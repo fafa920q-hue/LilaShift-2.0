@@ -82,11 +82,17 @@ final class ImportedWallpaperDeletionTests: XCTestCase {
         let saved = try PropertyListDecoder().decode([Data].self, from: Data(contentsOf: record))
         XCTAssert(saved == [manifest], "Complete installation manifest was not preserved")
         XCTAssert(try Data(contentsOf: importFolder(other, storage: storage).appendingPathComponent("Pack.plist")) == otherManifest, "Another imported pack changed")
-        await XCTAssertThrowsError(try await localStore(storage, device: "changed-device").removeWallpaper(pack.id))
+        do {
+            _ = try await localStore(storage, device: "changed-device").removeWallpaper(pack.id)
+            XCTFail("Expected removeWallpaper to throw")
+        } catch {}
         XCTAssert(fm.fileExists(atPath: record.path), "Device mismatch lost archived ownership")
         let uninstaller = CustomizationStore(storage: storage, device: "original-device", resolver: { _ in poster })
         if changed {
-            await XCTAssertThrowsError(try await uninstaller.removeWallpaper(pack.id))
+            do {
+                _ = try await uninstaller.removeWallpaper(pack.id)
+                XCTFail("Expected removeWallpaper to throw")
+            } catch {}
             XCTAssert(try CustomizationFiles.tree(poster) == before, "Uninstall removed an externally changed wallpaper")
             XCTAssert(fm.fileExists(atPath: record.path), "Refused uninstall lost archived ownership")
             try original.write(to: file)
@@ -104,7 +110,10 @@ final class ImportedWallpaperDeletionTests: XCTestCase {
         let blocker = storage.appendingPathComponent("WallpaperInstallations")
         try Data("not a directory".utf8).write(to: blocker)
         let store = localStore(storage)
-        await XCTAssertThrowsError(try await store.deleteImportedWallpaper(pack.id))
+        do {
+            _ = try await store.deleteImportedWallpaper(pack.id)
+            XCTFail("Expected deleteImportedWallpaper to throw")
+        } catch {}
         XCTAssert(try Data(contentsOf: importFolder(pack, storage: storage).appendingPathComponent("Pack.plist")) == manifest, "Failed record write deleted the original pack")
         let listed = try await store.listWallpapers()
         XCTAssert(listed.map(\.id) == [pack.id], "Failed deletion lost the list item")
@@ -143,12 +152,18 @@ final class ImportedWallpaperDeletionTests: XCTestCase {
         try fm.createDirectory(at: storage.appendingPathComponent("Wallpapers"), withIntermediateDirectories: true)
         let link = importFolder(pack, storage: storage)
         try fm.createSymbolicLink(at: link, withDestinationURL: importFolder(pack, storage: outside))
-        await XCTAssertThrowsError(try await localStore(storage).deleteImportedWallpaper(pack.id))
+        do {
+            _ = try await localStore(storage).deleteImportedWallpaper(pack.id)
+            XCTFail("Expected deleteImportedWallpaper to throw")
+        } catch {}
         XCTAssert(try Data(contentsOf: importFolder(pack, storage: outside).appendingPathComponent("Pack.plist")) == manifest, "Deletion followed a pack symlink")
         try fm.removeItem(at: link)
         _ = try makeImport(pack, storage: storage)
         try fm.createSymbolicLink(at: storage.appendingPathComponent("WallpaperInstallations"), withDestinationURL: outside)
-        await XCTAssertThrowsError(try await localStore(storage).deleteImportedWallpaper(pack.id))
+        do {
+            _ = try await localStore(storage).deleteImportedWallpaper(pack.id)
+            XCTFail("Expected deleteImportedWallpaper to throw")
+        } catch {}
         XCTAssert(fm.fileExists(atPath: importFolder(pack, storage: storage).path), "Record-directory symlink deleted the import")
     }
 }

@@ -104,7 +104,8 @@ final class LocalRestoreProvenanceTests: XCTestCase {
         let verifiedRecord = try await writingStore.backups().first { $0.reason == "Verified import" }
         XCTAssert(verifiedRecord?.provenance == .importedHistory && verifiedRecord?.source == .device,
                    "A verified import is recorded as imported history, not as a device-origin backup")
-        XCTAssert(try await writingStore.backups().first { $0.reason == "Before restoring" }?.provenance == .preModification,
+        let beforeRestoring = try await writingStore.backups().first { $0.reason == "Before restoring" }
+        XCTAssert(beforeRestoring?.provenance == .preModification,
                    "Restoring first records the pre-restoration state")
     }
 }

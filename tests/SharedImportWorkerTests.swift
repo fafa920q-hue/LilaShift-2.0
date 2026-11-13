@@ -91,7 +91,8 @@ final class SharedImportWorkerTests: XCTestCase {
 
         let inbox = try SharedPlistInbox(container: root, namespace: "test")
         let entry = try inbox.enqueue(bytes, name: "queued.plist")
-        XCTAssert(try await inbox.readAsync(entry) == bytes, "Queued reads use the same bounded background worker")
+        let queuedData = try await inbox.readAsync(entry)
+        XCTAssert(queuedData == bytes, "Queued reads use the same bounded background worker")
         XCTAssert(try inbox.entries().map(\.id) == [entry.id], "Reading never acknowledges the queued document")
     }
 }

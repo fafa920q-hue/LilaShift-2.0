@@ -22,7 +22,8 @@ final class BackupExportProofTests: XCTestCase {
         let exported = try await store.backupExportData(owned, sealingWith: { try DeviceBoundPlist.seal($0, key: key) })
         let verified = try DeviceBoundPlist.verify(exported, key: key)
         XCTAssert(try GestaltDocument(data: verified).matches(GestaltDocument(data: original)), "An owned device backup round-trips through proof verification")
-        XCTAssert(try await store.backupData(owned) == original, "Export never changes the stored backup")
+        let storedBackupData = try await store.backupData(owned)
+        XCTAssert(storedBackupData == original, "Export never changes the stored backup")
         XCTAssertThrowsError(try DeviceBoundPlist.verify(exported, key: Data(repeating: 0x32, count: 32))) { error in
             XCTAssertTrue(error is SharedPlistError)
         }
@@ -38,11 +39,17 @@ final class BackupExportProofTests: XCTestCase {
         let localData = try await store.backupExportData(localRecord, sealingWith: { data in trace.seals += 1; return data })
         XCTAssert(localData == original && trace.seals == 0, "Local backup exports remain unproven")
 
-        await XCTAssertThrowsError(try await store.backupExportData(owned, sealingWith: { _ in throw Failure(message: "Sealing unavailable") })) { error in
+        do {
+            _ = try await store.backupExportData(owned, sealingWith: { _ in throw Failure(message: "Sealing unavailable") })
+            XCTFail("Expected backupExportData to throw")
+        } catch {
             XCTAssertTrue((error as? Failure)?.message == "Sealing unavailable", "Propagate a sealing failure")
         }
         try Data("corrupt backup".utf8).write(to: backups.appendingPathComponent(owned.filename))
-        await XCTAssertThrowsError(try await store.backupExportData(owned, sealingWith: { data in trace.seals += 1; return data })) { error in
+        do {
+            _ = try await store.backupExportData(owned, sealingWith: { data in trace.seals += 1; return data })
+            XCTFail("Expected backupExportData to throw")
+        } catch {
             XCTAssertTrue(error is GestaltFailure)
         }
         XCTAssert(trace.seals == 0, "Verify backup integrity before invoking the sealer")

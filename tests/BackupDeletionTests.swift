@@ -34,18 +34,24 @@ final class BackupDeletionTests: XCTestCase {
         let record = try await store.backups().first!
         let metadata = backups.appendingPathComponent(record.id.uuidString + ".json")
         let originalMetadata = try Data(contentsOf: metadata)
-        await XCTAssertThrowsError(try await store.deleteBackup(record)) { error in
+        do {
+            _ = try await store.deleteBackup(record)
+            XCTFail("Expected deleteBackup to throw")
+        } catch {
             XCTAssertTrue((error as? CocoaError)?.code == .fileWriteNoPermission, "Report the real deletion error")
         }
-        XCTAssert(try await store.backups().contains { $0.id == record.id }, "A failed payload removal must leave the backup visible")
-        XCTAssert(try await store.backupData(record) == bytes, "The visible backup remains recoverable")
+        let visibleBackups = try await store.backups()
+        XCTAssert(visibleBackups.contains { $0.id == record.id }, "A failed payload removal must leave the backup visible")
+        let recoveredData = try await store.backupData(record)
+        XCTAssert(recoveredData == bytes, "The visible backup remains recoverable")
         XCTAssert(try Data(contentsOf: metadata) == originalMetadata, "A failed payload removal preserves its original metadata")
         XCTAssert(trace.paths == [record.filename], "Metadata removal is not attempted before a successful payload removal")
 
         trace.failPayload = false
         trace.paths = []
         try await store.deleteBackup(record)
-        XCTAssert(try await store.backups().isEmpty, "A successful retry removes the backup from the listing")
+        let remainingBackups = try await store.backups()
+        XCTAssert(remainingBackups.isEmpty, "A successful retry removes the backup from the listing")
         XCTAssert(!fm.fileExists(atPath: metadata.path), "A successful delete removes metadata")
         XCTAssert(!fm.fileExists(atPath: backups.appendingPathComponent(record.filename).path), "A successful delete removes payload")
         XCTAssert(try fm.contentsOfDirectory(atPath: backups.path).isEmpty, "A successful delete leaves no staging or orphan files")
@@ -54,7 +60,10 @@ final class BackupDeletionTests: XCTestCase {
         let interrupted = try await store.backups().first!
         let interruptedMetadata = backups.appendingPathComponent(interrupted.id.uuidString + ".json")
         trace.failMetadataOnce = true
-        await XCTAssertThrowsError(try await store.deleteBackup(interrupted)) { error in
+        do {
+            _ = try await store.deleteBackup(interrupted)
+            XCTFail("Expected deleteBackup to throw")
+        } catch {
             XCTAssertTrue((error as? CocoaError)?.code == .fileWriteNoPermission, "Metadata errors remain visible to the caller")
         }
         XCTAssert(!fm.fileExists(atPath: backups.appendingPathComponent(interrupted.filename).path), "The interrupted delete already removed the payload")

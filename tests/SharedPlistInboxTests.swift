@@ -28,7 +28,7 @@ final class SharedPlistInboxTests: XCTestCase {
         XCTAssert(try restarted.entries().map(\.id) == [first.id], "Completed handoff survives process restart")
         let second = try restarted.enqueue(xml, name: "same-name.plist")
         let third = try restarted.enqueue(binary, name: "same-name.plist")
-        XCTAssert(second.id != third.id && (try restarted.entries().count) == 3, "Duplicate filenames never overwrite queued files")
+        XCTAssert(try second.id != third.id && restarted.entries().count == 3, "Duplicate filenames never overwrite queued files")
         XCTAssert(try restarted.read(second) == xml, "XML plist is accepted without converting its values")
         try restarted.acknowledge(first)
         XCTAssert(try restarted.entries().map(\.id) == [second.id, third.id], "Acknowledge removes only the imported entry")

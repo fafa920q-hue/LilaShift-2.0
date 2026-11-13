@@ -225,7 +225,8 @@ final class DocumentTests: XCTestCase {
         let backups = try await store.backups()
         let writeBackup = backups.first { $0.reason == "Before applying" }!
         XCTAssert(backups.count == 2, "Initial and pre-write backups are retained")
-        XCTAssert(try await store.backupData(writeBackup) == originalBytes, "Backup retains exact pre-patch bytes")
+        let writeBackupData = try await store.backupData(writeBackup)
+        XCTAssert(writeBackupData == originalBytes, "Backup retains exact pre-patch bytes")
         _ = try await store.commit(original, expected: committed, restoring: writeBackup)
         XCTAssert(try GestaltDocument(data: Data(contentsOf: device)).matches(original), "Owned backup restores the original cache flags")
         let rejected = try await store.loadDevice()
@@ -324,7 +325,7 @@ final class DocumentTests: XCTestCase {
         let localEdit = try await store.commit(enabled, expected: local)
         XCTAssert(try localEdit.originalCachedOptionFlags() == .restricted, "Local sessions retain their own original flags")
         let otherLocal = try await store.loadLocal(data: enabled.encoded(), name: "unrelated-local")
-        XCTAssert(otherLocal.cachedOptionsOriginal == nil && try otherLocal.originalCachedOptionFlags() == .enabled,
+        XCTAssert(try otherLocal.cachedOptionsOriginal == nil && otherLocal.originalCachedOptionFlags() == .enabled,
                    "Newly opened files do not inherit another document's original flags")
         var foreignLayout = fixture
         foreignLayout["CacheUUID"] = "different-layout"
@@ -396,7 +397,7 @@ final class DocumentTests: XCTestCase {
         pencil.apply(.enable, to: &badOriginEdit, restoringFrom: beforeBadOrigin)
         do { _ = try await badOriginStore.commit(badOriginEdit, expected: beforeBadOrigin); throw TestFailure(message: "Broken originals must stop a system write") }
         catch is GestaltFailure {}
-        XCTAssert(originalTrace.writes == 0 && (try Data(contentsOf: unreadableRecordDevice)) == originalData, "No system write when original values cannot be preserved")
+        XCTAssert(try originalTrace.writes == 0 && Data(contentsOf: unreadableRecordDevice) == originalData, "No system write when original values cannot be preserved")
         let unknownSnapshot = DocumentSnapshot(data: try residual.encoded(), document: residual, source: .local, name: "unknown")
         var unknown = residual
         pencil.apply(.disable, to: &unknown, restoringFrom: unknownSnapshot)
@@ -504,7 +505,8 @@ final class DocumentTests: XCTestCase {
         let firstReadBackups = try await store.backups()
         XCTAssert(firstReadBackups.count == 1 && firstReadBackups[0].reason == "Initial backup", "First device read saves a backup before editing")
         _ = try await store.loadDevice()
-        XCTAssert(try await store.backups().count == 1, "Repeated reads do not duplicate the initial backup")
+        let rereadBackups = try await store.backups()
+        XCTAssert(rereadBackups.count == 1, "Repeated reads do not duplicate the initial backup")
         trace.released.removeAll()
         var pending = initial.document
         pending.set("pending", for: "unrelated-pending")
@@ -522,7 +524,8 @@ final class DocumentTests: XCTestCase {
         XCTAssert((committed.document.root["UnchangedTopLevel"] as? String) == "keep", "Preserve unrelated root values")
         let records = try await store.backups()
         XCTAssert(records.count == 2 && records.allSatisfy { $0.source == .device }, "Initial and transaction backups are persistent and source-bound")
-        XCTAssert(try await store.backupData(records[0]) == originalData, "Backup stores the original bytes")
+        let firstBackupData = try await store.backupData(records[0])
+        XCTAssert(firstBackupData == originalData, "Backup stores the original bytes")
         XCTAssert(trace.released == [0], "Zero is a valid extension handle and must be released")
         do { _ = try await store.commit(document, expected: initial); throw TestFailure(message: "Reject stale snapshot") }
         catch is GestaltFailure {}
@@ -557,7 +560,8 @@ final class DocumentTests: XCTestCase {
         let savedLocal = try await local.commit(document, expected: localSnapshot)
         XCTAssert(savedLocal.source == .local && savedLocal.document.matches(document), "Local document mode")
         XCTAssert(try Data(contentsOf: device) == originalData, "Local mode leaves device bytes untouched")
-        XCTAssert(try await local.backups().first?.source == .local, "Local backups stay local")
+        let localBackups = try await local.backups()
+        XCTAssert(localBackups.first?.source == .local, "Local backups stay local")
         try await store.deleteBackup(records[0])
         let remaining = try await store.backups()
         XCTAssert(!remaining.contains { $0.id == records[0].id }, "Backup deletion updates library")

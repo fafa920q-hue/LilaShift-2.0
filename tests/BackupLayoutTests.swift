@@ -37,11 +37,15 @@ final class BackupLayoutTests: XCTestCase {
         changed = root; changed["CacheData"] = "invalid"; variants.append(changed)
         for variant in variants {
             let restored = try GestaltDocument(data: bytes(variant))
-            await XCTAssertThrowsError(try await store.commit(restored, expected: initial, restoring: record)) { error in
+            do {
+                _ = try await store.commit(restored, expected: initial, restoring: record)
+                XCTFail("Expected commit to throw")
+            } catch {
                 XCTAssertTrue(error is GestaltFailure)
             }
-            XCTAssert(trace.writes == 0 && (try Data(contentsOf: device)) == original, "Layout rejection leaves the device untouched")
-            XCTAssert(try await store.backups().count == 1, "Layout rejection precedes backup and journal side effects")
+            XCTAssert(try trace.writes == 0 && Data(contentsOf: device) == original, "Layout rejection leaves the device untouched")
+            let backupListAfterRejection = try await store.backups()
+            XCTAssert(backupListAfterRejection.count == 1, "Layout rejection precedes backup and journal side effects")
         }
         var matching = initial.document
         matching.set("restored", for: "setting")
