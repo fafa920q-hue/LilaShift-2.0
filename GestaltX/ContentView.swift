@@ -386,6 +386,8 @@ struct ContentView: View {
 
                 SmartFaultDiagnosisCard()
 
+                PresetCatalogCard()
+
                 if model.isReading {
                     GlassReadProgressCard(title: L("Reading device data…"))
                 }

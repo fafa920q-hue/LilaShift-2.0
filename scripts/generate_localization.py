@@ -934,6 +934,58 @@ What went wrong, why, and what to try — from real readings only.	出了什么�
 Write did not verify	写入未能通过验证
 Write, restore and guard events are not recorded yet.	写入、恢复和防护事件尚未记录。
 eSIM layout could not be resolved	无法解析 eSIM 布局
+%d members	%d 个成员
+%d members are no longer in the catalog.	有 %d 个成员已不在预设库中。
+%d verified models	%d 个已验证机型
+A combination cannot contain the same preset twice.	一个组合不能两次包含同一个预设。
+All	全部
+Applies to	适用范围
+Category	分类
+Check Result	检查结果
+China-market devices	中国大陆市场设备
+Choose at least one preset.	请至少选择一个预设。
+Choose members	选择成员
+Combination name	组合名称
+Conflicts	冲突
+Custom Combinations	自定义组合
+Dependencies	依赖
+Eligibility	适用情况
+Favorites first	收藏优先
+Give the combination a name.	请给组合起个名字。
+Group	组
+High	高
+Hypothesis	假设
+Low	低
+Medium	中
+Members	成员
+Minimum system	最低系统
+New Combination	新建组合
+No combinations yet.	暂无自定义组合。
+No presets match this search.	没有符合搜索条件的预设。
+Not verified	未验证
+Observed	实测
+Preset Catalog	智能预设库
+Read the device first to see eligibility on this device.	请先读取设备，以查看本机上的适用情况。
+Restore method	恢复方式
+Risk	风险
+Risk level	风险等级
+Save Combination	保存组合
+Search presets…	搜索预设…
+Search, filter and save presets — from the catalog only.	搜索、筛选并收藏预设——仅基于预设库。
+Simulation can proceed	模拟可继续
+Source code	源码
+The combinations could not be read. No system changes were made.	无法读取组合。未做任何系统更改。
+The combinations could not be saved and verified. No system changes were made.	无法保存并验证组合。未做任何系统更改。
+The favorites could not be read. No system changes were made.	无法读取收藏。未做任何系统更改。
+The favorites could not be saved and verified. No system changes were made.	无法保存并验证收藏。未做任何系统更改。
+These combinations belong to a different device.	这些组合属于另一台设备。
+These combinations use a newer format this version cannot read.	这些组合使用了此版本无法读取的新格式。
+These favorites belong to a different device.	这些收藏属于另一台设备。
+These favorites use a newer format this version cannot read.	这些收藏使用了此版本无法读取的新格式。
+This combination is a plan only. It is not connected to staging or applying.	此组合仅为计划，未连接暂存或套用。
+Unknown preset: %@	未知预设：%@
+Upstream	上游
+iPad hardware	iPad 硬件
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():
