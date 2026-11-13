@@ -515,7 +515,7 @@ extension PresetCatalog {
     /// specific mechanism. Entries not listed here are dropped by
     /// the builder (and the count test fails), so the table must
     /// cover every `CapabilityEntry` id.
-    static let chineseContent: [String: PresetContent] = [
+    fileprivate static let chineseContent: [String: PresetContent] = [
         // MARK: Virtual entries
         "esim": PresetContent(
             chineseName: "eSIM",
@@ -646,7 +646,7 @@ extension PresetCatalog {
     /// advanced capabilities. (One dictionary literal per category
     /// keeps each extension readable; the two are merged in
     /// `mergedChineseContent` below.)
-    static let chineseContentDeviceAndAdvanced: [String: PresetContent] = [
+    fileprivate static let chineseContentDeviceAndAdvanced: [String: PresetContent] = [
         // MARK: Device
         "bootChime": PresetContent(
             chineseName: "开关机提示音",
@@ -720,7 +720,7 @@ extension PresetCatalog {
 
     /// The full Chinese content table: the main table plus the
     /// device/advanced table. The builder reads this merged table.
-    static var mergedChineseContent: [String: PresetContent] {
+    fileprivate static var mergedChineseContent: [String: PresetContent] {
         chineseContent.merging(chineseContentDeviceAndAdvanced) { _, new in new }
     }
 }
