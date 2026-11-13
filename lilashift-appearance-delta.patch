@@ -2581,7 +2581,7 @@ index 151029d..83b4411 100644
  entries = {}
  for line in TRANSLATIONS.strip().splitlines():
 diff --git a/tests/LaunchArtworkCatalogTests.swift b/tests/LaunchArtworkCatalogTests.swift
-index b6a6266..0248118 100644
+index c665d23..0248118 100644
 --- a/tests/LaunchArtworkCatalogTests.swift
 +++ b/tests/LaunchArtworkCatalogTests.swift
 @@ -1,4 +1,7 @@
@@ -2596,9 +2596,8 @@ index b6a6266..0248118 100644
          let invalidID = AppAppearanceProposal(bundleID: "../invalid", currentName: "微信", proposedName: "WX")
          XCTAssertEqual(invalidID.check, .invalidIdentifier)
  
--        let controls = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX\\nBad")
 +        // A real newline is a control character; a literal backslash is not.
-+        let controls = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX\nBad")
+         let controls = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX\nBad")
          XCTAssertEqual(controls.check, .invalidName)
      }
  
