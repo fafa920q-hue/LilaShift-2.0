@@ -38,7 +38,7 @@ final class ModifiedValuesTests: XCTestCase {
             GestaltKeys.regionInfo: regionInfo,
             GestaltKeys.legacyRegionInfo: regionInfo,
             GestaltKeys.modelNumber: "A3518",
-            GestaltKeys.siriKey: 2,
+            "K/R1GfGfCkXvEhaPS2Vrng": 2,
         ]
         if aiEnabled {
             for key in ChinaUnlock.aiCapabilityIDs {
