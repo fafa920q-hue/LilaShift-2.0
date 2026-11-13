@@ -754,6 +754,102 @@ Verified.	已验证。
 Verified. Cache layout matches this device.	已验证。缓存布局与此设备一致。
 WAPI flag reads back as disabled — this verifies the staged flag, not network hardware.	WAPI 标志回读值为关闭——这仅验证暂存的标志位，不验证网络硬件。
 Would change %d fields	将更改 %d 个字段
+%@ conflicts with %@	%@ 与 %@ 冲突
+%@ is changed to the same value by %@	%@ 被 %@ 改为相同的值
+%@ is set to different values by %@	%@ 被 %@ 设为不同的值
+%d accepted	已接受 %d 个
+%d conflicts block staging.	%d 个冲突阻止暂存。
+%d fields changed since the fingerprint was recorded.	自记录指纹以来，有 %d 个字段发生了变化。
+%d fields were modified outside this app's records.	有 %d 个字段是在本 App 记录之外被修改的。
+%d not re-read	%d 个未重新读取
+%d of %d fields accepted after restart.	重启后 %d / %d 个字段已接受。
+%d of %d fields accepted after restart; %d reverted.	重启后 %d / %d 个字段已接受；%d 个已还原。
+%d of %d fields hold the staged value, but the device was not confirmed restarted.	%d / %d 个字段保留了暂存值，但未确认设备已重启。
+%d prerequisites are missing.	缺少 %d 个前置条件。
+%d recorded modifications have not been verified as restored.	有 %d 项已记录的修改尚未验证是否已还原。
+%d reverted	已还原 %d 个
+A trusted, verified backup exists for restore.	存在受信任且已验证的备份，可用于还原。
+Accepted	已接受
+Accepted changes marked restart-verified in history.	已接受的更改已在历史记录中标记为重启后已验证。
+Across the selected set	所选组合整体
+Analysis only — nothing is staged or written here.	仅供分析——此处不暂存、不写入任何内容。
+App Group	App 群组
+Audio Intelligence slot	音频智能插槽
+Backup	备份
+Backups have not been verified yet.	备份尚未验证。
+Build	构建号
+Cache bytes	缓存字节数
+Cache integrity	缓存完整性
+Cache layout	缓存布局
+Cache layout resolved, CacheUUID present, originals recorded, document verified.	缓存布局已解析，CacheUUID 存在，原始值已记录，文档已验证。
+Cache slots	缓存插槽数
+Cache, compatibility, backup and modification risk, from real readings only.	缓存、兼容性、备份与修改风险，均来自真实读取。
+Dependencies, conflicts and duplicates for a proposal, before you stage it.	在暂存之前，先查看该方案的依赖、冲突与重复修改。
+Dependency	依赖
+Dependency Analyzer	依赖分析器
+Device Capability Fingerprint	设备能力指纹
+Duplicate	重复
+Fair	一般
+Fingerprint saved.	指纹已保存。
+Fingerprint unchanged since it was recorded.	指纹自记录以来未发生变化。
+Has conflicts	存在冲突
+Health could not be scored: no evidence was available.	无法评分健康状况：没有任何证据。
+Health score %d of 100. %@	健康评分 %d / 100。%@
+Healthy	健康
+I restarted the device after applying	应用后我已重启设备
+Live probe agrees with the staged value.	实时检测与暂存值一致。
+Live probe disagrees with the staged value.	实时检测与暂存值不一致。
+Mark accepted as restart-verified	将已接受项标记为重启后已验证
+Missing prerequisites	缺少前置条件
+Model number	型号
+Model, OS build and support scope are recorded for this device.	该设备的型号、系统构建号与支持范围均已记录。
+Modification risk	修改风险
+Native Apple Intelligence	原生 Apple Intelligence
+Needs attention	需要注意
+No backups exist yet.	尚无备份。
+No fingerprint has been recorded for this device yet.	尚未为该设备记录指纹。
+No modifications have been recorded yet.	尚未记录任何修改。
+No modifications recorded.	未记录任何修改。
+No post-restart document has been read. Nothing is claimed accepted.	尚未读取重启后的文档。没有任何内容被声称为已接受。
+No trusted backup exists yet.	尚无受信任的备份。
+Not re-read	未重新读取
+Off	关
+On	开
+Only fields that were re-read after a restart are claimed accepted. A value in the file does not prove the system uses it.	只有在重启后重新读取过的字段才会被声称为已接受。文件中的值并不能证明系统实际在使用它。
+Personal Translator slot	个人翻译插槽
+Post-Modification Acceptance	修改后验收
+Product type	产品类型
+Re-read the device after a restart and check what actually stuck.	重启后重新读取设备，检查实际生效了什么。
+Read the device first to analyze a proposal.	请先读取设备，再分析方案。
+Read the device first to capture its fingerprint.	请先读取设备，再记录其指纹。
+Read the device first to score its health.	请先读取设备，再评估其健康状况。
+Recorded %@ · Digest %@	已记录 %@ · 摘要 %@
+Region code	地区码
+Reverted	已还原
+Reverted: %@	已还原：%@
+Safe to stage	可以暂存
+Safe to stage: %d features, %d warnings.	可以暂存：%d 个功能，%d 个警告。
+Safe to stage: %d features, no findings.	可以暂存：%d 个功能，无发现。
+Save current fingerprint	保存当前指纹
+System Health Score	系统健康评分
+Target %@ · Now %@	目标 %@ · 当前 %@
+The change history could not be saved. No system changes were made.	无法保存更改历史。未做任何系统更改。
+The device fingerprint could not be read. No system changes were made.	无法读取设备指纹。未做任何系统更改。
+The device fingerprint could not be saved. No system changes were made.	无法保存设备指纹。未做任何系统更改。
+The document could not be serialized and verified.	文档无法序列化与验证。
+The fingerprint is stored only on this device, in the app's own history. It is never sent anywhere.	指纹仅保存在本设备上，位于 App 自身的历史记录中，绝不会发送到任何地方。
+The live probe is not connected yet: acceptance is based on the file value only.	实时检测尚未连接：验收仅基于文件值。
+The recorded support scope may no longer apply. Re-verification is needed before staging.	已记录的支持范围可能不再适用。暂存前需要重新验证。
+The stored fingerprint belongs to a different device. It was not used.	存储的指纹属于另一台设备，未被使用。
+This device's real capabilities and build, recorded locally with a SHA-256 digest.	该设备的真实能力与构建信息，本地记录并附 SHA-256 摘要。
+This score is a diagnostic summary only. It does not guarantee safety or that any feature will work.	此评分仅为诊断性汇总，不保证安全，也不保证任何功能一定可用。
+Trusted backup	受信任的备份
+Unreadable	无法读取
+eSIM	eSIM
+eSIM green-tea	eSIM 绿茶
+eSIM not-green-tea	eSIM 非绿茶
+iOS version	iOS 版本
+The device could not be identified, so its fingerprint was not saved.	无法识别设备，因此未保存其指纹。
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():
