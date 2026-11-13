@@ -8,8 +8,11 @@
 // could not be read. Fields that were not re-read are never claimed
 // accepted. "Mark accepted as restart-verified" only sets a flag on
 // history records whose items all accepted — it never writes to the
-// MobileGestalt cache. The live probe is not connected yet, so
-// acceptance is based on the file value only, and the card says so.
+// MobileGestalt cache. The live probe is connected for CacheExtra
+// keys (region code, AI keys): when the probe answers, each item
+// shows whether the live system agrees with the staged value; when
+// it does not answer, the card says acceptance is based on the file
+// value only. CacheData slots have no live probe.
 import SwiftUI
 
 struct PostModificationAcceptanceCard: View {
@@ -30,9 +33,13 @@ struct PostModificationAcceptanceCard: View {
     /// The acceptance report for the recorded changes against the
     /// re-read document. `model.working` is the document read after
     /// the restart; when it is `nil` every item is not re-read.
+    /// Live-probe values come from `PostModificationAcceptance
+    /// .liveValues(for:)`: CacheExtra keys the probe answers for
+    /// show whether the live system agrees with the staged value.
     private var acceptanceReport: AcceptanceReport {
         PostModificationAcceptance.accept(
             records: records, current: model.working,
+            liveValues: PostModificationAcceptance.liveValues(for: records),
             restartConfirmed: restartConfirmed)
     }
 
@@ -130,9 +137,11 @@ struct PostModificationAcceptanceCard: View {
                     Text(AcceptanceReport.disclaimer)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(L("The live probe is not connected yet: acceptance is based on the file value only."))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    if report.items.allSatisfy({ $0.liveAgrees == nil }) {
+                        Text(L("The live probe did not answer for these keys: acceptance is based on the file value only."))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }

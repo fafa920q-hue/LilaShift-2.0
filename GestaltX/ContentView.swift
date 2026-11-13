@@ -384,6 +384,8 @@ struct ContentView: View {
 
                 PostModificationAcceptanceCard()
 
+                SmartFaultDiagnosisCard()
+
                 if model.isReading {
                     GlassReadProgressCard(title: L("Reading device data…"))
                 }

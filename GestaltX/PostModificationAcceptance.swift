@@ -179,6 +179,41 @@ enum PostModificationAcceptance {
             summary: summary)
     }
 
+    /// Builds live-probe values for the recorded changes' CacheExtra
+    /// keys, from a live-answers source (the production source is
+    /// `LiveGestaltProbeSource`, a thin wrapper over `LiveGestaltProbe`).
+    /// The probe is asked in the shape of the staged target value: a
+    /// `.bool` target asks for a bool answer, a `.string` target asks
+    /// for a string answer. A key the probe cannot answer gets no
+    /// entry — never a guessed value — and an `.int` / `.data` /
+    /// `.absent` target is not probed at all (the probe API has no
+    /// integer answer, and asking a bool question about an integer
+    /// key would misread it). CacheData keys get no live value:
+    /// CacheData slots have no live probe, so the file value is the
+    /// only evidence for them. The caller passes the result as
+    /// `liveValues` to `accept(_:)`.
+    static func liveValues(
+        for records: [RecordedChange],
+        using live: any LiveAnswersSource = LiveGestaltProbeSource()
+    ) -> [String: ChangeValue] {
+        var values: [String: ChangeValue] = [:]
+        for record in records where record.layer == .cacheExtra {
+            switch record.new {
+            case .bool:
+                if let answer = live.boolAnswer(for: record.key) {
+                    values[record.key] = .bool(answer)
+                }
+            case .string:
+                if let answer = live.stringAnswer(for: record.key) {
+                    values[record.key] = .string(answer)
+                }
+            case .int, .data, .absent:
+                break
+            }
+        }
+        return values
+    }
+
     /// Reads the current value of one recorded change from the
     /// post-restart document. Mirrors
     /// `RestorePreviewBuilder.currentValue`: CacheExtra and artwork

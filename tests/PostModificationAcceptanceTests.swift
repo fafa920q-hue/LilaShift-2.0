@@ -124,6 +124,67 @@ final class PostModificationAcceptanceTests: XCTestCase {
                        "The counts are the same; only the claim differs")
     }
 
+    // MARK: - Live values from the probe
+
+    /// A fake live-answers source: answers only what the test says,
+    /// nothing else.
+    private struct FakeLiveAnswers: LiveAnswersSource {
+        let bools: [String: Bool]
+        let strings: [String: String]
+        func boolAnswer(for key: String) -> Bool? { bools[key] }
+        func stringAnswer(for key: String) -> String? { strings[key] }
+    }
+
+    /// Bool targets ask for a bool answer, string targets for a
+    /// string answer, and both are mapped to the matching
+    /// `ChangeValue`.
+    func testLiveValuesMapsBoolAndStringTargets() throws {
+        let aiKey = try XCTUnwrap(Capability.all.first(where: { $0.id == "ai" })?.keys.first)
+        let aiRecord = RecordedChange(
+            id: UUID(), date: Date(timeIntervalSince1970: 0), deviceID: "test",
+            osBuild: "23A344", featureID: "ai", key: aiKey,
+            layer: .cacheExtra, original: .absent, new: .bool(true),
+            backupProvenance: .preModification, verified: true)
+        let fake = FakeLiveAnswers(
+            bools: [aiKey: true],
+            strings: [GestaltKeys.regionCode: "LL"])
+        let values = PostModificationAcceptance.liveValues(
+            for: [regionRecord(), aiRecord], using: fake)
+        XCTAssertEqual(values[GestaltKeys.regionCode], .string("LL"))
+        XCTAssertEqual(values[aiKey], .bool(true))
+    }
+
+    /// CacheData keys get no live value: the slots have no live
+    /// probe, so the file value is the only evidence for them.
+    func testLiveValuesSkipsCacheDataKeys() {
+        let fake = FakeLiveAnswers(
+            bools: [DeviceCacheOptions.greenTeaKey: false], strings: [:])
+        let values = PostModificationAcceptance.liveValues(
+            for: [esimGreenTeaRecord()], using: fake)
+        XCTAssertTrue(values.isEmpty, "A CacheData key must never get a live-probe value")
+    }
+
+    /// A key the probe cannot answer gets no entry — never a guessed
+    /// value.
+    func testLiveValuesSkipsUnansweredKeys() {
+        let values = PostModificationAcceptance.liveValues(
+            for: [regionRecord()], using: FakeLiveAnswers(bools: [:], strings: [:]))
+        XCTAssertTrue(values.isEmpty)
+    }
+
+    /// An integer target is not probed at all: asking a bool question
+    /// about an integer key would misread it.
+    func testLiveValuesSkipsIntTargets() {
+        let intRecord = RecordedChange(
+            id: UUID(), date: Date(timeIntervalSince1970: 0), deviceID: "test",
+            osBuild: "23A344", featureID: "test", key: "test-int-key",
+            layer: .cacheExtra, original: .int(1), new: .int(2),
+            backupProvenance: .preModification, verified: true)
+        let fake = FakeLiveAnswers(bools: ["test-int-key": true], strings: [:])
+        let values = PostModificationAcceptance.liveValues(for: [intRecord], using: fake)
+        XCTAssertTrue(values.isEmpty, "An integer-valued key must not be read as a bool")
+    }
+
     // MARK: - Helpers
 
     /// Region staged CH → LL.

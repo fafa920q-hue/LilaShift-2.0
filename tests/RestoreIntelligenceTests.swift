@@ -278,6 +278,139 @@ final class RestoreIntelligenceTests: XCTestCase {
                        "A backup with no file on disk must report not-found, never verified")
     }
 
+    // MARK: - Backup verification of existing files
+
+    /// A valid fixture document, as bytes, for backup-file tests.
+    private func backupData() throws -> Data {
+        try CoreModuleFixtures.document().encoded()
+    }
+
+    private func backupRecord(id: UUID, byteCount: Int, sha256: String?) -> BackupRecord {
+        BackupRecord(id: id, date: Date(timeIntervalSince1970: 0), reason: "test",
+                     source: .device, deviceID: "test-device", byteCount: byteCount,
+                     sha256: sha256, provenance: .verifiedFactory)
+    }
+
+    /// Writes `data` as the backup file for `id` in `directory`.
+    private func writeBackupFile(_ data: Data, id: UUID, in directory: URL) throws {
+        try data.write(to: directory.appendingPathComponent(id.uuidString + ".plist"))
+    }
+
+    /// The happy path: an existing file with the recorded byte count,
+    /// matching digest and a parseable plist verifies.
+    func testBackupVerificationValidExistingBackup() throws {
+        let directory = try tempDirectory()
+        let data = try backupData()
+        let id = UUID()
+        try writeBackupFile(data, id: id, in: directory)
+        let record = backupRecord(id: id, byteCount: data.count,
+                                  sha256: GestaltFileStore.sha256Hex(of: data))
+        let results = RestoreIntelligence.verifyBackups([record], against: nil, directory: directory)
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results[0].status, .verified)
+        XCTAssertNil(results[0].layoutMatchesCurrent, "No current document was supplied")
+    }
+
+    /// The same valid backup against a current document from the same
+    /// cache generation: the layout matches.
+    func testBackupVerificationLayoutMatchesCurrent() throws {
+        let directory = try tempDirectory()
+        let data = try backupData()
+        let id = UUID()
+        try writeBackupFile(data, id: id, in: directory)
+        let record = backupRecord(id: id, byteCount: data.count,
+                                  sha256: GestaltFileStore.sha256Hex(of: data))
+        let current = try CoreModuleFixtures.document()
+        let results = RestoreIntelligence.verifyBackups([record], against: current, directory: directory)
+        XCTAssertEqual(results[0].status, .verified)
+        XCTAssertEqual(results[0].layoutMatchesCurrent, true)
+    }
+
+    /// A verified backup from a different cache generation (a
+    /// different CacheUUID) still verifies as a file, but the layout
+    /// does not match the current document.
+    func testBackupVerificationLayoutMismatch() throws {
+        let directory = try tempDirectory()
+        let data = try backupData()
+        let id = UUID()
+        try writeBackupFile(data, id: id, in: directory)
+        let record = backupRecord(id: id, byteCount: data.count,
+                                  sha256: GestaltFileStore.sha256Hex(of: data))
+        let other = try GestaltDocument(data: PropertyListSerialization.data(fromPropertyList: [
+            "CacheUUID": "11111111-2222-3333-4444-555555555555",
+            "CacheData": CoreModuleFixtures.cacheData(greenTea: true, notGreenTea: false, wapi: true),
+            "CacheExtra": [GestaltKeys.regionCode: "CH"],
+        ], format: .binary, options: 0))
+        let results = RestoreIntelligence.verifyBackups([record], against: other, directory: directory)
+        XCTAssertEqual(results[0].status, .verified, "The file itself is intact")
+        XCTAssertEqual(results[0].layoutMatchesCurrent, false)
+    }
+
+    /// Same byte count, same parseable plist shape, but the bytes
+    /// differ from the recorded digest: the digest leg must fail.
+    /// The file holds a different region (LL instead of CH) so the
+    /// plist still parses — only the digest disagrees.
+    func testBackupVerificationDigestMismatch() throws {
+        let directory = try tempDirectory()
+        let original = try backupData()
+        let changed = try CoreModuleFixtures.document(
+            extra: [GestaltKeys.regionCode: "LL"]).encoded()
+        let id = UUID()
+        try writeBackupFile(changed, id: id, in: directory)
+        let record = backupRecord(id: id, byteCount: changed.count,
+                                  sha256: GestaltFileStore.sha256Hex(of: original))
+        let results = RestoreIntelligence.verifyBackups([record], against: nil, directory: directory)
+        if case .failed = results[0].status { } else {
+            XCTFail("A file whose digest does not match its record must fail verification, got \(results[0].status)")
+        }
+        XCTAssertNil(results[0].layoutMatchesCurrent)
+    }
+
+    /// A record whose byte count does not match the file on disk
+    /// fails, even when the file itself is a valid plist.
+    func testBackupVerificationByteCountMismatch() throws {
+        let directory = try tempDirectory()
+        let data = try backupData()
+        let id = UUID()
+        try writeBackupFile(data, id: id, in: directory)
+        let record = backupRecord(id: id, byteCount: data.count + 1,
+                                  sha256: GestaltFileStore.sha256Hex(of: data))
+        let results = RestoreIntelligence.verifyBackups([record], against: nil, directory: directory)
+        if case .failed = results[0].status { } else {
+            XCTFail("A byte-count mismatch must fail verification, got \(results[0].status)")
+        }
+    }
+
+    /// Bytes that match the recorded count and digest but do not
+    /// parse as a MobileGestalt plist fail on the parse leg.
+    func testBackupVerificationCorruptPlist() throws {
+        let directory = try tempDirectory()
+        let garbage = Data(repeating: 0xAB, count: 100)
+        let id = UUID()
+        try writeBackupFile(garbage, id: id, in: directory)
+        let record = backupRecord(id: id, byteCount: garbage.count,
+                                  sha256: GestaltFileStore.sha256Hex(of: garbage))
+        let results = RestoreIntelligence.verifyBackups([record], against: nil, directory: directory)
+        if case .failed = results[0].status { } else {
+            XCTFail("Unparseable bytes must fail verification, got \(results[0].status)")
+        }
+    }
+
+    /// A legacy record with no recorded digest is checked by byte
+    /// count and parse only — there is no digest to compare against —
+    /// and a valid file still verifies. This documents the current
+    /// behavior for digest-less records; it is not a claim that the
+    /// file was integrity-checked against a digest.
+    func testBackupVerificationWithoutDigestUsesByteCountAndParse() throws {
+        let directory = try tempDirectory()
+        let data = try backupData()
+        let id = UUID()
+        try writeBackupFile(data, id: id, in: directory)
+        let record = backupRecord(id: id, byteCount: data.count, sha256: nil)
+        let results = RestoreIntelligence.verifyBackups([record], against: nil, directory: directory)
+        XCTAssertEqual(results[0].status, .verified)
+    }
+
     func testProvenanceLabelsNeverClaimFactory() {
         XCTAssertEqual(RestoreIntelligence.provenanceLabel(for: .firstRead), L("First-recorded value"))
         XCTAssertNotEqual(RestoreIntelligence.provenanceLabel(for: .firstRead), L("Verified factory backup"))

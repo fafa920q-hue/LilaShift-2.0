@@ -75,6 +75,7 @@
 		B831FA5C5D600B267D6D663F /* DeviceFingerprintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DF9F83E57401483D5C89C7 /* DeviceFingerprintTests.swift */; };
 		7599F3DD3C5B9210D6191669 /* PostModificationAcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4BE41C060B5845330078F46 /* PostModificationAcceptanceTests.swift */; };
 		2626D3584530BA06A2CCC380 /* SystemHealthScoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093F094BCB46F978E3A84937 /* SystemHealthScoreTests.swift */; };
+		E28B04032B5F8FE4FF1B9276 /* SmartFaultDiagnosisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9F2EE54417F1ED12123955 /* SmartFaultDiagnosisTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -180,6 +181,7 @@
 		B8DF9F83E57401483D5C89C7 /* DeviceFingerprintTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeviceFingerprintTests.swift; sourceTree = "<group>"; };
 		F4BE41C060B5845330078F46 /* PostModificationAcceptanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PostModificationAcceptanceTests.swift; sourceTree = "<group>"; };
 		093F094BCB46F978E3A84937 /* SystemHealthScoreTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SystemHealthScoreTests.swift; sourceTree = "<group>"; };
+		8B9F2EE54417F1ED12123955 /* SmartFaultDiagnosisTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SmartFaultDiagnosisTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -344,6 +346,7 @@
 				300F68E457157F9D858AC087 /* SharedPlistInboxTests.swift */,
 				A4A683ED87150CEDBF035E3E /* SharedWallpaperImportTests.swift */,
 				4F95D4CCB08774DA750651F3 /* SiriCapabilityTests.swift */,
+				8B9F2EE54417F1ED12123955 /* SmartFaultDiagnosisTests.swift */,
 				7855C855237441FD9AE48803 /* StandalonePresetsTests.swift */,
 				093F094BCB46F978E3A84937 /* SystemHealthScoreTests.swift */,
 				F848381DE0AD4A5154849284 /* SystemSettingsTests.swift */,
@@ -556,6 +559,7 @@
 				DA6506CDA83E2C083F2C1C48 /* SharedPlistInboxTests.swift in Sources */,
 				038597A87681F8DC1D335263 /* SharedWallpaperImportTests.swift in Sources */,
 				CE7268CB52FB7B02198ECCF0 /* SiriCapabilityTests.swift in Sources */,
+				E28B04032B5F8FE4FF1B9276 /* SmartFaultDiagnosisTests.swift in Sources */,
 				9A7C7D4DD36F45B3B9ACFDB2 /* StandalonePresetsTests.swift in Sources */,
 				2626D3584530BA06A2CCC380 /* SystemHealthScoreTests.swift in Sources */,
 				B20A12924CF9E683E96DC4EF /* SystemSettingsTests.swift in Sources */,
