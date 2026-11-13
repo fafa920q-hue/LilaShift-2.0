@@ -838,7 +838,6 @@ The device fingerprint could not be read. No system changes were made.	无法读
 The device fingerprint could not be saved. No system changes were made.	无法保存设备指纹。未做任何系统更改。
 The document could not be serialized and verified.	文档无法序列化与验证。
 The fingerprint is stored only on this device, in the app's own history. It is never sent anywhere.	指纹仅保存在本设备上，位于 App 自身的历史记录中，绝不会发送到任何地方。
-The live probe is not connected yet: acceptance is based on the file value only.	实时检测尚未连接：验收仅基于文件值。
 The recorded support scope may no longer apply. Re-verification is needed before staging.	已记录的支持范围可能不再适用。暂存前需要重新验证。
 The stored fingerprint belongs to a different device. It was not used.	存储的指纹属于另一台设备，未被使用。
 This device's real capabilities and build, recorded locally with a SHA-256 digest.	该设备的真实能力与构建信息，本地记录并附 SHA-256 摘要。
@@ -850,6 +849,91 @@ eSIM green-tea	eSIM 绿茶
 eSIM not-green-tea	eSIM 非绿茶
 iOS version	iOS 版本
 The device could not be identified, so its fingerprint was not saved.	无法识别设备，因此未保存其指纹。
+%d errors, %d warnings, %d notes	%d 个错误，%d 个警告，%d 条提示
+%d fields could not be re-read.	有 %d 个字段无法重新读取。
+A backup file is missing from disk.	磁盘上缺少一个备份文件。
+A read attempt failed.	一次读取尝试失败了。
+A restore attempt failed.	一次恢复尝试失败了。
+A suggested fix is a suggestion, not a guarantee. It may not work on this device.	建议的修复方法只是建议，不是保证，在这台设备上可能无效。
+A verified backup is from a different cache generation than the current document.	一个已验证的备份来自与当前文稿不同的缓存世代。
+A write attempt did not verify.	一次写入尝试未能通过验证。
+Apple Intelligence slot could not be resolved	无法定位 Apple 智能插槽
+Backup could not be verified	备份无法通过验证
+Backup file is missing	备份文件缺失
+Backup is from a different cache generation	备份来自不同的缓存世代
+Backup “%@” — cache layout does not match the current document.	备份“%@”——缓存布局与当前文稿不匹配。
+Backup “%@” — file not found.	备份“%@”——找不到文件。
+Backup “%@” — verification failed.	备份“%@”——验证失败。
+Backups exist, but none has been verified in this session.	已有备份，但本次会话中尚未验证任何一个。
+Backups have not been verified	备份尚未验证
+Cache integrity needs attention	缓存完整性需要注意
+Cause not yet determined.	原因尚未确定。
+Check whether this model is in the supported list, and re-read the device.	请确认该机型是否在支持列表中，并重新读取设备。
+Compatibility could not be determined for this device.	无法确定此设备的兼容性。
+Compatibility is unknown	兼容性未知
+Confirm the device was restarted after applying, then re-read and check the acceptance report. If the region keeps reverting, restore from a verified backup.	请确认应用后设备已重新启动，然后重新读取并查看验收报告。如果地区仍在还原，请从已验证的备份恢复。
+Create a backup before changing anything.	在更改任何内容之前，请先创建备份。
+Create a fresh backup before changing anything. This record cannot be used to restore.	在更改任何内容之前，请先创建一个新的备份。此记录无法用于恢复。
+Create a fresh backup on this build. Treat a restore from this backup as review-required.	请在此构建上创建一个新的备份。从此备份恢复时需要复核。
+Device changed — support scope needs re-verification	设备已更改——支持范围需要重新验证
+Device identity or build changed since the last fingerprint.	自上次记录指纹以来，设备标识或构建已更改。
+Device not read yet	尚未读取设备
+Device state changed since the last fingerprint	自上次记录指纹以来设备状态已更改
+Device values changed between the stored fingerprint and the current read.	在已存储的指纹与当前读取之间，设备值发生了变化。
+Do not restore from this backup. Create a fresh backup, and keep the failed file for inspection.	请勿从此备份恢复。请创建一个新的备份，并保留失败的文件以供检查。
+Do not retry the write blindly. Re-read the device to see its current state first.	请勿盲目重试写入。请先重新读取设备，查看其当前状态。
+Error	错误
+Evidence	证据
+Hardware-identity change refused	已拒绝更改硬件标识
+Live system disagrees with the file	实时系统与文件值不一致
+Modification risk needs attention	修改风险需要注意
+No action is needed unless the change was unexpected — then review the change history.	除非该更改出乎意料，否则无需采取行动——如有意外，请查看更改历史。
+No backup has been created yet.	尚未创建任何备份。
+No backups yet	暂无备份
+No issues were found in the available data.	在现有数据中未发现问题。
+No read has happened yet, so there is nothing to diagnose.	尚未进行任何读取，因此无可诊断。
+Note	提示
+On native Apple Intelligence hardware, skip this item: the native slot stays off. Otherwise use the repair path, then re-read after a restart.	在原生支持 Apple 智能的硬件上，请跳过此项：原生插槽保持关闭。否则请使用修复路径，然后在重新启动后重新读取。
+Re-read after a restart and check the live probe again.	请在重新启动后重新读取，并再次检查实时检测。
+Re-read the device and check the restore log. If the device is in an unwanted state, restore from a verified backup.	请重新读取设备并查看恢复日志。如果设备处于不希望的状态，请从已验证的备份恢复。
+Re-read the device and check whether the fields can be read then.	请重新读取设备，查看届时是否可以读取这些字段。
+Re-read the device and check whether the integrity checks pass then.	请重新读取设备，查看届时完整性检查是否通过。
+Re-read the device. If it keeps failing, note the model and iOS minor version — the layout may not be resolvable on this build.	请重新读取设备。如果仍然失败，请记下机型和 iOS 小版本号——此构建上的布局可能无法解析。
+Re-verify support on this build before staging anything.	在暂存任何内容之前，请在此构建上重新验证支持情况。
+Read failed	读取失败
+Read the device first to diagnose faults.	请先读取设备以诊断故障。
+Read the device to see its current state.	请读取设备以查看其当前状态。
+Region reverted after restart	重新启动后地区已还原
+Remove hardware-identity fields from the proposal.	请从方案中移除硬件标识字段。
+Restore failed	恢复失败
+Review the change history and the Modified Values report. If a change was unwanted, restore from a trusted backup.	请查看更改历史和“已修改的值”报告。如果某项更改并非所需，请从受信任的备份恢复。
+Run backup verification before relying on a backup.	在依赖备份之前，请先运行备份验证。
+Smart Fault Diagnosis	智能故障诊断
+Some device values changed since the fingerprint was captured.	自记录指纹以来，一些设备值已更改。
+Some fields could not be re-read	部分字段无法重新读取
+Suggested fix	建议的修复方法
+The CacheData slot for this key cannot be located on this device's layout. On native Apple Intelligence hardware the slot is natively off, while the CacheExtra key can be staged on — the two are separate values.	在此设备的布局上无法定位此键对应的 CacheData 插槽。在原生支持 Apple 智能的硬件上，该插槽原生为关闭，而 CacheExtra 键可以暂存为开启——两者是相互独立的值。
+The CacheData slot for this key could not be located.	无法定位此键对应的 CacheData 插槽。
+The backup file is no longer on disk.	备份文件已不在磁盘上。
+The backup was written from a different cache generation.	该备份写入自不同的缓存世代。
+The cache integrity checks did not all pass.	缓存完整性检查并未全部通过。
+The cache layout could not be resolved on this model and OS build, so eSIM staging was refused by the guard.	在此机型和系统构建上无法解析缓存布局，因此防护机制拒绝了 eSIM 暂存。
+The eSIM cache layout could not be resolved on this device.	无法解析此设备上的 eSIM 缓存布局。
+The file failed its byte-count, digest or plist check.	该文件未通过字节数、摘要或 plist 检查。
+The file holds the staged value, but the live system returns a different answer. A value in the file does not prove the system uses it.	文件保存的是暂存值，但实时系统返回了不同的答案。文件中有某个值，并不能证明系统正在使用它。
+The live probe did not answer for these keys: acceptance is based on the file value only.	实时检测未回答这些键：验收仅基于文件值。
+The live system answer disagrees with the file value.	实时系统的答案与文件值不一致。
+The modification-risk checks did not all pass.	修改风险检查并未全部通过。
+The product type, OS build, cache layout or slot count changed since the fingerprint was captured, so the previously recorded support scope may no longer apply.	自记录指纹以来，产品类型、系统构建、缓存布局或插槽数量已更改，因此此前记录的支持范围可能不再适用。
+The proposal touched a hardware-identity field. Staging it is refused by design: changing such a field can break Face ID or make the system discard the whole cache at boot.	该方案触及了硬件标识字段。按设计会拒绝暂存：更改此类字段可能破坏面容 ID，或导致系统在启动时丢弃整个缓存。
+The region code is back to its original value in the re-read document.	在重新读取的文稿中，地区代码已恢复为原值。
+The system rebuilt the cached region value on restart instead of keeping the staged value. This has been observed on iPhone 17 Pro Max (A3527): the region returned to CH after a restart.	系统在重新启动时重建了缓存的地区值，而没有保留暂存值。这一情况已在 iPhone 17 Pro Max（A3527）上观察到：重新启动后地区恢复为 CH。
+Try reading again. If it keeps failing, check the App Group and signing state.	请重试读取。如果仍然失败，请检查 App Group 和签名状态。
+Warning	警告
+What went wrong, why, and what to try — from real readings only.	出了什么问题、为什么、以及可以尝试什么——仅基于真实读取。
+Write did not verify	写入未能通过验证
+Write, restore and guard events are not recorded yet.	写入、恢复和防护事件尚未记录。
+eSIM layout could not be resolved	无法解析 eSIM 布局
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():

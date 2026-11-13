@@ -894,11 +894,20 @@ enum RestoreIntelligence {
     /// its recorded byte count and SHA-256 digest, and parse as a
     /// MobileGestalt plist. When `current` is supplied, the backup's
     /// cache layout generation must also match it. A failure is
-    /// reported with the specific reason, never hidden.
+    /// reported with the specific reason, never hidden. `directory`
+    /// overrides the backup directory (the production directory by
+    /// default); tests pass a temporary directory so verification of
+    /// an existing file can be exercised without touching the real
+    /// backup store. A record with no recorded digest (`sha256 == nil`,
+    /// legacy records) is checked by byte count and parse only — there
+    /// is no digest to compare against, and the result says so by
+    /// still reporting `.verified` when those checks pass.
     static func verifyBackups(_ records: [BackupRecord],
-                              against current: GestaltDocument?) -> [BackupVerification] {
+                              against current: GestaltDocument?,
+                              directory: URL? = nil) -> [BackupVerification] {
+        let directory = directory ?? backupDirectory
         records.map { record in
-            let url = backupDirectory.appendingPathComponent(record.filename)
+            let url = directory.appendingPathComponent(record.filename)
             guard FileManager.default.fileExists(atPath: url.path) else {
                 return BackupVerification(record: record, status: .notFound, layoutMatchesCurrent: nil)
             }

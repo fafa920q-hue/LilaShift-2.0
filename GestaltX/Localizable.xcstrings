@@ -53505,70 +53505,6 @@
         }
       }
     },
-    "The live probe is not connected yet: acceptance is based on the file value only.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The live probe is not connected yet: acceptance is based on the file value only."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "实时检测尚未连接：验收仅基于文件值。"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La sonda en vivo aún no está conectada: la aceptación se basa solo en el valor del archivo."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بررسی زنده هنوز متصل نشده است: پذیرش فقط بر اساس مقدار فایل است."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ライブプローブはまだ接続されていません。受け入れ確認はファイルの値のみに基づきます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실시간 프로브가 아직 연결되지 않았습니다. 수락은 파일 값만을 기준으로 합니다."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Живая проверка ещё не подключена: проверка основана только на значении в файле."
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kiểm tra trực tiếp chưa được kết nối: việc chấp nhận chỉ dựa trên giá trị trong tệp."
-          }
-        },
-        "zh-Hant-HK": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "即時檢測尚未連接：驗收僅基於文件值。"
-          }
-        },
-        "zh-Hant-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "即時檢測尚未連接：驗收僅基於檔案值。"
-          }
-        }
-      }
-    },
     "The recorded support scope may no longer apply. Re-verification is needed before staging.": {
       "localizations": {
         "en": {
@@ -54269,6 +54205,5446 @@
           "stringUnit": {
             "state": "translated",
             "value": "無法識別裝置，因此未儲存其指紋。"
+          }
+        }
+      }
+    },
+    "%d errors, %d warnings, %d notes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d errors, %d warnings, %d notes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个错误，%d 个警告，%d 条提示"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d errores, %d advertencias, %d notas"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d خطا، %d هشدار، %d نکته"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 件のエラー、%d 件の警告、%d 件の注意"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오류 %d개, 경고 %d개, 참고 %d개"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d ошибок, %d предупреждений, %d заметок"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d lỗi, %d cảnh báo, %d ghi chú"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 個錯誤，%d 個警告，%d 條提示"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 個錯誤，%d 個警告，%d 條提示"
+          }
+        }
+      }
+    },
+    "%d fields could not be re-read.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d fields could not be re-read."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %d 个字段无法重新读取。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron volver a leer %d campos."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d فیلد قابل بازخوانی نبود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 個のフィールドを再読み込みできませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d개 필드를 다시 읽을 수 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось повторно прочитать поля: %d."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể đọc lại %d trường."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %d 個欄位無法重新讀取。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %d 個欄位無法重新讀取。"
+          }
+        }
+      }
+    },
+    "A backup file is missing from disk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A backup file is missing from disk."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁盘上缺少一个备份文件。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta un archivo de respaldo en el disco."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک فایل پشتیبان در دیسک وجود ندارد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ディスクにバックアップファイルがありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크에 백업 파일이 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На диске отсутствует файл резервной копии."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thiếu một tệp sao lưu trên đĩa."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁碟上缺少一個備份檔案。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁碟上缺少一個備份檔案。"
+          }
+        }
+      }
+    },
+    "A read attempt failed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A read attempt failed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次读取尝试失败了。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falló un intento de lectura."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک تلاش برای خواندن ناموفق بود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み取りの試行に失敗しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "읽기 시도가 실패했습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попытка чтения завершилась неудачей."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một lần đọc đã thất bại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次讀取嘗試失敗了。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次讀取嘗試失敗了。"
+          }
+        }
+      }
+    },
+    "A restore attempt failed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A restore attempt failed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次恢复尝试失败了。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falló un intento de restauración."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک تلاش برای بازیابی ناموفق بود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復元の試行に失敗しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복원 시도가 실패했습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попытка восстановления завершилась неудачей."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một lần khôi phục đã thất bại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次還原嘗試失敗了。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次還原嘗試失敗了。"
+          }
+        }
+      }
+    },
+    "A suggested fix is a suggestion, not a guarantee. It may not work on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A suggested fix is a suggestion, not a guarantee. It may not work on this device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建议的修复方法只是建议，不是保证，在这台设备上可能无效。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una solución sugerida es solo una sugerencia, no una garantía. Es posible que no funcione en este dispositivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راه‌حل پیشنهادی فقط یک پیشنهاد است، نه تضمین. ممکن است در این دستگاه کار نکند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案された修正方法はあくまで提案であり、保証ではありません。このデバイスでは機能しない場合があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제안된 수정 방법은 제안일 뿐 보장이 아닙니다. 이 기기에서 동작하지 않을 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предлагаемое исправление — это лишь предложение, а не гарантия. Оно может не сработать на этом устройстве."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cách khắc phục được gợi ý chỉ là gợi ý, không phải cam kết. Nó có thể không hiệu quả trên thiết bị này."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建議的修復方法只是建議，並非保證，在此裝置上可能無效。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建議的修復方法只是建議，並非保證，在此裝置上可能無效。"
+          }
+        }
+      }
+    },
+    "A verified backup is from a different cache generation than the current document.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A verified backup is from a different cache generation than the current document."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一个已验证的备份来自与当前文稿不同的缓存世代。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una copia de seguridad verificada pertenece a una generación de caché distinta a la del documento actual."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک پشتیبان تأییدشده از نسل کش متفاوتی نسبت به سند فعلی است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検証済みのバックアップは、現在のドキュメントとは異なるキャッシュ世代のものです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인된 백업은 현재 문서와 다른 캐시 세대의 것입니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверенная резервная копия относится к другому поколению кэша, чем текущий документ."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một bản sao lưu đã xác minh thuộc thế hệ bộ nhớ đệm khác với tài liệu hiện tại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一個已驗證的備份來自與目前文件不同的快取世代。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一個已驗證的備份來自與目前文件不同的快取世代。"
+          }
+        }
+      }
+    },
+    "A write attempt did not verify.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A write attempt did not verify."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次写入尝试未能通过验证。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un intento de escritura no se verificó."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک تلاش برای نوشتن تأیید نشد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "書き込みの試行は検証されませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쓰기 시도가 확인되지 않았습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попытка записи не прошла проверку."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một lần ghi đã không được xác minh."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次寫入嘗試未能通過驗證。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一次寫入嘗試未能通過驗證。"
+          }
+        }
+      }
+    },
+    "Apple Intelligence slot could not be resolved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence slot could not be resolved"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法定位 Apple 智能插槽"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo localizar la ranura de Apple Intelligence"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شکاف Apple Intelligence قابل یافتن نبود"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence のスロットを特定できませんでした"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence 슬롯을 찾을 수 없습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось найти слот Apple Intelligence"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xác định khe Apple Intelligence"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法定位 Apple 智能插槽"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法定位 Apple 智慧插槽"
+          }
+        }
+      }
+    },
+    "Backup could not be verified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup could not be verified"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份无法通过验证"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar la copia de seguridad"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان قابل تأیید نبود"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップを確認できませんでした"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업을 확인할 수 없습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось проверить резервную копию"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xác minh bản sao lưu"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份無法通過驗證"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份無法通過驗證"
+          }
+        }
+      }
+    },
+    "Backup file is missing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup file is missing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份文件缺失"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta el archivo de respaldo"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فایل پشتیبان وجود ندارد"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップファイルがありません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업 파일이 없습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл резервной копии отсутствует"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thiếu tệp sao lưu"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份檔案缺失"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份檔案缺失"
+          }
+        }
+      }
+    },
+    "Backup is from a different cache generation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup is from a different cache generation"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份来自不同的缓存世代"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia de seguridad pertenece a otra generación de caché"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان از نسل کش متفاوتی است"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップは異なるキャッシュ世代のものです"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업이 다른 캐시 세대의 것입니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервная копия из другого поколения кэша"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu thuộc thế hệ bộ nhớ đệm khác"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份來自不同的快取世代"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份來自不同的快取世代"
+          }
+        }
+      }
+    },
+    "Backup “%@” — cache layout does not match the current document.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup “%@” — cache layout does not match the current document."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份“%@”——缓存布局与当前文稿不匹配。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de seguridad «%@»: el diseño de la caché no coincide con el documento actual."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان «%@» — چیدمان کش با سند فعلی مطابقت ندارد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップ「%@」— キャッシュレイアウトが現在のドキュメントと一致しません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업 “%@” — 캐시 레이아웃이 현재 문서와 일치하지 않습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервная копия «%@»: раскладка кэша не совпадает с текущим документом."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu “%@” — bố cục bộ nhớ đệm không khớp với tài liệu hiện tại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份「%@」——快取佈局與目前文件不符。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份「%@」——快取佈局與目前文件不符。"
+          }
+        }
+      }
+    },
+    "Backup “%@” — file not found.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup “%@” — file not found."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份“%@”——找不到文件。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de seguridad «%@»: archivo no encontrado."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان «%@» — فایل یافت نشد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップ「%@」— ファイルが見つかりません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업 “%@” — 파일을 찾을 수 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервная копия «%@»: файл не найден."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu “%@” — không tìm thấy tệp."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份「%@」——找不到檔案。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份「%@」——找不到檔案。"
+          }
+        }
+      }
+    },
+    "Backup “%@” — verification failed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup “%@” — verification failed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份“%@”——验证失败。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de seguridad «%@»: la verificación falló."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان «%@» — تأیید ناموفق بود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップ「%@」— 検証に失敗しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업 “%@” — 확인에 실패했습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервная копия «%@»: проверка не пройдена."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu “%@” — xác minh thất bại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份「%@」——驗證失敗。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份「%@」——驗證失敗。"
+          }
+        }
+      }
+    },
+    "Backups exist, but none has been verified in this session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backups exist, but none has been verified in this session."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已有备份，但本次会话中尚未验证任何一个。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay copias de seguridad, pero ninguna se ha verificado en esta sesión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان‌هایی وجود دارد، اما هیچ‌کدام در این نشست تأیید نشده‌اند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップはありますが、このセッションではどれも検証されていません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업은 있지만 이번 세션에서 확인된 것이 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервные копии есть, но ни одна не проверена в этом сеансе."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã có bản sao lưu, nhưng chưa có bản nào được xác minh trong phiên này."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已有備份，但在本次工作階段中尚未驗證任何一個。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已有備份，但在本次工作階段中尚未驗證任何一個。"
+          }
+        }
+      }
+    },
+    "Backups have not been verified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backups have not been verified"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份尚未验证"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las copias de seguridad no se han verificado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان‌ها تأیید نشده‌اند"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップが検証されていません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업이 확인되지 않았습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервные копии не проверены"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Các bản sao lưu chưa được xác minh"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份尚未驗證"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份尚未驗證"
+          }
+        }
+      }
+    },
+    "Cache integrity needs attention": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache integrity needs attention"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缓存完整性需要注意"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La integridad de la caché necesita atención"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یکپارچگی کش نیاز به توجه دارد"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャッシュの整合性に注意が必要です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캐시 무결성에 주의가 필요합니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Целостность кэша требует внимания"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tính toàn vẹn của bộ nhớ đệm cần được chú ý"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快取完整性需要注意"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快取完整性需要注意"
+          }
+        }
+      }
+    },
+    "Cause not yet determined.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cause not yet determined."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原因尚未确定。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Causa aún no determinada."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "علت هنوز مشخص نشده است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原因はまだ特定されていません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원인이 아직 확인되지 않았습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Причина пока не установлена."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa xác định được nguyên nhân."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原因尚未確定。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原因尚未確定。"
+          }
+        }
+      }
+    },
+    "Check whether this model is in the supported list, and re-read the device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check whether this model is in the supported list, and re-read the device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请确认该机型是否在支持列表中，并重新读取设备。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprueba si este modelo está en la lista de compatibles y vuelve a leer el dispositivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بررسی کنید آیا این مدل در فهرست پشتیبانی‌شده است یا نه، و دستگاه را دوباره بخوانید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このモデルが対応リストにあるか確認し、デバイスを再度読み取ってください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 모델이 지원 목록에 있는지 확인하고 기기를 다시 읽으십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверьте, есть ли эта модель в списке поддерживаемых, и прочитайте устройство ещё раз."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiểm tra xem mẫu máy này có trong danh sách được hỗ trợ không, rồi đọc lại thiết bị."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請確認此型號是否在支援清單中，並重新讀取裝置。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請確認此型號是否在支援清單中，並重新讀取裝置。"
+          }
+        }
+      }
+    },
+    "Compatibility could not be determined for this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibility could not be determined for this device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法确定此设备的兼容性。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo determinar la compatibilidad de este dispositivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سازگاری این دستگاه قابل تعیین نبود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスの互換性を判断できませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기의 호환성을 확인할 수 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось определить совместимость этого устройства."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xác định tính tương thích của thiết bị này."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法確定此裝置的相容性。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法確定此裝置的相容性。"
+          }
+        }
+      }
+    },
+    "Compatibility is unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibility is unknown"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兼容性未知"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibilidad desconocida"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سازگاری نامشخص است"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "互換性は不明です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "호환성을 알 수 없습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Совместимость неизвестна"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không rõ tính tương thích"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相容性未知"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相容性未知"
+          }
+        }
+      }
+    },
+    "Confirm the device was restarted after applying, then re-read and check the acceptance report. If the region keeps reverting, restore from a verified backup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the device was restarted after applying, then re-read and check the acceptance report. If the region keeps reverting, restore from a verified backup."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请确认应用后设备已重新启动，然后重新读取并查看验收报告。如果地区仍在还原，请从已验证的备份恢复。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma que el dispositivo se reinició después de aplicar los cambios, vuelve a leerlo y revisa el informe de aceptación. Si la región sigue revirtiéndose, restaura desde una copia de seguridad verificada."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأیید کنید که دستگاه پس از اعمال تغییرات راه‌اندازی مجدد شده است، سپس دوباره بخوانید و گزارش پذیرش را بررسی کنید. اگر منطقه همچنان برمی‌گردد، از یک پشتیبان تأییدشده بازیابی کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "適用後にデバイスを再起動したことを確認し、再度読み取って受け入れレポートを確認してください。地域が繰り返し戻る場合は、検証済みのバックアップから復元してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "적용한 후 기기를 다시 시작했는지 확인한 다음 다시 읽고 수락 보고서를 확인하십시오. 지역이 계속 되돌아가면 확인된 백업에서 복원하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убедитесь, что устройство было перезапущено после применения изменений, затем прочитайте его снова и проверьте отчёт о приёмке. Если регион продолжает возвращаться, восстановитесь из проверенной резервной копии."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy xác nhận thiết bị đã được khởi động lại sau khi áp dụng, rồi đọc lại và kiểm tra báo cáo chấp nhận. Nếu vùng vẫn tiếp tục bị hoàn nguyên, hãy khôi phục từ bản sao lưu đã xác minh."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請確認套用後裝置已重新啟動，然後重新讀取並查看驗收報告。如果地區仍然還原，請從已驗證的備份還原。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請確認套用後裝置已重新啟動，然後重新讀取並查看驗收報告。如果地區仍然還原，請從已驗證的備份還原。"
+          }
+        }
+      }
+    },
+    "Create a backup before changing anything.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a backup before changing anything."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在更改任何内容之前，请先创建备份。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea una copia de seguridad antes de cambiar nada."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیش از تغییر دادن چیزی، یک پشتیبان بسازید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何かを変更する前に、バックアップを作成してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무엇이든 변경하기 전에 백업을 만드십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создайте резервную копию, прежде чем что-либо менять."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy tạo bản sao lưu trước khi thay đổi bất cứ thứ gì."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在更改任何內容之前，請先建立備份。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在更改任何內容之前，請先建立備份。"
+          }
+        }
+      }
+    },
+    "Create a fresh backup before changing anything. This record cannot be used to restore.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a fresh backup before changing anything. This record cannot be used to restore."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在更改任何内容之前，请先创建一个新的备份。此记录无法用于恢复。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea una copia de seguridad nueva antes de cambiar nada. Este registro no se puede usar para restaurar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیش از تغییر دادن چیزی، یک پشتیبان تازه بسازید. این رکورد برای بازیابی قابل استفاده نیست."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何かを変更する前に、新しいバックアップを作成してください。このレコードは復元に使用できません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무엇이든 변경하기 전에 새 백업을 만드십시오. 이 기록은 복원에 사용할 수 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создайте новую резервную копию, прежде чем что-либо менять. Эту запись нельзя использовать для восстановления."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy tạo bản sao lưu mới trước khi thay đổi bất cứ thứ gì. Bản ghi này không thể dùng để khôi phục."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在更改任何內容之前，請先建立一個新的備份。此記錄無法用於還原。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在更改任何內容之前，請先建立一個新的備份。此記錄無法用於還原。"
+          }
+        }
+      }
+    },
+    "Create a fresh backup on this build. Treat a restore from this backup as review-required.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a fresh backup on this build. Treat a restore from this backup as review-required."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在此构建上创建一个新的备份。从此备份恢复时需要复核。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea una copia de seguridad nueva en esta compilación. Trata cualquier restauración desde ella como algo que requiere revisión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روی همین بیلد یک پشتیبان تازه بسازید. بازیابی از این پشتیبان را نیازمند بازبینی بدانید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このビルドで新しいバックアップを作成してください。このバックアップからの復元は要確認として扱ってください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 빌드에서 새 백업을 만드십시오. 이 백업에서의 복원은 검토가 필요한 것으로 간주하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создайте новую резервную копию на этой сборке. Восстановление из неё считайте требующим проверки."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy tạo bản sao lưu mới trên bản dựng này. Việc khôi phục từ bản sao lưu này cần được xem xét lại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請在此版本上建立一個新的備份。從此備份還原時需要複核。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請在此版本上建立一個新的備份。從此備份還原時需要複核。"
+          }
+        }
+      }
+    },
+    "Device changed — support scope needs re-verification": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device changed — support scope needs re-verification"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设备已更改——支持范围需要重新验证"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dispositivo cambió: el alcance de compatibilidad debe volver a verificarse"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه تغییر کرده است — محدوده پشتیبانی باید دوباره تأیید شود"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスが変更されました — サポート範囲の再確認が必要です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기가 변경되었습니다 — 지원 범위를 다시 확인해야 합니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Устройство изменилось: область поддержки нужно проверить повторно"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thiết bị đã thay đổi — cần xác minh lại phạm vi hỗ trợ"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裝置已更改——支援範圍需要重新驗證"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裝置已更改——支援範圍需要重新驗證"
+          }
+        }
+      }
+    },
+    "Device identity or build changed since the last fingerprint.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device identity or build changed since the last fingerprint."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自上次记录指纹以来，设备标识或构建已更改。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La identidad o la compilación del dispositivo cambió desde la última huella."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هویت یا بیلد دستگاه از زمان آخرین اثر انگشت تغییر کرده است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回のフィンガープリント取得以降、デバイスの識別情報またはビルドが変更されました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막 지문 기록 이후 기기 식별 정보 또는 빌드가 변경되었습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Идентификатор или сборка устройства изменились с момента последнего отпечатка."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Định danh hoặc bản dựng của thiết bị đã thay đổi kể từ lần ghi vân tay trước."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自上次記錄指紋以來，裝置識別或版本已更改。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自上次記錄指紋以來，裝置識別或版本已更改。"
+          }
+        }
+      }
+    },
+    "Device not read yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device not read yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未读取设备"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivo aún no leído"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه هنوز خوانده نشده است"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスはまだ読み取られていません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기를 아직 읽지 않았습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Устройство ещё не прочитано"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thiết bị chưa được đọc"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未讀取裝置"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未讀取裝置"
+          }
+        }
+      }
+    },
+    "Device state changed since the last fingerprint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device state changed since the last fingerprint"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自上次记录指纹以来设备状态已更改"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El estado del dispositivo cambió desde la última huella"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعیت دستگاه از زمان آخرین اثر انگشت تغییر کرده است"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回のフィンガープリント取得以降、デバイスの状態が変更されました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막 지문 기록 이후 기기 상태가 변경되었습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Состояние устройства изменилось с момента последнего отпечатка"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trạng thái thiết bị đã thay đổi kể từ lần ghi vân tay trước"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自上次記錄指紋以來裝置狀態已更改"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自上次記錄指紋以來裝置狀態已更改"
+          }
+        }
+      }
+    },
+    "Device values changed between the stored fingerprint and the current read.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device values changed between the stored fingerprint and the current read."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在已存储的指纹与当前读取之间，设备值发生了变化。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los valores del dispositivo cambiaron entre la huella guardada y la lectura actual."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقادیر دستگاه بین اثر انگشت ذخیره‌شده و خواندن فعلی تغییر کرده‌اند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存されたフィンガープリントと現在の読み取りの間で、デバイスの値が変更されました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장된 지문과 현재 읽기 사이에 기기 값이 변경되었습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Значения устройства изменились между сохранённым отпечатком и текущим чтением."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Các giá trị thiết bị đã thay đổi giữa vân tay đã lưu và lần đọc hiện tại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在已儲存的指紋與目前讀取之間，裝置值發生了變化。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在已儲存的指紋與目前讀取之間，裝置值發生了變化。"
+          }
+        }
+      }
+    },
+    "Do not restore from this backup. Create a fresh backup, and keep the failed file for inspection.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not restore from this backup. Create a fresh backup, and keep the failed file for inspection."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请勿从此备份恢复。请创建一个新的备份，并保留失败的文件以供检查。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No restaures desde esta copia de seguridad. Crea una copia nueva y conserva el archivo fallido para revisarlo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "از این پشتیبان بازیابی نکنید. یک پشتیبان تازه بسازید و فایل ناموفق را برای بررسی نگه دارید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このバックアップからは復元しないでください。新しいバックアップを作成し、失敗したファイルは確認用に保管してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 백업에서 복원하지 마십시오. 새 백업을 만들고 실패한 파일은 검사용으로 보관하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не восстанавливайтесь из этой резервной копии. Создайте новую копию, а неудавшийся файл сохраните для проверки."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đừng khôi phục từ bản sao lưu này. Hãy tạo bản sao lưu mới và giữ lại tệp lỗi để kiểm tra."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請勿從此備份還原。請建立一個新的備份，並保留失敗的檔案以供檢查。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請勿從此備份還原。請建立一個新的備份，並保留失敗的檔案以供檢查。"
+          }
+        }
+      }
+    },
+    "Do not retry the write blindly. Re-read the device to see its current state first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not retry the write blindly. Re-read the device to see its current state first."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请勿盲目重试写入。请先重新读取设备，查看其当前状态。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reintentes la escritura a ciegas. Vuelve a leer el dispositivo para ver su estado actual primero."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نوشتن را کورکورانه دوباره امتحان نکنید. اول دستگاه را دوباره بخوانید تا وضعیت فعلی آن را ببینید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "書き込みをむやみに再試行しないでください。まずデバイスを再度読み取り、現在の状態を確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쓰기를 무작정 다시 시도하지 마십시오. 먼저 기기를 다시 읽어 현재 상태를 확인하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не повторяйте запись вслепую. Сначала прочитайте устройство ещё раз, чтобы увидеть его текущее состояние."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đừng thử ghi lại một cách mù quáng. Hãy đọc lại thiết bị trước để xem trạng thái hiện tại của nó."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請勿盲目重試寫入。請先重新讀取裝置，查看其目前狀態。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請勿盲目重試寫入。請先重新讀取裝置，查看其目前狀態。"
+          }
+        }
+      }
+    },
+    "Error": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "错误"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطا"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エラー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오류"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lỗi"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "錯誤"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "錯誤"
+          }
+        }
+      }
+    },
+    "Evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "证据"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidencia"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شواهد"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "証拠"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "증거"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доказательства"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bằng chứng"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "證據"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "證據"
+          }
+        }
+      }
+    },
+    "Hardware-identity change refused": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hardware-identity change refused"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拒绝更改硬件标识"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio de identidad de hardware rechazado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغییر هویت سخت‌افزاری رد شد"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ハードウェア識別情報の変更は拒否されました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "하드웨어 식별 정보 변경이 거부되었습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменение аппаратного идентификатора отклонено"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thay đổi định danh phần cứng đã bị từ chối"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拒絕更改硬件識別"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拒絕更改硬體識別"
+          }
+        }
+      }
+    },
+    "Live system disagrees with the file": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live system disagrees with the file"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时系统与文件值不一致"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El sistema en vivo no coincide con el archivo"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سیستم زنده با فایل مطابقت ندارد"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブシステムがファイルと一致しません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 시스템이 파일과 일치하지 않습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Живая система не совпадает с файлом"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hệ thống trực tiếp không khớp với tệp"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時系統與檔案值不一致"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時系統與檔案值不一致"
+          }
+        }
+      }
+    },
+    "Modification risk needs attention": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modification risk needs attention"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改风险需要注意"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El riesgo de modificación necesita atención"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ریسک تغییر نیاز به توجه دارد"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更リスクに注意が必要です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "수정 위험에 주의가 필요합니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Риск изменений требует внимания"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rủi ro sửa đổi cần được chú ý"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改風險需要注意"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改風險需要注意"
+          }
+        }
+      }
+    },
+    "No action is needed unless the change was unexpected — then review the change history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No action is needed unless the change was unexpected — then review the change history."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "除非该更改出乎意料，否则无需采取行动——如有意外，请查看更改历史。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hace falta hacer nada, salvo que el cambio fuera inesperado; en ese caso, revisa el historial de cambios."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ اقدامی لازم نیست، مگر اینکه تغییر غیرمنتظره بوده باشد — در آن صورت سابقه تغییرات را بررسی کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更が予期しないものでない限り、対応は不要です。予期しない場合は変更履歴を確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경이 예상치 못한 것이 아니라면 조치가 필요 없습니다. 예상치 못한 경우 변경 기록을 검토하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ничего делать не нужно, если изменение не было неожиданным; в противном случае просмотрите историю изменений."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không cần hành động gì trừ khi thay đổi đó là bất ngờ — trong trường hợp đó, hãy xem lại lịch sử thay đổi."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "除非該更改出乎意料，否則無需採取行動——如有意外，請查看更改歷史。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "除非該更改出乎意料，否則無需採取行動——如有意外，請查看更改歷史。"
+          }
+        }
+      }
+    },
+    "No backup has been created yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No backup has been created yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未创建任何备份。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se ha creado ninguna copia de seguridad."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هنوز هیچ پشتیبانی ساخته نشده است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップはまだ作成されていません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 백업이 만들어지지 않았습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервная копия ещё не создана."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa có bản sao lưu nào được tạo."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未建立任何備份。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未建立任何備份。"
+          }
+        }
+      }
+    },
+    "No backups yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No backups yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无备份"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay copias de seguridad"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هنوز پشتیبانی وجود ندارد"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップはまだありません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 백업이 없습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервных копий пока нет"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa có bản sao lưu"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫無備份"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫無備份"
+          }
+        }
+      }
+    },
+    "No issues were found in the available data.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No issues were found in the available data."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在现有数据中未发现问题。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontraron problemas en los datos disponibles."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در داده‌های موجود مشکلی یافت نشد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用可能なデータに問題は見つかりませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용 가능한 데이터에서 문제를 찾지 못했습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В имеющихся данных проблем не найдено."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tìm thấy vấn đề nào trong dữ liệu hiện có."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在現有資料中未發現問題。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在現有資料中未發現問題。"
+          }
+        }
+      }
+    },
+    "No read has happened yet, so there is nothing to diagnose.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No read has happened yet, so there is nothing to diagnose."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未进行任何读取，因此无可诊断。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se ha realizado ninguna lectura, así que no hay nada que diagnosticar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هنوز هیچ خواندنی انجام نشده است، پس چیزی برای تشخیص وجود ندارد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "まだ読み取りが行われていないため、診断するものがありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 읽은 적이 없어 진단할 내용이 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Чтение ещё не выполнялось, поэтому диагностировать нечего."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa có lần đọc nào, vì vậy không có gì để chẩn đoán."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未進行任何讀取，因此無可診斷。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未進行任何讀取，因此無可診斷。"
+          }
+        }
+      }
+    },
+    "Note": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نکته"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注意"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참고"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заметка"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghi chú"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        }
+      }
+    },
+    "On native Apple Intelligence hardware, skip this item: the native slot stays off. Otherwise use the repair path, then re-read after a restart.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On native Apple Intelligence hardware, skip this item: the native slot stays off. Otherwise use the repair path, then re-read after a restart."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在原生支持 Apple 智能的硬件上，请跳过此项：原生插槽保持关闭。否则请使用修复路径，然后在重新启动后重新读取。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En hardware con Apple Intelligence nativo, omite este elemento: la ranura nativa permanece desactivada. En caso contrario, usa la ruta de reparación y vuelve a leer después de reiniciar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روی سخت‌افزار دارای Apple Intelligence بومی، این مورد را رد کنید: شکاف بومی خاموش می‌ماند. در غیر این صورت از مسیر تعمیر استفاده کنید، سپس پس از راه‌اندازی مجدد دوباره بخوانید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネイティブの Apple Intelligence ハードウェアでは、この項目をスキップしてください。ネイティブスロットはオフのままです。それ以外の場合は修復パスを使用し、再起動後に再度読み取ってください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네이티브 Apple Intelligence 하드웨어에서는 이 항목을 건너뛰십시오. 네이티브 슬롯은 꺼진 상태로 유지됩니다. 그렇지 않으면 복구 경로를 사용한 뒤 다시 시작한 후 다시 읽으십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На устройстве с нативным Apple Intelligence пропустите этот пункт: нативный слот останется выключенным. В противном случае используйте путь исправления, а затем прочитайте устройство после перезапуска."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trên phần cứng có Apple Intelligence gốc, hãy bỏ qua mục này: khe gốc vẫn tắt. Nếu không, hãy dùng đường dẫn sửa chữa, rồi đọc lại sau khi khởi động lại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在原生支援 Apple 智能的硬件上，請跳過此項：原生插槽保持關閉。否則請使用修復路徑，然後在重新啟動後重新讀取。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在原生支援 Apple 智慧的硬體上，請跳過此項：原生插槽保持關閉。否則請使用修復路徑，然後在重新啟動後重新讀取。"
+          }
+        }
+      }
+    },
+    "Re-read after a restart and check the live probe again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Re-read after a restart and check the live probe again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在重新启动后重新读取，并再次检查实时检测。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a leer después de reiniciar y comprueba de nuevo la sonda en vivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پس از راه‌اندازی مجدد دوباره بخوانید و کاوش زنده را دوباره بررسی کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再起動後に再度読み取り、ライブプローブをもう一度確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 시작한 후 다시 읽고 실시간 프로브를 다시 확인하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитайте устройство после перезапуска и ещё раз проверьте живой зонд."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy đọc lại sau khi khởi động lại và kiểm tra lại đầu dò trực tiếp."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請在重新啟動後重新讀取，並再次檢查即時偵測。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請在重新啟動後重新讀取，並再次檢查即時偵測。"
+          }
+        }
+      }
+    },
+    "Re-read the device and check the restore log. If the device is in an unwanted state, restore from a verified backup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Re-read the device and check the restore log. If the device is in an unwanted state, restore from a verified backup."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请重新读取设备并查看恢复日志。如果设备处于不希望的状态，请从已验证的备份恢复。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a leer el dispositivo y revisa el registro de restauración. Si el dispositivo está en un estado no deseado, restaura desde una copia de seguridad verificada."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه را دوباره بخوانید و گزارش بازیابی را بررسی کنید. اگر دستگاه در وضعیت ناخواسته‌ای است، از یک پشتیبان تأییدشده بازیابی کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスを再度読み取り、復元ログを確認してください。デバイスが望ましくない状態の場合は、検証済みのバックアップから復元してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기를 다시 읽고 복원 로그를 확인하십시오. 기기가 원하지 않는 상태라면 확인된 백업에서 복원하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитайте устройство ещё раз и проверьте журнал восстановления. Если устройство находится в нежелательном состоянии, восстановитесь из проверенной резервной копии."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy đọc lại thiết bị và kiểm tra nhật ký khôi phục. Nếu thiết bị đang ở trạng thái không mong muốn, hãy khôi phục từ bản sao lưu đã xác minh."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重新讀取裝置並查看還原記錄。如果裝置處於不希望的狀態，請從已驗證的備份還原。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重新讀取裝置並查看還原記錄。如果裝置處於不希望的狀態，請從已驗證的備份還原。"
+          }
+        }
+      }
+    },
+    "Re-read the device and check whether the fields can be read then.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Re-read the device and check whether the fields can be read then."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请重新读取设备，查看届时是否可以读取这些字段。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a leer el dispositivo y comprueba si los campos se pueden leer entonces."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه را دوباره بخوانید و بررسی کنید آیا فیلدها آن موقع قابل خواندن هستند یا نه."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスを再度読み取り、そのときにフィールドを読み取れるか確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기를 다시 읽고 그때 필드를 읽을 수 있는지 확인하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитайте устройство ещё раз и проверьте, удастся ли тогда прочитать эти поля."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy đọc lại thiết bị và kiểm tra xem khi đó có đọc được các trường không."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重新讀取裝置，查看屆時是否可以讀取這些欄位。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重新讀取裝置，查看屆時是否可以讀取這些欄位。"
+          }
+        }
+      }
+    },
+    "Re-read the device and check whether the integrity checks pass then.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Re-read the device and check whether the integrity checks pass then."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请重新读取设备，查看届时完整性检查是否通过。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a leer el dispositivo y comprueba si las comprobaciones de integridad pasan entonces."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه را دوباره بخوانید و بررسی کنید آیا بررسی‌های یکپارچگی آن موقع موفق می‌شوند یا نه."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスを再度読み取り、そのときに整合性チェックが通るか確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기를 다시 읽고 그때 무결성 검사가 통과하는지 확인하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитайте устройство ещё раз и проверьте, пройдут ли тогда проверки целостности."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy đọc lại thiết bị và kiểm tra xem khi đó các bước kiểm tra tính toàn vẹn có đạt không."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重新讀取裝置，查看屆時完整性檢查是否通過。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重新讀取裝置，查看屆時完整性檢查是否通過。"
+          }
+        }
+      }
+    },
+    "Re-read the device. If it keeps failing, note the model and iOS minor version — the layout may not be resolvable on this build.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Re-read the device. If it keeps failing, note the model and iOS minor version — the layout may not be resolvable on this build."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请重新读取设备。如果仍然失败，请记下机型和 iOS 小版本号——此构建上的布局可能无法解析。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a leer el dispositivo. Si sigue fallando, anota el modelo y la versión secundaria de iOS: es posible que el diseño no se pueda resolver en esta compilación."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه را دوباره بخوانید. اگر همچنان ناموفق بود، مدل و نسخه فرعی iOS را یادداشت کنید — ممکن است چیدمان در این بیلد قابل حل نباشد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスを再度読み取ってください。引き続き失敗する場合は、モデルと iOS のマイナーバージョンを記録してください。このビルドではレイアウトを解決できない場合があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기를 다시 읽으십시오. 계속 실패하면 모델과 iOS 부 버전을 기록하십시오. 이 빌드에서는 레이아웃을 확인할 수 없을 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитайте устройство ещё раз. Если это снова не удастся, запишите модель и минорную версию iOS: возможно, раскладку нельзя разрешить на этой сборке."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy đọc lại thiết bị. Nếu vẫn thất bại, hãy ghi lại mẫu máy và phiên bản phụ của iOS — bố cục có thể không xác định được trên bản dựng này."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重新讀取裝置。如果仍然失敗，請記下型號和 iOS 小版本號——此版本上的佈局可能無法解析。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重新讀取裝置。如果仍然失敗，請記下型號和 iOS 小版本號——此版本上的佈局可能無法解析。"
+          }
+        }
+      }
+    },
+    "Re-verify support on this build before staging anything.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Re-verify support on this build before staging anything."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在暂存任何内容之前，请在此构建上重新验证支持情况。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a verificar la compatibilidad en esta compilación antes de preparar nada."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیش از آماده‌سازی هر چیزی، پشتیبانی را روی همین بیلد دوباره تأیید کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何かをステージングする前に、このビルドでのサポートを再確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무엇이든 스테이징하기 전에 이 빌드에서 지원을 다시 확인하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повторно проверьте поддержку на этой сборке, прежде чем что-либо подготавливать."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy xác minh lại khả năng hỗ trợ trên bản dựng này trước khi chuẩn bị bất cứ thứ gì."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在暫存任何內容之前，請在此版本上重新驗證支援情況。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在暫存任何內容之前，請在此版本上重新驗證支援情況。"
+          }
+        }
+      }
+    },
+    "Read failed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read failed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "读取失败"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lectura fallida"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خواندن ناموفق بود"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み取りに失敗しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "읽기에 실패했습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Чтение не удалось"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đọc thất bại"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "讀取失敗"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "讀取失敗"
+          }
+        }
+      }
+    },
+    "Read the device first to diagnose faults.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the device first to diagnose faults."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先读取设备以诊断故障。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lee primero el dispositivo para diagnosticar fallos."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای تشخیص خطاها، اول دستگاه را بخوانید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "障害を診断するには、まずデバイスを読み取ってください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "결함을 진단하려면 먼저 기기를 읽으십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала прочитайте устройство, чтобы диагностировать сбои."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy đọc thiết bị trước để chẩn đoán lỗi."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請先讀取裝置以診斷故障。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請先讀取裝置以診斷故障。"
+          }
+        }
+      }
+    },
+    "Read the device to see its current state.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the device to see its current state."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请读取设备以查看其当前状态。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lee el dispositivo para ver su estado actual."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه را بخوانید تا وضعیت فعلی آن را ببینید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスを読み取り、現在の状態を確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기를 읽어 현재 상태를 확인하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитайте устройство, чтобы увидеть его текущее состояние."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy đọc thiết bị để xem trạng thái hiện tại của nó."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請讀取裝置以查看其目前狀態。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請讀取裝置以查看其目前狀態。"
+          }
+        }
+      }
+    },
+    "Region reverted after restart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Region reverted after restart"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新启动后地区已还原"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La región se revirtió tras el reinicio"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منطقه پس از راه‌اندازی مجدد برگشت"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再起動後に地域が戻りました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 시작한 후 지역이 되돌아갔습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Регион вернулся после перезапуска"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vùng đã bị hoàn nguyên sau khi khởi động lại"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新啟動後地區已還原"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新啟動後地區已還原"
+          }
+        }
+      }
+    },
+    "Remove hardware-identity fields from the proposal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove hardware-identity fields from the proposal."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请从方案中移除硬件标识字段。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quita los campos de identidad de hardware de la propuesta."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فیلدهای هویت سخت‌افزاری را از پیشنهاد حذف کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案からハードウェア識別情報のフィールドを削除してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제안에서 하드웨어 식별 정보 필드를 제거하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалите поля аппаратного идентификатора из предложения."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy loại bỏ các trường định danh phần cứng khỏi đề xuất."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請從方案中移除硬件識別欄位。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請從方案中移除硬體識別欄位。"
+          }
+        }
+      }
+    },
+    "Restore failed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore failed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复失败"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restauración fallida"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازیابی ناموفق بود"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復元に失敗しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복원에 실패했습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Восстановление не удалось"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khôi phục thất bại"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還原失敗"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還原失敗"
+          }
+        }
+      }
+    },
+    "Review the change history and the Modified Values report. If a change was unwanted, restore from a trusted backup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the change history and the Modified Values report. If a change was unwanted, restore from a trusted backup."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请查看更改历史和“已修改的值”报告。如果某项更改并非所需，请从受信任的备份恢复。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el historial de cambios y el informe de valores modificados. Si algún cambio no era deseado, restaura desde una copia de seguridad de confianza."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سابقه تغییرات و گزارش «مقادیر تغییرکرده» را بررسی کنید. اگر تغییری ناخواسته بود، از یک پشتیبان معتبر بازیابی کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更履歴と「変更された値」レポートを確認してください。不要な変更があった場合は、信頼できるバックアップから復元してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경 기록과 '수정된 값' 보고서를 검토하십시오. 원하지 않는 변경이 있었다면 신뢰할 수 있는 백업에서 복원하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Просмотрите историю изменений и отчёт об изменённых значениях. Если какое-то изменение было нежелательным, восстановитесь из доверенной резервной копии."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy xem lại lịch sử thay đổi và báo cáo Giá trị đã sửa đổi. Nếu có thay đổi không mong muốn, hãy khôi phục từ bản sao lưu đáng tin cậy."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請查看更改歷史和「已修改的值」報告。如果某項更改並非所需，請從受信任的備份還原。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請查看更改歷史和「已修改的值」報告。如果某項更改並非所需，請從受信任的備份還原。"
+          }
+        }
+      }
+    },
+    "Run backup verification before relying on a backup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run backup verification before relying on a backup."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在依赖备份之前，请先运行备份验证。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ejecuta la verificación de copias de seguridad antes de confiar en una."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیش از اتکا به یک پشتیبان، تأیید پشتیبان را اجرا کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップに頼る前に、バックアップの検証を実行してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업에 의존하기 전에 백업 확인을 실행하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запустите проверку резервных копий, прежде чем полагаться на одну из них."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy chạy xác minh sao lưu trước khi dựa vào một bản sao lưu."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在依賴備份之前，請先執行備份驗證。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在依賴備份之前，請先執行備份驗證。"
+          }
+        }
+      }
+    },
+    "Smart Fault Diagnosis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Fault Diagnosis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "智能故障诊断"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnóstico inteligente de fallos"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشخیص هوشمند خطا"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スマート障害診断"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스마트 결함 진단"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Умная диагностика сбоев"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chẩn đoán lỗi thông minh"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "智能故障診斷"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "智慧型故障診斷"
+          }
+        }
+      }
+    },
+    "Some device values changed since the fingerprint was captured.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some device values changed since the fingerprint was captured."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自记录指纹以来，一些设备值已更改。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos valores del dispositivo cambiaron desde que se capturó la huella."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برخی مقادیر دستگاه از زمان ثبت اثر انگشت تغییر کرده‌اند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィンガープリントの取得以降、一部のデバイス値が変更されました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지문을 기록한 이후 일부 기기 값이 변경되었습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Некоторые значения устройства изменились с момента снятия отпечатка."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một số giá trị thiết bị đã thay đổi kể từ khi vân tay được ghi lại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自記錄指紋以來，一些裝置值已更改。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自記錄指紋以來，一些裝置值已更改。"
+          }
+        }
+      }
+    },
+    "Some fields could not be re-read": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some fields could not be re-read"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分字段无法重新读取"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos campos no se pudieron volver a leer"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برخی فیلدها قابل بازخوانی نبودند"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一部のフィールドを再読み込みできませんでした"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일부 필드를 다시 읽을 수 없습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Некоторые поля не удалось прочитать повторно"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một số trường không thể đọc lại"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分欄位無法重新讀取"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分欄位無法重新讀取"
+          }
+        }
+      }
+    },
+    "Suggested fix": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested fix"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建议的修复方法"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solución sugerida"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راه‌حل پیشنهادی"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案された修正方法"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제안된 수정 방법"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предлагаемое исправление"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cách khắc phục được gợi ý"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建議的修復方法"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建議的修復方法"
+          }
+        }
+      }
+    },
+    "The CacheData slot for this key cannot be located on this device's layout. On native Apple Intelligence hardware the slot is natively off, while the CacheExtra key can be staged on — the two are separate values.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The CacheData slot for this key cannot be located on this device's layout. On native Apple Intelligence hardware the slot is natively off, while the CacheExtra key can be staged on — the two are separate values."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此设备的布局上无法定位此键对应的 CacheData 插槽。在原生支持 Apple 智能的硬件上，该插槽原生为关闭，而 CacheExtra 键可以暂存为开启——两者是相互独立的值。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se puede localizar la ranura CacheData de esta clave en el diseño de este dispositivo. En hardware con Apple Intelligence nativo, la ranura está desactivada de forma nativa, mientras que la clave CacheExtra puede prepararse activada; son dos valores independientes."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شکاف CacheData این کلید در چیدمان این دستگاه قابل یافتن نیست. روی سخت‌افزار دارای Apple Intelligence بومی، شکاف به‌صورت بومی خاموش است، در حالی که کلید CacheExtra می‌تواند روشن آماده شود — این دو مقدار جداگانه‌اند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このキーの CacheData スロットをこのデバイスのレイアウト上で特定できません。ネイティブの Apple Intelligence ハードウェアでは、スロットはネイティブでオフですが、CacheExtra キーはオンでステージングできます。これらは別々の値です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 키의 CacheData 슬롯을 이 기기의 레이아웃에서 찾을 수 없습니다. 네이티브 Apple Intelligence 하드웨어에서는 슬롯이 기본적으로 꺼져 있지만 CacheExtra 키는 켠 상태로 스테이징할 수 있습니다. 두 값은 별개입니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слот CacheData для этого ключа не удаётся найти в раскладке этого устройства. На устройстве с нативным Apple Intelligence слот изначально выключен, а ключ CacheExtra можно подготовить включённым — это два отдельных значения."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xác định khe CacheData của khóa này trên bố cục của thiết bị này. Trên phần cứng có Apple Intelligence gốc, khe vốn đã tắt, trong khi khóa CacheExtra có thể được chuẩn bị ở trạng thái bật — hai giá trị này độc lập với nhau."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此裝置的佈局上無法定位此鍵對應的 CacheData 插槽。在原生支援 Apple 智能的硬件上，該插槽原生為關閉，而 CacheExtra 鍵可以暫存為開啟——兩者是相互獨立的值。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此裝置的佈局上無法定位此鍵對應的 CacheData 插槽。在原生支援 Apple 智慧的硬體上，該插槽原生為關閉，而 CacheExtra 鍵可以暫存為開啟——兩者是相互獨立的值。"
+          }
+        }
+      }
+    },
+    "The CacheData slot for this key could not be located.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The CacheData slot for this key could not be located."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法定位此键对应的 CacheData 插槽。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo localizar la ranura CacheData de esta clave."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شکاف CacheData این کلید قابل یافتن نبود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このキーの CacheData スロットを特定できませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 키의 CacheData 슬롯을 찾을 수 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось найти слот CacheData для этого ключа."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xác định khe CacheData của khóa này."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法定位此鍵對應的 CacheData 插槽。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法定位此鍵對應的 CacheData 插槽。"
+          }
+        }
+      }
+    },
+    "The backup file is no longer on disk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup file is no longer on disk."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备份文件已不在磁盘上。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El archivo de respaldo ya no está en el disco."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فایل پشتیبان دیگر روی دیسک نیست."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップファイルはディスク上にもうありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백업 파일이 더 이상 디스크에 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл резервной копии больше не находится на диске."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tệp sao lưu không còn trên đĩa nữa."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份檔案已不在磁碟上。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備份檔案已不在磁碟上。"
+          }
+        }
+      }
+    },
+    "The backup was written from a different cache generation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup was written from a different cache generation."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该备份写入自不同的缓存世代。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia de seguridad se escribió desde otra generación de caché."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این پشتیبان از نسل کش متفاوتی نوشته شده است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このバックアップは、異なるキャッシュ世代から書き込まれました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 백업은 다른 캐시 세대에서 작성되었습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта резервная копия была записана из другого поколения кэша."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu này được ghi từ một thế hệ bộ nhớ đệm khác."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "該備份寫入自不同的快取世代。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "該備份寫入自不同的快取世代。"
+          }
+        }
+      }
+    },
+    "The cache integrity checks did not all pass.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cache integrity checks did not all pass."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缓存完整性检查并未全部通过。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No todas las comprobaciones de integridad de la caché pasaron."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "همه بررسی‌های یکپارچگی کش موفق نبودند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャッシュ整合性チェックがすべて通過したわけではありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캐시 무결성 검사가 모두 통과하지는 못했습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не все проверки целостности кэша пройдены."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không phải mọi bước kiểm tra tính toàn vẹn của bộ nhớ đệm đều đạt."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快取完整性檢查並未全部通過。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快取完整性檢查並未全部通過。"
+          }
+        }
+      }
+    },
+    "The cache layout could not be resolved on this model and OS build, so eSIM staging was refused by the guard.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cache layout could not be resolved on this model and OS build, so eSIM staging was refused by the guard."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此机型和系统构建上无法解析缓存布局，因此防护机制拒绝了 eSIM 暂存。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo resolver el diseño de la caché en este modelo y compilación del SO, por lo que el guardián rechazó la preparación de la eSIM."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چیدمان کش روی این مدل و بیلد سیستم‌عامل قابل حل نبود، پس محافظ از آماده‌سازی eSIM جلوگیری کرد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このモデルと OS ビルドではキャッシュレイアウトを解決できなかったため、ガードが eSIM のステージングを拒否しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 모델 및 OS 빌드에서 캐시 레이아웃을 확인할 수 없어 가드가 eSIM 스테이징을 거부했습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Раскладку кэша не удалось разрешить на этой модели и сборке ОС, поэтому защита отклонила подготовку eSIM."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xác định bố cục bộ nhớ đệm trên mẫu máy và bản dựng hệ điều hành này, vì vậy bộ phận bảo vệ đã từ chối chuẩn bị eSIM."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此型號和系統版本上無法解析快取佈局，因此防護機制拒絕了 eSIM 暫存。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此型號和系統版本上無法解析快取佈局，因此防護機制拒絕了 eSIM 暫存。"
+          }
+        }
+      }
+    },
+    "The eSIM cache layout could not be resolved on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The eSIM cache layout could not be resolved on this device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法解析此设备上的 eSIM 缓存布局。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo resolver el diseño de caché de la eSIM en este dispositivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چیدمان کش eSIM روی این دستگاه قابل حل نبود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスの eSIM キャッシュレイアウトを解決できませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기에서 eSIM 캐시 레이아웃을 확인할 수 없습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось разрешить раскладку кэша eSIM на этом устройстве."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xác định bố cục bộ nhớ đệm eSIM trên thiết bị này."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法解析此裝置上的 eSIM 快取佈局。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法解析此裝置上的 eSIM 快取佈局。"
+          }
+        }
+      }
+    },
+    "The file failed its byte-count, digest or plist check.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file failed its byte-count, digest or plist check."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该文件未通过字节数、摘要或 plist 检查。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El archivo no pasó la comprobación de tamaño, resumen ni plist."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فایل بررسی تعداد بایت، خلاصه یا plist را پشت سر نگذاشت."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このファイルはバイト数、ダイジェスト、または plist のチェックに失敗しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 파일은 바이트 수, 다이제스트 또는 plist 검사를 통과하지 못했습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл не прошёл проверку размера, дайджеста или plist."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tệp đã không đạt kiểm tra số byte, mã băm hoặc plist."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "該檔案未通過位元組數、摘要或 plist 檢查。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "該檔案未通過位元組數、摘要或 plist 檢查。"
+          }
+        }
+      }
+    },
+    "The file holds the staged value, but the live system returns a different answer. A value in the file does not prove the system uses it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file holds the staged value, but the live system returns a different answer. A value in the file does not prove the system uses it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件保存的是暂存值，但实时系统返回了不同的答案。文件中有某个值，并不能证明系统正在使用它。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El archivo contiene el valor preparado, pero el sistema en vivo devuelve otra respuesta. Que un valor esté en el archivo no prueba que el sistema lo use."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فایل مقدار آماده‌شده را دارد، اما سیستم زنده پاسخ متفاوتی برمی‌گرداند. وجود یک مقدار در فایل ثابت نمی‌کند که سیستم از آن استفاده می‌کند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルにはステージングされた値がありますが、ライブシステムは異なる答えを返します。ファイルに値があることは、システムがそれを使用している証明にはなりません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파일에는 스테이징된 값이 있지만 실시간 시스템은 다른 답을 반환합니다. 파일에 값이 있다고 해서 시스템이 그 값을 사용한다는 증거는 아닙니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В файле находится подготовленное значение, но живая система возвращает другой ответ. Наличие значения в файле не доказывает, что система его использует."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tệp chứa giá trị đã chuẩn bị, nhưng hệ thống trực tiếp trả về đáp án khác. Việc một giá trị có trong tệp không chứng minh hệ thống đang dùng nó."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檔案保存的是暫存值，但即時系統返回了不同的答案。檔案中有某個值，並不能證明系統正在使用它。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檔案保存的是暫存值，但即時系統返回了不同的答案。檔案中有某個值，並不能證明系統正在使用它。"
+          }
+        }
+      }
+    },
+    "The live probe did not answer for these keys: acceptance is based on the file value only.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The live probe did not answer for these keys: acceptance is based on the file value only."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时检测未回答这些键：验收仅基于文件值。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La sonda en vivo no respondió para estas claves: la aceptación se basa solo en el valor del archivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کاوش زنده برای این کلیدها پاسخی نداد: پذیرش فقط بر اساس مقدار فایل است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブプローブはこれらのキーに回答しませんでした。受け入れはファイルの値のみに基づきます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 프로브가 이 키들에 답하지 않았습니다. 수락은 파일 값에만 근거합니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Живой зонд не ответил для этих ключей: приёмка основана только на значении файла."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đầu dò trực tiếp đã không trả lời cho các khóa này: việc chấp nhận chỉ dựa trên giá trị tệp."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時偵測未回答這些鍵：驗收僅基於檔案值。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時偵測未回答這些鍵：驗收僅基於檔案值。"
+          }
+        }
+      }
+    },
+    "The live system answer disagrees with the file value.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The live system answer disagrees with the file value."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时系统的答案与文件值不一致。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La respuesta del sistema en vivo no coincide con el valor del archivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پاسخ سیستم زنده با مقدار فایل مطابقت ندارد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブシステムの答えがファイルの値と一致しません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 시스템 답이 파일 값과 일치하지 않습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ответ живой системы не совпадает со значением файла."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đáp án của hệ thống trực tiếp không khớp với giá trị tệp."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時系統的答案與檔案值不一致。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時系統的答案與檔案值不一致。"
+          }
+        }
+      }
+    },
+    "The modification-risk checks did not all pass.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The modification-risk checks did not all pass."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改风险检查并未全部通过。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No todas las comprobaciones de riesgo de modificación pasaron."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "همه بررسی‌های ریسک تغییر موفق نبودند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更リスクチェックがすべて通過したわけではありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "수정 위험 검사가 모두 통과하지는 못했습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не все проверки риска изменений пройдены."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không phải mọi bước kiểm tra rủi ro sửa đổi đều đạt."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改風險檢查並未全部通過。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改風險檢查並未全部通過。"
+          }
+        }
+      }
+    },
+    "The product type, OS build, cache layout or slot count changed since the fingerprint was captured, so the previously recorded support scope may no longer apply.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The product type, OS build, cache layout or slot count changed since the fingerprint was captured, so the previously recorded support scope may no longer apply."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自记录指纹以来，产品类型、系统构建、缓存布局或插槽数量已更改，因此此前记录的支持范围可能不再适用。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El tipo de producto, la compilación del SO, el diseño de la caché o el número de ranuras cambió desde que se capturó la huella, por lo que el alcance de compatibilidad registrado anteriormente podría ya no aplicarse."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نوع محصول، بیلد سیستم‌عامل، چیدمان کش یا تعداد شکاف‌ها از زمان ثبت اثر انگشت تغییر کرده‌اند، پس محدوده پشتیبانی ثبت‌شده قبلی ممکن است دیگر اعمال نشود."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィンガープリント取得以降、製品タイプ、OS ビルド、キャッシュレイアウト、またはスロット数が変更されたため、以前に記録されたサポート範囲が適用されなくなっている可能性があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지문을 기록한 이후 제품 유형, OS 빌드, 캐시 레이아웃 또는 슬롯 수가 변경되어 이전에 기록된 지원 범위가 더 이상 적용되지 않을 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тип продукта, сборка ОС, раскладка кэша или количество слотов изменились с момента снятия отпечатка, поэтому ранее записанная область поддержки может больше не применяться."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loại sản phẩm, bản dựng hệ điều hành, bố cục bộ nhớ đệm hoặc số khe đã thay đổi kể từ khi vân tay được ghi lại, vì vậy phạm vi hỗ trợ đã ghi trước đây có thể không còn áp dụng."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自記錄指紋以來，產品類型、系統版本、快取佈局或插槽數量已更改，因此此前記錄的支援範圍可能不再適用。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自記錄指紋以來，產品類型、系統版本、快取佈局或插槽數量已更改，因此此前記錄的支援範圍可能不再適用。"
+          }
+        }
+      }
+    },
+    "The proposal touched a hardware-identity field. Staging it is refused by design: changing such a field can break Face ID or make the system discard the whole cache at boot.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The proposal touched a hardware-identity field. Staging it is refused by design: changing such a field can break Face ID or make the system discard the whole cache at boot."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该方案触及了硬件标识字段。按设计会拒绝暂存：更改此类字段可能破坏面容 ID，或导致系统在启动时丢弃整个缓存。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La propuesta tocaba un campo de identidad de hardware. Prepararla se rechaza por diseño: cambiar ese campo puede romper Face ID o hacer que el sistema descarte toda la caché al arrancar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیشنهاد به یک فیلد هویت سخت‌افزاری برخورد کرد. آماده‌سازی آن به‌صورت طراحی‌شده رد می‌شود: تغییر چنین فیلدی می‌تواند Face ID را خراب کند یا باعث شود سیستم کل کش را هنگام راه‌اندازی دور بریزد."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案がハードウェア識別情報のフィールドに触れました。ステージングは設計上拒否されます。そのようなフィールドを変更すると Face ID が壊れたり、起動時にシステムがキャッシュ全体を破棄したりする可能性があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제안이 하드웨어 식별 정보 필드에 닿았습니다. 스테이징은 설계상 거부됩니다. 이러한 필드를 변경하면 Face ID가 손상되거나 부팅 시 시스템이 전체 캐시를 버릴 수 있습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предложение затрагивало поле аппаратного идентификатора. Подготовка отклоняется по замыслу: изменение такого поля может сломать Face ID или заставить систему отбросить весь кэш при загрузке."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đề xuất đã chạm vào một trường định danh phần cứng. Việc chuẩn bị bị từ chối theo thiết kế: thay đổi trường như vậy có thể làm hỏng Face ID hoặc khiến hệ thống loại bỏ toàn bộ bộ nhớ đệm khi khởi động."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "該方案觸及了硬件識別欄位。按設計會拒絕暫存：更改此類欄位可能破壞面容 ID，或導致系統在啟動時丟棄整個快取。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "該方案觸及了硬體識別欄位。按設計會拒絕暫存：更改此類欄位可能破壞 Face ID，或導致系統在啟動時丟棄整個快取。"
+          }
+        }
+      }
+    },
+    "The region code is back to its original value in the re-read document.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The region code is back to its original value in the re-read document."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在重新读取的文稿中，地区代码已恢复为原值。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El código de región ha vuelto a su valor original en el documento releído."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در سند بازخوانی‌شده، کد منطقه به مقدار اصلی خود برگشته است."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込みしたドキュメントでは、地域コードが元の値に戻っています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 읽은 문서에서 지역 코드가 원래 값으로 돌아갔습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В повторно прочитанном документе код региона вернулся к исходному значению."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trong tài liệu đọc lại, mã vùng đã trở về giá trị gốc của nó."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在重新讀取的文件中，地區代碼已恢復為原值。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在重新讀取的文件中，地區代碼已恢復為原值。"
+          }
+        }
+      }
+    },
+    "The system rebuilt the cached region value on restart instead of keeping the staged value. This has been observed on iPhone 17 Pro Max (A3527): the region returned to CH after a restart.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The system rebuilt the cached region value on restart instead of keeping the staged value. This has been observed on iPhone 17 Pro Max (A3527): the region returned to CH after a restart."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统在重新启动时重建了缓存的地区值，而没有保留暂存值。这一情况已在 iPhone 17 Pro Max（A3527）上观察到：重新启动后地区恢复为 CH。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El sistema reconstruyó el valor de región almacenado al reiniciar en lugar de conservar el valor preparado. Esto se ha observado en el iPhone 17 Pro Max (A3527): la región volvió a CH tras reiniciar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سیستم هنگام راه‌اندازی مجدد، مقدار منطقه ذخیره‌شده را بازسازی کرد به‌جای اینکه مقدار آماده‌شده را نگه دارد. این موضوع روی iPhone 17 Pro Max (A3527) مشاهده شده است: منطقه پس از راه‌اندازی مجدد به CH برگشت."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システムは再起動時にステージングされた値を保持するのではなく、キャッシュされた地域値を再構築しました。これは iPhone 17 Pro Max（A3527）で観測されています。再起動後、地域は CH に戻りました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템은 다시 시작할 때 스테이징된 값을 유지하는 대신 캐시된 지역 값을 다시 만들었습니다. 이는 iPhone 17 Pro Max(A3527)에서 관찰되었습니다. 다시 시작한 후 지역이 CH로 돌아갔습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "При перезапуске система пересоздала кэшированное значение региона вместо того, чтобы сохранить подготовленное значение. Это наблюдалось на iPhone 17 Pro Max (A3527): после перезапуска регион вернулся к CH."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hệ thống đã tái tạo giá trị vùng đã lưu trong bộ nhớ đệm khi khởi động lại thay vì giữ giá trị đã chuẩn bị. Điều này đã được quan sát trên iPhone 17 Pro Max (A3527): vùng đã trở về CH sau khi khởi động lại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統在重新啟動時重建了快取的地區值，而沒有保留暫存值。這一情況已在 iPhone 17 Pro Max（A3527）上觀察到：重新啟動後地區恢復為 CH。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統在重新啟動時重建了快取的地區值，而沒有保留暫存值。這一情況已在 iPhone 17 Pro Max（A3527）上觀察到：重新啟動後地區恢復為 CH。"
+          }
+        }
+      }
+    },
+    "Try reading again. If it keeps failing, check the App Group and signing state.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try reading again. If it keeps failing, check the App Group and signing state."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请重试读取。如果仍然失败，请检查 App Group 和签名状态。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intenta leer de nuevo. Si sigue fallando, comprueba el App Group y el estado de firma."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوباره خواندن را امتحان کنید. اگر همچنان ناموفق بود، App Group و وضعیت امضا را بررسی کنید."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再度読み取ってみてください。引き続き失敗する場合は、App Group と署名の状態を確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 읽어 보십시오. 계속 실패하면 App Group 및 서명 상태를 확인하십시오."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попробуйте прочитать ещё раз. Если это снова не удастся, проверьте App Group и состояние подписи."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy thử đọc lại. Nếu vẫn thất bại, hãy kiểm tra App Group và trạng thái ký."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重試讀取。如果仍然失敗，請檢查 App Group 和簽名狀態。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請重試讀取。如果仍然失敗，請檢查 App Group 和簽名狀態。"
+          }
+        }
+      }
+    },
+    "Warning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "警告"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advertencia"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هشدار"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "警告"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "경고"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предупреждение"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cảnh báo"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "警告"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "警告"
+          }
+        }
+      }
+    },
+    "What went wrong, why, and what to try — from real readings only.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What went wrong, why, and what to try — from real readings only."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出了什么问题、为什么、以及可以尝试什么——仅基于真实读取。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué salió mal, por qué y qué probar, solo a partir de lecturas reales."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چه چیزی اشتباه شد، چرا، و چه چیزی را امتحان کنید — فقط از خواندن‌های واقعی."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何が問題だったのか、なぜなのか、何を試すべきか — 実際の読み取り結果のみから。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무엇이 잘못되었는지, 왜 그런지, 무엇을 시도할지 — 실제 읽기 결과만으로."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что пошло не так, почему и что попробовать — только по реальным показаниям."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xảy ra lỗi gì, tại sao và nên thử gì — chỉ từ các lần đọc thực tế."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出了甚麼問題、為甚麼、以及可以嘗試甚麼——僅基於真實讀取。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出了什麼問題、為什麼、以及可以嘗試什麼——僅基於真實讀取。"
+          }
+        }
+      }
+    },
+    "Write did not verify": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write did not verify"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写入未能通过验证"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La escritura no se verificó"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نوشتن تأیید نشد"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "書き込みは検証されませんでした"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쓰기가 확인되지 않았습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запись не прошла проверку"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghi đã không được xác minh"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "寫入未能通過驗證"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "寫入未能通過驗證"
+          }
+        }
+      }
+    },
+    "Write, restore and guard events are not recorded yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write, restore and guard events are not recorded yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写入、恢复和防护事件尚未记录。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los eventos de escritura, restauración y protección aún no se registran."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رویدادهای نوشتن، بازیابی و محافظت هنوز ثبت نمی‌شوند."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "書き込み、復元、ガードのイベントはまだ記録されていません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쓰기, 복원 및 가드 이벤트는 아직 기록되지 않습니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "События записи, восстановления и защиты пока не записываются."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Các sự kiện ghi, khôi phục và bảo vệ chưa được ghi lại."
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "寫入、還原和防護事件尚未記錄。"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "寫入、還原和防護事件尚未記錄。"
+          }
+        }
+      }
+    },
+    "eSIM layout could not be resolved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eSIM layout could not be resolved"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法解析 eSIM 布局"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo resolver el diseño de la eSIM"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چیدمان eSIM قابل حل نبود"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eSIM レイアウトを解決できませんでした"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eSIM 레이아웃을 확인할 수 없습니다"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось разрешить раскладку eSIM"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xác định bố cục eSIM"
+          }
+        },
+        "zh-Hant-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法解析 eSIM 佈局"
+          }
+        },
+        "zh-Hant-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法解析 eSIM 佈局"
           }
         }
       }
