@@ -1,16 +1,15 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
 /// Offline tests for the item-2 dual vault backup: the 4-check gate and the
 /// install / reinstall / corrupt-digest flow. The "system" directory is a
 /// temp directory here; on device it is the shared mobilegestaltcache
 /// Caches directory next to the live plist.
-@main struct SystemVaultTests {
+final class SystemVaultTests: XCTestCase {
     struct Failure: Error { let message: String }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
-    }
 
-    static func fixtureData(uuid: String = "7F1DF278-18B7-4E5A-8425-09E8830DE9AF",
+    func fixtureData(uuid: String = "7F1DF278-18B7-4E5A-8425-09E8830DE9AF",
                             version: String = "24C5037i",
                             productType: String = "iPhone18,1",
                             cacheBytes: Int = 6480) throws -> Data {
@@ -21,26 +20,26 @@ import Foundation
         ], format: .binary, options: 0)
     }
 
-    static func main() async throws {
+    func testSystemVault() async throws {
         // Known-answer digest.
-        try expect(GestaltFileStore.sha256Hex(of: Data("abc".utf8))
+        XCTAssert(GestaltFileStore.sha256Hex(of: Data("abc".utf8))
                    == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
                    "SHA-256 hex matches the known digest of 'abc'")
 
         // The 4-check gate: matching passes; each single mismatch fails.
         let live = try GestaltDocument(data: fixtureData())
-        try expect(GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(), live: live),
+        XCTAssert(GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(), live: live),
                    "Matching vault passes all four checks")
-        try expect(!GestaltFileStore.vaultMatchesLive(
+        XCTAssert(!GestaltFileStore.vaultMatchesLive(
                        vaultData: fixtureData(uuid: "BBBBBBBB-1111-2222-3333-123456789ABC"), live: live),
                    "UUID mismatch fails the gate")
-        try expect(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(version: "24C5037j"), live: live),
+        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(version: "24C5037j"), live: live),
                    "CacheVersion mismatch fails the gate")
-        try expect(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(productType: "iPhone18,2"), live: live),
+        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(productType: "iPhone18,2"), live: live),
                    "ProductType mismatch fails the gate")
-        try expect(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(cacheBytes: 6471), live: live),
+        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(cacheBytes: 6471), live: live),
                    "CacheData length mismatch fails the gate")
-        try expect(!GestaltFileStore.vaultMatchesLive(vaultData: Data("not a plist".utf8), live: live),
+        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: Data("not a plist".utf8), live: live),
                    "Unparseable vault fails the gate")
 
         let fm = FileManager.default
@@ -60,18 +59,18 @@ import Foundation
                                      backupDirectory: directory.appendingPathComponent("backups1"),
                                      deviceID: "install-1", acquire: { 1 }, release: { _ in })
         _ = try await first.loadDevice()
-        try expect(fm.fileExists(atPath: vaultURL.path) && fm.fileExists(atPath: digestURL.path),
+        XCTAssert(fm.fileExists(atPath: vaultURL.path) && fm.fileExists(atPath: digestURL.path),
                    "First load mirrors the factory backup into the vault")
-        try expect(try Data(contentsOf: vaultURL) == liveBytes,
+        XCTAssert(try Data(contentsOf: vaultURL) == liveBytes,
                    "Vault content equals the live bytes")
-        try expect(try String(contentsOf: digestURL, encoding: .utf8)
+        XCTAssert(try String(contentsOf: digestURL, encoding: .utf8)
                    == GestaltFileStore.sha256Hex(of: liveBytes),
                    "Vault sidecar holds the SHA-256 of the vault bytes")
-        try expect(try await first.backups().count == 1, "First load saves one initial backup")
+        XCTAssert(try await first.backups().count == 1, "First load saves one initial backup")
         let firstBackups = try await first.backups()
-        try expect(firstBackups[0].provenance == .firstRead,
+        XCTAssert(firstBackups[0].provenance == .firstRead,
                    "The first backup is recorded as first-read state, never factory state")
-        try expect(try String(contentsOf: provenanceURL, encoding: .utf8) == BackupProvenance.firstRead.rawValue,
+        XCTAssert(try String(contentsOf: provenanceURL, encoding: .utf8) == BackupProvenance.firstRead.rawValue,
                    "The vault sidecar records first-read provenance on first load")
 
         // Reinstall (new installation ID, empty backup directory, same
@@ -83,11 +82,11 @@ import Foundation
                                       deviceID: "install-2", acquire: { 1 }, release: { _ in })
         _ = try await second.loadDevice()
         let recovered = try await second.backups()
-        try expect(recovered.count == 1 && recovered[0].reason == "Initial backup",
+        XCTAssert(recovered.count == 1 && recovered[0].reason == "Initial backup",
                    "Reinstall restores one initial backup from the vault")
-        try expect(recovered[0].provenance == .firstRead,
+        XCTAssert(recovered[0].provenance == .firstRead,
                    "A vault recovery of a first-read mirror stays first-read state, never factory state")
-        try expect(try await second.backupData(recovered[0]) == liveBytes,
+        XCTAssert(try await second.backupData(recovered[0]) == liveBytes,
                    "Recovered backup bytes match the live bytes")
 
         // Corrupt digest: recovery fails, a fresh initial backup is made
@@ -97,11 +96,11 @@ import Foundation
                                      backupDirectory: directory.appendingPathComponent("backups3"),
                                      deviceID: "install-3", acquire: { 1 }, release: { _ in })
         _ = try await third.loadDevice()
-        try expect(try await third.backups().count == 1, "Corrupt digest still yields a fresh initial backup")
-        try expect(try String(contentsOf: digestURL, encoding: .utf8)
+        XCTAssert(try await third.backups().count == 1, "Corrupt digest still yields a fresh initial backup")
+        XCTAssert(try String(contentsOf: digestURL, encoding: .utf8)
                    == GestaltFileStore.sha256Hex(of: liveBytes),
                    "A corrupt digest is replaced by a re-synced vault sidecar")
-        try expect(try String(contentsOf: provenanceURL, encoding: .utf8) == BackupProvenance.firstRead.rawValue,
+        XCTAssert(try String(contentsOf: provenanceURL, encoding: .utf8) == BackupProvenance.firstRead.rawValue,
                    "A re-synced vault records first-read provenance")
 
         // Stale vault (different CacheUUID, correct digest for its own
@@ -116,31 +115,31 @@ import Foundation
                                       backupDirectory: directory.appendingPathComponent("backups4"),
                                       deviceID: "install-4", acquire: { 1 }, release: { _ in })
         _ = try await fourth.loadDevice()
-        try expect(try Data(contentsOf: vaultURL) == stale,
+        XCTAssert(try Data(contentsOf: vaultURL) == stale,
                    "A digest-valid stale vault is kept, never replaced by the live baseline")
         let fourthBackups = try await fourth.backups()
-        try expect(fourthBackups.count == 1 && fourthBackups[0].provenance == .firstRead,
+        XCTAssert(fourthBackups.count == 1 && fourthBackups[0].provenance == .firstRead,
                    "A stale vault still yields a fresh first-read local backup")
 
         // --- P0-2 provenance ---
         // The five cases are distinct, round-trip through JSON, and the
         // first-read label never claims factory state.
-        try expect(BackupProvenance.allCases.count == 5, "Five provenance cases exist")
-        try expect(Set(BackupProvenance.allCases.map(\.rawValue)).count == 5,
+        XCTAssert(BackupProvenance.allCases.count == 5, "Five provenance cases exist")
+        XCTAssert(Set(BackupProvenance.allCases.map(\.rawValue)).count == 5,
                    "Each provenance case has a distinct raw value")
-        try expect(Set(BackupProvenance.allCases.map(\.displayLabel)).count == 5,
+        XCTAssert(Set(BackupProvenance.allCases.map(\.displayLabel)).count == 5,
                    "Each provenance case has a distinct user-facing label")
-        try expect(BackupProvenance.firstRead.displayLabel != BackupProvenance.verifiedFactory.displayLabel,
+        XCTAssert(BackupProvenance.firstRead.displayLabel != BackupProvenance.verifiedFactory.displayLabel,
                    "First-read state is labelled differently from a verified factory backup")
-        try expect(BackupProvenance.allCases.filter(\.isFactory) == [.verifiedFactory],
+        XCTAssert(BackupProvenance.allCases.filter(\.isFactory) == [.verifiedFactory],
                    "Only a verified factory backup claims factory state")
         for provenance in BackupProvenance.allCases {
             let record = BackupRecord(id: UUID(), date: Date(), reason: "Manual backup", source: .device,
                                       deviceID: "roundtrip", byteCount: 3, sha256: nil, provenance: provenance)
             let decoded = try JSONDecoder().decode(BackupRecord.self, from: JSONEncoder().encode(record))
-            try expect(decoded.provenance == provenance,
+            XCTAssert(decoded.provenance == provenance,
                        "Provenance survives a JSON round-trip: \(provenance.rawValue)")
-            try expect(decoded.provenanceLabel == provenance.displayLabel,
+            XCTAssert(decoded.provenanceLabel == provenance.displayLabel,
                        "Record label matches its provenance: \(provenance.rawValue)")
         }
         // Legacy JSON without a provenance key infers honestly from the
@@ -153,19 +152,19 @@ import Foundation
             json.removeValue(forKey: "provenance")
             return try JSONDecoder().decode(BackupRecord.self, from: JSONSerialization.data(withJSONObject: json)).provenance
         }
-        try expect(try legacyProvenance(reason: "Before applying", source: .device) == .preModification,
+        XCTAssert(try legacyProvenance(reason: "Before applying", source: .device) == .preModification,
                    "Legacy pre-write backup infers pre-modification provenance")
-        try expect(try legacyProvenance(reason: "Before restoring", source: .device) == .preModification,
+        XCTAssert(try legacyProvenance(reason: "Before restoring", source: .device) == .preModification,
                    "Legacy pre-restore backup infers pre-modification provenance")
-        try expect(try legacyProvenance(reason: "Initial backup", source: .device) == .unknown,
+        XCTAssert(try legacyProvenance(reason: "Initial backup", source: .device) == .unknown,
                    "Legacy initial backup does not infer factory provenance")
-        try expect(try legacyProvenance(reason: "Original values snapshot", source: .device) == .unknown,
+        XCTAssert(try legacyProvenance(reason: "Original values snapshot", source: .device) == .unknown,
                    "Legacy original-values snapshot does not infer factory provenance")
-        try expect(try legacyProvenance(reason: "Verified import", source: .device) == .importedHistory,
+        XCTAssert(try legacyProvenance(reason: "Verified import", source: .device) == .importedHistory,
                    "Legacy verified import infers imported-history provenance")
-        try expect(try legacyProvenance(reason: "Manual backup", source: .local) == .importedHistory,
+        XCTAssert(try legacyProvenance(reason: "Manual backup", source: .local) == .importedHistory,
                    "Legacy local manual backup infers imported-history provenance")
-        try expect(try legacyProvenance(reason: "Manual backup", source: .device) == .firstRead,
+        XCTAssert(try legacyProvenance(reason: "Manual backup", source: .device) == .firstRead,
                    "Legacy device manual backup infers first-read provenance")
 
         // A digest-valid verified factory vault is never overwritten: not by
@@ -189,11 +188,11 @@ import Foundation
                                             deviceID: "factory-1", acquire: { 1 }, release: { _ in })
         _ = try await factoryStore.loadDevice()
         let factoryBackups = try await factoryStore.backups()
-        try expect(factoryBackups.count == 1 && factoryBackups[0].provenance == .verifiedFactory,
+        XCTAssert(factoryBackups.count == 1 && factoryBackups[0].provenance == .verifiedFactory,
                    "Reinstall recovery restores the verified factory backup")
-        try expect(try Data(contentsOf: factoryVault) == liveBytes,
+        XCTAssert(try Data(contentsOf: factoryVault) == liveBytes,
                    "A verified factory vault is never overwritten by a later first read")
-        try expect(try String(contentsOf: factorySidecar, encoding: .utf8) == BackupProvenance.verifiedFactory.rawValue,
+        XCTAssert(try String(contentsOf: factorySidecar, encoding: .utf8) == BackupProvenance.verifiedFactory.rawValue,
                    "The verified factory provenance sidecar survives recovery")
         var modifiedAgain = try GestaltDocument(data: liveBytes)
         modifiedAgain.set("LL", for: GestaltKeys.regionCode)
@@ -202,10 +201,10 @@ import Foundation
                                              backupDirectory: factoryDir.appendingPathComponent("backups2"),
                                              deviceID: "factory-2", acquire: { 1 }, release: { _ in })
         _ = try await factoryStore2.loadDevice()
-        try expect(try Data(contentsOf: factoryVault) == liveBytes,
+        XCTAssert(try Data(contentsOf: factoryVault) == liveBytes,
                    "First-read state never overwrites a verified factory vault")
         let factoryBackups2 = try await factoryStore2.backups()
-        try expect(factoryBackups2.count == 1 && factoryBackups2[0].provenance == .verifiedFactory,
+        XCTAssert(factoryBackups2.count == 1 && factoryBackups2[0].provenance == .verifiedFactory,
                    "Later reinstalls still recover the factory backup")
 
         // Reinstall recovery requires the digest: vault bytes without a
@@ -222,9 +221,9 @@ import Foundation
                                              deviceID: "digest-1", acquire: { 1 }, release: { _ in })
         _ = try await noDigestStore.loadDevice()
         let noDigestBackups = try await noDigestStore.backups()
-        try expect(noDigestBackups.count == 1 && noDigestBackups[0].provenance == .firstRead,
+        XCTAssert(noDigestBackups.count == 1 && noDigestBackups[0].provenance == .firstRead,
                    "Without a digest the vault is not recovered; a fresh first-read backup is made")
-        try expect(try Data(contentsOf: digestVault) == liveBytes
+        XCTAssert(try Data(contentsOf: digestVault) == liveBytes
                    && String(contentsOf: digestVault.appendingPathExtension("provenance"), encoding: .utf8) == BackupProvenance.firstRead.rawValue,
                    "A digest-less vault is re-synced as first-read state once its digest is written")
         let legacyDir = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -239,9 +238,7 @@ import Foundation
                                            deviceID: "legacy-1", acquire: { 1 }, release: { _ in })
         _ = try await legacyStore.loadDevice()
         let legacyBackups = try await legacyStore.backups()
-        try expect(legacyBackups.count == 1 && legacyBackups[0].provenance == .unknown,
+        XCTAssert(legacyBackups.count == 1 && legacyBackups[0].provenance == .unknown,
                    "A legacy vault without a provenance sidecar recovers as unknown provenance, never as factory")
-
-        print("PASS: vault 4-check gate refuses each single mismatch; first load records a first-read backup and mirrors it with SHA-256 and provenance sidecars; reinstall recovers the recorded provenance; a digest-valid vault (factory or stale) is never overwritten; recovery requires the digest; legacy vaults recover as unknown provenance, never as factory.")
     }
 }

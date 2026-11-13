@@ -1,13 +1,12 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-@main struct BackupLayoutTests {
+final class BackupLayoutTests: XCTestCase {
     struct Failure: Error { let message: String }
     final class Trace: @unchecked Sendable { var writes = 0 }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
-    }
 
-    static func main() async throws {
+    func testBackupLayout() async throws {
         let fm = FileManager.default
         let directory = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -38,22 +37,20 @@ import Foundation
         changed = root; changed["CacheData"] = "invalid"; variants.append(changed)
         for variant in variants {
             let restored = try GestaltDocument(data: bytes(variant))
-            do {
-                _ = try await store.commit(restored, expected: initial, restoring: record)
-                throw Failure(message: "Incompatible same-device backup reached the writer")
-            } catch is GestaltFailure {}
-            try expect(trace.writes == 0 && (try Data(contentsOf: device)) == original, "Layout rejection leaves the device untouched")
-            try expect(try await store.backups().count == 1, "Layout rejection precedes backup and journal side effects")
+            await XCTAssertThrowsError(try await store.commit(restored, expected: initial, restoring: record)) { error in
+                XCTAssertTrue(error is GestaltFailure)
+            }
+            XCTAssert(trace.writes == 0 && (try Data(contentsOf: device)) == original, "Layout rejection leaves the device untouched")
+            XCTAssert(try await store.backups().count == 1, "Layout rejection precedes backup and journal side effects")
         }
         var matching = initial.document
         matching.set("restored", for: "setting")
         let restored = try await store.commit(matching, expected: initial, restoring: record)
-        try expect(trace.writes == 1 && restored.document.matches(matching), "Matching cache layouts can be restored")
+        XCTAssert(trace.writes == 1 && restored.document.matches(matching), "Matching cache layouts can be restored")
         let local = try await store.loadLocal(data: original, name: "old-local.plist")
         let oldLayout = try GestaltDocument(data: bytes(variants[0]))
         let opened = try await store.commit(oldLayout, expected: local, restoring: record)
-        try expect(opened.source == .local && opened.document.matches(oldLayout), "Old backups can still be opened as local documents")
-        try expect(trace.writes == 1, "Opening an incompatible backup locally never writes the device")
-        print("PASS: UUID, version, data-length and missing-metadata restore rejection; compatible restore and local access.")
+        XCTAssert(opened.source == .local && opened.document.matches(oldLayout), "Old backups can still be opened as local documents")
+        XCTAssert(trace.writes == 1, "Opening an incompatible backup locally never writes the device")
     }
 }

@@ -1,7 +1,9 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
 extension DocumentTests {
-    static func verifyWAPI(in root: URL) async throws {
+    func verifyWAPI(in root: URL) async throws {
         let layout = MobileGestaltCacheLayout.originalProfile
         let offset = layout.wapiOffset!
         func fixture(_ enabled: Bool) throws -> GestaltDocument {
@@ -28,34 +30,34 @@ extension DocumentTests {
         try disabled.setWAPI(false)
         try DeviceCacheOptions.validateEdit(from: original, to: disabled)
         let before = original.root["CacheData"] as! Data, after = disabled.root["CacheData"] as! Data
-        try expect(before.indices.filter { before[$0] != after[$0] } == [offset], "WAPI changes only its own cached Boolean")
-        try expect(disabled.extra as NSDictionary == original.extra as NSDictionary, "WAPI preserves region and other CacheExtra values")
-        try expect(DeviceCacheOptions.changes(from: original, to: disabled).map(\.name) == ["wapi"], "WAPI appears in the review/count")
+        XCTAssert(before.indices.filter { before[$0] != after[$0] } == [offset], "WAPI changes only its own cached Boolean")
+        XCTAssert(disabled.extra as NSDictionary == original.extra as NSDictionary, "WAPI preserves region and other CacheExtra values")
+        XCTAssert(DeviceCacheOptions.changes(from: original, to: disabled).map(\.name) == ["wapi"], "WAPI appears in the review/count")
         var combined = disabled
         try combined.setCacheOptions(.enabled)
         try DeviceCacheOptions.validateEdit(from: original, to: combined)
-        try expect(!DeviceCacheOptions.wapi(in: combined), "Green-tea and WAPI edits coexist")
+        XCTAssert(!DeviceCacheOptions.wapi(in: combined), "Green-tea and WAPI edits coexist")
         try combined.setCacheOptions(.restricted)
-        try expect(combined.matches(disabled), "Restoring green-tea preserves staged WAPI")
+        XCTAssert(combined.matches(disabled), "Restoring green-tea preserves staged WAPI")
         for bad in [offset, offset + 1, layout.validityOffset(for: layout.wapiIndex!)] {
             var invalid = original
             var bytes = before
             bytes[bad] = bad == offset ? 2 : (bad == offset + 1 ? 1 : 0)
             invalid = try replacingCache(invalid, bytes)
-            try expectThrows("Reject invalid WAPI byte, padding or validity") { try invalid.setWAPI(false) }
+            XCTAssertThrowsError(try invalid.setWAPI(false), "Reject invalid WAPI byte, padding or validity")
             try invalid.setCacheOptions(.enabled)
             try DeviceCacheOptions.validateEdit(from: replacingCache(original, bytes), to: invalid)
         }
         for key in [DeviceCacheOptions.wapiKey, "wapi"] {
             var invalid = original; invalid.set(true, for: key)
-            try expectThrows("Reject conflicting WAPI override") { try invalid.setWAPI(false) }
+            XCTAssertThrowsError(try invalid.setWAPI(false), "Reject conflicting WAPI override")
         }
         var unrelated = disabled; var bytes = after; bytes[27] = 0; unrelated = try replacingCache(unrelated, bytes)
-        try expectThrows("Reject unrelated bytes alongside WAPI") { try DeviceCacheOptions.validateEdit(from: original, to: unrelated) }
+        XCTAssertThrowsError(try DeviceCacheOptions.validateEdit(from: original, to: unrelated), "Reject unrelated bytes alongside WAPI")
         var invalidGreen = original; bytes = before; bytes[layout.greenTeaOffset + 1] = 1; invalidGreen = try replacingCache(invalidGreen, bytes)
         var onlyWAPI = invalidGreen; try onlyWAPI.setWAPI(false)
         try DeviceCacheOptions.validateEdit(from: invalidGreen, to: onlyWAPI)
-        try expect(DeviceCacheOptions.changes(from: invalidGreen, to: onlyWAPI).map(\.name) == ["wapi"], "WAPI works independently of green-tea validity")
+        XCTAssert(DeviceCacheOptions.changes(from: invalidGreen, to: onlyWAPI).map(\.name) == ["wapi"], "WAPI works independently of green-tea validity")
 
         // Preserve the first value across repeated edits, app reopen, deleted
         // visible backups, and migration from a journal without a WAPI entry.
@@ -81,16 +83,16 @@ extension DocumentTests {
                 }
                 let reopened = GestaltFileStore(deviceURL: url, backupDirectory: backups, deviceID: tag, acquire: { 1 }, release: { _ in })
                 let loaded = try await reopened.loadDevice()
-                try expect(loaded.originalWAPI() == initialValue, "Exact original WAPI survives journal recovery/reopen")
+                XCTAssert(loaded.originalWAPI() == initialValue, "Exact original WAPI survives journal recovery/reopen")
                 var restored = loaded.document; try restored.setWAPI(loaded.originalWAPI())
-                try expect(restored.matches(baseline), "Restoring WAPI preserves all other values")
+                XCTAssert(restored.matches(baseline), "Restoring WAPI preserves all other values")
                 _ = try await reopened.commit(restored, expected: loaded)
             }
         }
         if let path = ProcessInfo.processInfo.environment["GX_TEST_WAPI_IMAGE"] {
             let image = try PropertyListSerialization.propertyList(from: Data(contentsOf: URL(fileURLWithPath: path)), format: nil) as! [String: Any]
             let actual = try MobileGestaltCacheLayout.scan(image: image)
-            try expect(actual.wapiIndex == 694 && actual.slotCount == 720, "Resolve WAPI and cache size from the actual device library")
+            XCTAssert(actual.wapiIndex == 694 && actual.slotCount == 720, "Resolve WAPI and cache size from the actual device library")
         }
         if let path = ProcessInfo.processInfo.environment["GX_TEST_WAPI_EXPORT"] {
             let url = URL(fileURLWithPath: path), bytes = try Data(contentsOf: url)
@@ -98,8 +100,7 @@ extension DocumentTests {
             let original = doc
             try doc.setWAPI(!value); try DeviceCacheOptions.validateEdit(from: original, to: doc)
             try doc.setWAPI(value)
-            try expect(doc.matches(original) && Data(contentsOf: url) == bytes, "Real device export round-trips without changing the source file")
+            XCTAssert(doc.matches(original) && Data(contentsOf: url) == bytes, "Real device export round-trips without changing the source file")
         }
-        print("PASS: WAPI isolation, combined edits, validation, durable original values, journal migration and real-export round trip.")
     }
 }

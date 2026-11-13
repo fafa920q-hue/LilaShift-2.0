@@ -1,12 +1,11 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-@main struct SiriCapabilityTests {
+final class SiriCapabilityTests: XCTestCase {
     struct Failure: Error { let message: String }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
-    }
 
-    static func fixture(_ value: Any?) throws -> GestaltDocument {
+    func fixture(_ value: Any?) throws -> GestaltDocument {
         var extra: [String: Any] = [
             GestaltKeys.regionCode: "LL",
             "A62OafQ85EJAiiqKn4agtg": NSNumber(value: 1),
@@ -22,13 +21,13 @@ import Foundation
         return try GestaltDocument(data: PropertyListSerialization.data(fromPropertyList: root, format: .binary, options: 0))
     }
 
-    static func main() async throws {
+    func testSiriCapability() async throws {
         let siri = Capability.all.first { $0.id == "siriOnDevice" }!
         let key = siri.keys.first!
-        try expect(siri.availableChoices == [.keep, .disable, .removeAdded],
+        XCTAssert(siri.availableChoices == [.keep, .disable, .removeAdded],
                    "Siri exposes current-value and recovery choices")
         for capability in Capability.all where capability.id != siri.id {
-            try expect(capability.availableChoices == PresetChoice.allCases,
+            XCTAssert(capability.availableChoices == PresetChoice.allCases,
                        "\(capability.id): all existing preset choices remain available")
         }
         let values: [(String, Any?)] = [
@@ -42,13 +41,13 @@ import Foundation
             let snapshot = DocumentSnapshot(data: data, document: original, source: .local, name: label)
             var document = original
             siri.apply(.keep, to: &document, restoringFrom: snapshot)
-            try expect(document.matches(original), "\(label): Keep Current preserves the complete document")
+            XCTAssert(document.matches(original), "\(label): Keep Current preserves the complete document")
             siri.apply(.enable, to: &document, restoringFrom: snapshot)
-            try expect(document.matches(original), "\(label): a forced enable preserves the system capability value")
+            XCTAssert(document.matches(original), "\(label): a forced enable preserves the system capability value")
             let roundtrip = try GestaltDocument(data: document.encoded())
-            try expect(roundtrip.matches(original), "\(label): encoding preserves the capability value and type")
+            XCTAssert(roundtrip.matches(original), "\(label): encoding preserves the capability value and type")
             siri.apply(.removeAdded, to: &document, restoringFrom: snapshot)
-            try expect(document.extra[key] == nil, "\(label): explicit field removal remains available")
+            XCTAssert(document.extra[key] == nil, "\(label): explicit field removal remains available")
         }
 
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -73,12 +72,11 @@ import Foundation
             let loaded = try await reloadedStore.loadDevice()
             var restored = loaded.document
             siri.apply(.disable, to: &restored, restoringFrom: loaded)
-            try expect(restored.matches(original), "\(label): Restore Original recovers the recorded value and type")
+            XCTAssert(restored.matches(original), "\(label): Restore Original recovers the recorded value and type")
             let result = try await reloadedStore.commit(restored, expected: loaded)
-            try expect(result.document.matches(original), "\(label): the restored value survives the normal commit path")
+            XCTAssert(result.document.matches(original), "\(label): the restored value survives the normal commit path")
             let readback = try GestaltDocument(data: Data(contentsOf: device))
-            try expect(readback.matches(original), "\(label): readback preserves region, AI flags and cache data")
+            XCTAssert(readback.matches(original), "\(label): readback preserves region, AI flags and cache data")
         }
-        print("PASS: Siri capability values are preserved and legacy originals survive journal reload and restoration.")
     }
 }

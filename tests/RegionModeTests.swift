@@ -1,17 +1,16 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
 /// Offline tests for the item-5 region mode choice: the US regulatory
 /// model mapping (refuses unknown models) and Full US staging/restore.
 /// No device or signing is needed.
-@main struct RegionModeTests {
+final class RegionModeTests: XCTestCase {
     struct Failure: Error { let message: String }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
-    }
 
     /// China-mainland fixture: region CH with CH/A suffixes, Air model
     /// number A3518 (China mainland), product type iPhone18,1.
-    static func fixture(productType: String = "iPhone18,1",
+    func fixture(productType: String = "iPhone18,1",
                         modelNumber: String = "A3518") throws -> GestaltDocument {
         let layout = MobileGestaltCacheLayout.originalProfile
         var cache = Data(count: layout.byteCount)
@@ -33,18 +32,18 @@ import Foundation
     }
 
     @MainActor
-    static func main() throws {
+    func testRegionMode() throws {
         // Mapping table spot checks (original reg model first, then
         // product type; unknown models refused, never guessed).
-        try expect(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: "A3718", productType: "iPhone19,3") == "A3473",
+        XCTAssert(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: "A3718", productType: "iPhone19,3") == "A3473",
                    "A3718 (18 Pro Max China) maps to US A3473")
-        try expect(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: "A3518", productType: "iPhone18,1") == "A3260",
+        XCTAssert(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: "A3518", productType: "iPhone18,1") == "A3260",
                    "A3518 (Air China) maps to US A3260, not the product-type fallback A3256")
-        try expect(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: nil, productType: "iPhone18,4") == "A3260",
+        XCTAssert(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: nil, productType: "iPhone18,4") == "A3260",
                    "Product-type fallback maps iPhone18,4 to US A3260")
-        try expect(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: "A9999", productType: "iPhone99,9") == nil,
+        XCTAssert(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: "A9999", productType: "iPhone99,9") == nil,
                    "Unknown model and product type map to nil, never a guessed A-number")
-        try expect(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: nil, productType: "iPad16,1") == nil,
+        XCTAssert(USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: nil, productType: "iPad16,1") == nil,
                    "iPads map to nil: the unlock is iPhone-focused")
 
         // Default mode stays region-code-only: staging is byte-identical
@@ -55,36 +54,36 @@ import Foundation
                                         source: .local, name: "fixture")
         let manager = GestaltManager()
         manager.loadSnapshotForTests(snapshot)
-        try expect(manager.chinaUnlockRegionMode == .regionCodeOnly,
+        XCTAssert(manager.chinaUnlockRegionMode == .regionCodeOnly,
                    "Default region mode is region-code-only")
         manager.stageChinaUnlock()
-        try expect(manager.changeCount == 9 && manager.regionID == "keep",
+        XCTAssert(manager.changeCount == 9 && manager.regionID == "keep",
                    "Region-code-only staging still changes exactly 9 items")
 
         // Full US staging on the fixture: LL + LL/A + A3260.
         ChinaUnlockRegionMode.stored = .fullUS
         let fullUS = GestaltManager()
         fullUS.loadSnapshotForTests(snapshot)
-        try expect(fullUS.chinaUnlockRegionMode == .fullUS, "Stored Full US mode is picked up")
+        XCTAssert(fullUS.chinaUnlockRegionMode == .fullUS, "Stored Full US mode is picked up")
         fullUS.stageChinaUnlock()
         guard let preview = fullUS.preview else { throw Failure(message: "Preview exists after Full US staging") }
-        try expect(preview.extra[GestaltKeys.regionCode] as? String == "LL",
+        XCTAssert(preview.extra[GestaltKeys.regionCode] as? String == "LL",
                    "Full US sets RegionCode to LL")
-        try expect(preview.extra[GestaltKeys.regionInfo] as? String == "LL/A"
+        XCTAssert(preview.extra[GestaltKeys.regionInfo] as? String == "LL/A"
                    && preview.extra[GestaltKeys.legacyRegionInfo] as? String == "LL/A",
                    "Full US sets both sales-region suffixes to LL/A")
-        try expect(preview.extra[GestaltKeys.modelNumber] as? String == "A3260",
+        XCTAssert(preview.extra[GestaltKeys.modelNumber] as? String == "A3260",
                    "Full US maps A3518 to the US model A3260")
-        try expect(fullUS.isChinaUnlockedInPreview, "Full US preview reads as unlocked")
+        XCTAssert(fullUS.isChinaUnlockedInPreview, "Full US preview reads as unlocked")
         // 10 CacheExtra keys (region code + 2 suffixes + model + 6 AI)
         // + 2 cache bytes = 12 staged changes.
-        try expect(fullUS.changeCount == 12, "Full US staging changes 12 items, got \(fullUS.changeCount)")
+        XCTAssert(fullUS.changeCount == 12, "Full US staging changes 12 items, got \(fullUS.changeCount)")
 
         // Restore after Full US returns all three region/model keys.
         fullUS.restoreChinaUnlock()
         guard let restored = fullUS.preview else { throw Failure(message: "Preview exists after restore") }
-        try expect(restored.matches(original), "Restore after Full US returns the original document")
-        try expect(restored.extra[GestaltKeys.regionInfo] as? String == "CH/A"
+        XCTAssert(restored.matches(original), "Restore after Full US returns the original document")
+        XCTAssert(restored.extra[GestaltKeys.regionInfo] as? String == "CH/A"
                    && restored.extra[GestaltKeys.legacyRegionInfo] as? String == "CH/A"
                    && restored.extra[GestaltKeys.modelNumber] as? String == "A3518",
                    "Restore returns suffixes and model number to their originals")
@@ -99,17 +98,16 @@ import Foundation
         unknown.loadSnapshotForTests(unknownSnapshot)
         unknown.stageChinaUnlock()
         guard let unknownPreview = unknown.preview else { throw Failure(message: "Preview exists for unknown device") }
-        try expect(unknownPreview.extra[GestaltKeys.regionCode] as? String == "LL"
+        XCTAssert(unknownPreview.extra[GestaltKeys.regionCode] as? String == "LL"
                    && unknownPreview.extra[GestaltKeys.regionInfo] as? String == "LL/A",
                    "Unknown device still stages region code and sales region")
-        try expect(unknownPreview.extra[GestaltKeys.modelNumber] as? String == "A9999",
+        XCTAssert(unknownPreview.extra[GestaltKeys.modelNumber] as? String == "A9999",
                    "Unknown device leaves the model number untouched")
-        try expect(unknown.regionModeNote != nil,
+        XCTAssert(unknown.regionModeNote != nil,
                    "Unknown device shows the no-mapping note")
-        try expect(unknown.isChinaUnlockedInPreview,
+        XCTAssert(unknown.isChinaUnlockedInPreview,
                    "Unknown device still reads as unlocked without a mapped model")
 
         ChinaUnlockRegionMode.stored = .regionCodeOnly
-        print("PASS: US regulatory mapping refuses unknown models, Full US stages LL + LL/A + mapped model (12 items) and restores all three keys, and unknown devices stage region-only with a note.")
     }
 }

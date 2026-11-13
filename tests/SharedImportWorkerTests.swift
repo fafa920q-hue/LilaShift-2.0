@@ -1,4 +1,6 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
 private actor Started {
     private var ready = false
@@ -53,13 +55,10 @@ private final class WaitingCoordinator: NSFileCoordinator, @unchecked Sendable {
     }
 }
 
-@main struct SharedImportWorkerTests {
+final class SharedImportWorkerTests: XCTestCase {
     struct Failure: Error { let message: String }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
-    }
 
-    @MainActor static func main() async throws {
+    @MainActor func testSharedImportWorker() async throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent("GestaltX-import-worker-" + UUID().uuidString)
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
@@ -69,9 +68,9 @@ private final class WaitingCoordinator: NSFileCoordinator, @unchecked Sendable {
         try bytes.write(to: supplied)
         let coordinator = MainQueueCoordinator(supplied)
         let result = try await SharedPlistInbox.readDocumentAsync(at: root.appendingPathComponent("placeholder.plist"), coordinator: coordinator)
-        try expect(coordinator.leftMainThread && coordinator.mainQueueProgressed,
+        XCTAssert(coordinator.leftMainThread && coordinator.mainQueueProgressed,
                    "The main queue must keep running while a coordinated read waits")
-        try expect(result == bytes, "Consume the accessor URL while it is valid")
+        XCTAssert(result == bytes, "Consume the accessor URL while it is valid")
 
         let source = root.appendingPathComponent("cancel.plist")
         try bytes.write(to: source)
@@ -81,19 +80,18 @@ private final class WaitingCoordinator: NSFileCoordinator, @unchecked Sendable {
         task.cancel()
         do { _ = try await task.value; throw Failure(message: "Expected cancellation") }
         catch is CancellationError {}
-        try expect(!waiting.accessed, "Cancel a pending coordinator without consuming its URL")
+        XCTAssert(!waiting.accessed, "Cancel a pending coordinator without consuming its URL")
 
         let neverStarted = WaitingCoordinator()
         let cancelled = Task { try await SharedPlistInbox.readDocumentAsync(at: source, coordinator: neverStarted) }
         cancelled.cancel()
         do { _ = try await cancelled.value; throw Failure(message: "Expected cancellation before startup") }
         catch is CancellationError {}
-        try expect(!neverStarted.entered, "An already-cancelled import must not begin coordination")
+        XCTAssert(!neverStarted.entered, "An already-cancelled import must not begin coordination")
 
         let inbox = try SharedPlistInbox(container: root, namespace: "test")
         let entry = try inbox.enqueue(bytes, name: "queued.plist")
-        try expect(try await inbox.readAsync(entry) == bytes, "Queued reads use the same bounded background worker")
-        try expect(try inbox.entries().map(\.id) == [entry.id], "Reading never acknowledges the queued document")
-        print("PASS: coordinated reads keep the main queue responsive, capture temporary accessor URLs and propagate cancellation without consuming queued entries.")
+        XCTAssert(try await inbox.readAsync(entry) == bytes, "Queued reads use the same bounded background worker")
+        XCTAssert(try inbox.entries().map(\.id) == [entry.id], "Reading never acknowledges the queued document")
     }
 }

@@ -1,19 +1,21 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-@main struct DynamicIslandRestorationTests {
+final class DynamicIslandRestorationTests: XCTestCase {
     struct Failure: Error { let message: String }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
+    func expect(_ condition: Bool, _ message: String) {
+        XCTAssert(condition, message)
     }
-    static func document(_ extra: [String: Any]) throws -> GestaltDocument {
+    func document(_ extra: [String: Any]) throws -> GestaltDocument {
         try GestaltDocument(data: PropertyListSerialization.data(fromPropertyList: ["CacheExtra": extra], format: .binary, options: 0))
     }
-    static func snapshot(_ original: GestaltDocument, edited: GestaltDocument) throws -> DocumentSnapshot {
+    func snapshot(_ original: GestaltDocument, edited: GestaltDocument) throws -> DocumentSnapshot {
         let before = DocumentSnapshot(data: try original.encoded(), document: original, source: .local, name: "fixture")
         return DocumentSnapshot(data: try edited.encoded(), document: edited, source: .local, name: "fixture",
                                 originals: before.recordingChanges(to: edited))
     }
-    static func main() throws {
+    func testDynamicIslandRestoration() throws {
         let capability = Capability.all.first { $0.id == "dynamicIsland" }!
         let flag = capability.keys[0]
         let subtype = "ArtworkDeviceSubType"
@@ -35,7 +37,7 @@ import Foundation
                     capability.apply(choice, to: &restored, restoringFrom: saved)
                     var expected = original
                     if choice == .removeAdded { expected.set(nil, for: flag) }
-                    try expect(restored.matches(expected), "Restoring the layout must restore its original presence, type and flag")
+                    expect(restored.matches(expected), "Restoring the layout must restore its original presence, type and flag")
                 }
             }
         }
@@ -49,23 +51,22 @@ import Foundation
         let saved = try snapshot(original, edited: changed)
         var restored = changed
         capability.apply(.disable, to: &restored, restoringFrom: saved)
-        try expect(restored.artwork[name] as? String == "Saved custom name", "Restoring the layout preserves a saved custom model name")
-        try expect(restored.artwork["new-vendor-key"] as? Data == Data([9]), "Unknown artwork members survive")
-        try expect(GestaltDocument.valuesEqual(restored.artwork[subtype]!, original.artwork[subtype]!), "Restore the exact original subtype")
+        expect(restored.artwork[name] as? String == "Saved custom name", "Restoring the layout preserves a saved custom model name")
+        expect(restored.artwork["new-vendor-key"] as? Data == Data([9]), "Unknown artwork members survive")
+        expect(GestaltDocument.valuesEqual(restored.artwork[subtype]!, original.artwork[subtype]!), "Restore the exact original subtype")
 
         var pending = changed
         pending.setArtwork("Pending custom name", for: name)
         pending.setArtwork(Data([8]), for: "pending-vendor-key")
         var rebased = saved.rebasingPendingEdits(pending, onto: restored, excluding: Set(capability.keys))
         capability.apply(.disable, to: &rebased, restoringFrom: saved)
-        try expect(rebased.artwork[name] as? String == "Pending custom name", "Pending model-name edits survive an immediate Revert")
-        try expect(rebased.artwork["pending-vendor-key"] as? Data == Data([8]), "Pending unknown members survive an immediate Revert")
-        try expect(GestaltDocument.valuesEqual(rebased.artwork[subtype]!, original.artwork[subtype]!), "Rebasing must not reintroduce the changed layout")
+        expect(rebased.artwork[name] as? String == "Pending custom name", "Pending model-name edits survive an immediate Revert")
+        expect(rebased.artwork["pending-vendor-key"] as? Data == Data([8]), "Pending unknown members survive an immediate Revert")
+        expect(GestaltDocument.valuesEqual(rebased.artwork[subtype]!, original.artwork[subtype]!), "Rebasing must not reintroduce the changed layout")
 
         var malformed = changed
         malformed.set("user-entered artwork", for: GestaltKeys.artwork)
         capability.apply(.disable, to: &malformed, restoringFrom: saved)
-        try expect(malformed.extra[GestaltKeys.artwork] as? String == "user-entered artwork", "Do not replace a separately edited malformed artwork value")
-        print("PASS: layout and flag restoration, exact presence/types, and independent saved/pending artwork edits.")
+        expect(malformed.extra[GestaltKeys.artwork] as? String == "user-entered artwork", "Do not replace a separately edited malformed artwork value")
     }
 }

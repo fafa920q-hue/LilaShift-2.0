@@ -1,13 +1,12 @@
 import Foundation
+import XCTest
+@testable import GestaltX
 
-@main struct OriginalHistoryMigrationTests {
+final class OriginalHistoryMigrationTests: XCTestCase {
     struct Failure: Error { let message: String }
     final class Trace: @unchecked Sendable { var backupReads = 0; var writes = 0 }
-    static func expect(_ condition: Bool, _ message: String) throws {
-        if !condition { throw Failure(message: message) }
-    }
 
-    static func verify(in directory: URL, legacy: Bool, cacheEdits: Bool) async throws {
+    func verify(in directory: URL, legacy: Bool, cacheEdits: Bool) async throws {
         let fm = FileManager.default
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
         let device = directory.appendingPathComponent("device.plist")
@@ -54,33 +53,32 @@ import Foundation
         trace.backupReads = 0
         let reopened = makeStore()
         let loaded = try await reopened.loadDevice()
-        try expect(loaded.originalValue(for: "setting") as? String == "original", "A complete journal retains its real original field value")
-        try expect(trace.backupReads == (legacy ? 1 : 0), "Legacy flags use one actual backup read; current journals do not enter history recovery")
+        XCTAssert(loaded.originalValue(for: "setting") as? String == "original", "A complete journal retains its real original field value")
+        XCTAssert(trace.backupReads == (legacy ? 1 : 0), "Legacy flags use one actual backup read; current journals do not enter history recovery")
         if cacheEdits {
-            try expect(loaded.originalCachedOptionFlags() == .restricted, "One legacy pass recovers the original audio flags")
-            try expect(loaded.originalWAPI(), "The same legacy pass recovers original WAPI")
+            XCTAssert(try loaded.originalCachedOptionFlags() == .restricted, "One legacy pass recovers the original audio flags")
+            XCTAssert(try loaded.originalWAPI(), "The same legacy pass recovers original WAPI")
         } else {
-            try expect(loaded.cachedOptionsOriginal == nil && loaded.wapiOriginal == nil, "Migration does not invent edits when cache flags have no history")
+            XCTAssert(loaded.cachedOptionsOriginal == nil && loaded.wapiOriginal == nil, "Migration does not invent edits when cache flags have no history")
         }
         let migrated = try PropertyListSerialization.propertyList(from: Data(contentsOf: journal), format: nil) as! [String: Any]
-        try expect(migrated["cacheHistoryRecovered"] as? Bool == true, "Completed migration is durable even when neither flag has an entry")
+        XCTAssert(migrated["cacheHistoryRecovered"] as? Bool == true, "Completed migration is durable even when neither flag has an entry")
 
         try Data([0]).write(to: payload)
         trace.backupReads = 0
         let again = try await makeStore().loadDevice()
-        try expect(trace.backupReads == 0, "Reopening does not rescan a now-corrupt backup after migration")
+        XCTAssert(trace.backupReads == 0, "Reopening does not rescan a now-corrupt backup after migration")
         var laterEdit = again.document
         laterEdit.set("another edit", for: "later")
         _ = try await reopened.commit(laterEdit, expected: again)
-        try expect(trace.backupReads == 0 && trace.writes == 2, "A complete journal allows subsequent verified device writes without reading corrupt history")
+        XCTAssert(trace.backupReads == 0 && trace.writes == 2, "A complete journal allows subsequent verified device writes without reading corrupt history")
     }
 
-    static func main() async throws {
+    func testOriginalHistoryMigration() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
         try await verify(in: directory.appendingPathComponent("current"), legacy: false, cacheEdits: false)
         try await verify(in: directory.appendingPathComponent("legacy-fields"), legacy: true, cacheEdits: false)
         try await verify(in: directory.appendingPathComponent("legacy-flags"), legacy: true, cacheEdits: true)
-        print("PASS: durable one-pass legacy migration; complete journals survive corrupt old backups on reopen and commit.")
     }
 }
