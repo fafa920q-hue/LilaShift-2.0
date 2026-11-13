@@ -1,0 +1,41 @@
+# Apply the P1 original-features patch (one-shot)
+#
+# Manually dispatched once, on the feature/lila-p1-20261114 branch: applies
+# lilashift-p1.patch (P1: System Health Score, Dependency Analyzer,
+# Device Capability Fingerprint, Post-Modification Auto-Acceptance)
+# on top of feature/lila-core-modules-20261114 (f21978e) and commits the
+# result to the current branch. Do NOT re-run after the patch is applied:
+# git apply --check fails when the changes are already in the tree, and
+# the run stops before committing.
+name: Apply P1 patch
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Apply the P1 patch and verify localizations
+        run: |
+          git apply --check lilashift-p1.patch
+          git apply lilashift-p1.patch
+          python3 -X utf8 scripts/generate_localization.py
+          python3 -X utf8 tests/LocalizationTests.py
+          python3 -X utf8 tests/ThirdPartyNoticesTests.py
+
+      - name: Commit the applied P1 features
+        run: |
+          git config user.name "fafa920q-hue"
+          git config user.email "fafa920q-hue@users.noreply.github.com"
+          git add -A
+          git commit -m "P1 原创功能：系统健康评分 + 依赖分析器 + 设备能力指纹 + 修改后自动验收（仅逻辑与只读）"
+          git push
