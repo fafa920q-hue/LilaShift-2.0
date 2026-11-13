@@ -1,0 +1,94 @@
+diff --git a/GestaltX/Capabilities.swift b/GestaltX/Capabilities.swift
+index 4eb8b77..c6dc9f4 100644
+--- a/GestaltX/Capabilities.swift
++++ b/GestaltX/Capabilities.swift
+@@ -99,7 +99,13 @@ struct Capability: Identifiable, Equatable {
+         default: "Respring first. Restart the device if the change does not appear."
+         }
+     }
+-    var enabled: Any { id == "ipadApps" ? [1, 2] : NSNumber(value: 1) }
++    /// The enable value for a plain boolean capability flag. This must
++    /// be a real Boolean (`true`), not the integer 1: the codebase
++    /// distinguishes Boolean from integer ("Do not conflate Boolean
++    /// and integer"), and `ChangeValue` reports them as different
++    /// types. Capabilities whose enable value is not a plain boolean
++    /// declare it explicitly in `values`.
++    var enabled: Any { id == "ipadApps" ? [1, 2] : true }
+ 
+     func isEnabled(in document: GestaltDocument?) -> Bool {
+         guard let fields = document?.extra else { return false }
+diff --git a/GestaltX/GestaltDocument.swift b/GestaltX/GestaltDocument.swift
+index a894704..691fe08 100644
+--- a/GestaltX/GestaltDocument.swift
++++ b/GestaltX/GestaltDocument.swift
+@@ -238,7 +238,12 @@ struct GestaltDocument: @unchecked Sendable {
+     func preservesDeviceIdentity(of original: Self) -> Bool {
+         // Keep each actual field and its plist type unchanged. Normalizing an
+         // identifier here would also permit edits that invalidate saved history.
+-        let keys = ["UniqueDeviceID", "re6Zb+zwFKJNlkQTUeT+/w",
++        // The product type and model number are hardware-identity fields too:
++        // changing them can break Face ID or make the system discard the
++        // whole cache at boot, so they must fail this check like the
++        // device-identity keys.
++        let keys = [GestaltKeys.productType, GestaltKeys.modelNumber,
++                    "UniqueDeviceID", "re6Zb+zwFKJNlkQTUeT+/w",
+                     "SerialNumber", "VasUgeSzVyHdB27g2XpN0g",
+                     "UniqueChipID", "TF31PAB6aO8KAbPyNKSxKA"]
+         for key in keys {
+diff --git a/GestaltX/LilaIntelligence.swift b/GestaltX/LilaIntelligence.swift
+index feea458..59633b6 100644
+--- a/GestaltX/LilaIntelligence.swift
++++ b/GestaltX/LilaIntelligence.swift
+@@ -382,8 +382,11 @@ enum FeatureEligibilityEvaluator {
+         layout: MobileGestaltCacheLayout?
+     ) -> (eligibility: FeatureEligibility, reason: String) {
+         // Layout first: without resolved slots there is nothing to stage.
+-        let resolvedLayout = resolvedLayout(profile: profile, document: document, layout: layout)
+-        guard let resolvedLayout else {
++        // The caller's layout is authoritative: a nil layout means the
++        // layout could not be resolved, and the evaluator must not
++        // re-resolve it from a cached profile or the document — that
++        // would defeat fail-closed.
++        guard let resolvedLayout = layout else {
+             let lockReason = document.flatMap { MobileGestaltCacheLayout.lockReason(in: $0.document) }
+                 ?? L("Unable to resolve this device's MobileGestalt cache layout.")
+             return (.unknown, lockReason)
+@@ -423,8 +426,7 @@ enum FeatureEligibilityEvaluator {
+         profile: DeviceProfile, document: DocumentSnapshot?,
+         layout: MobileGestaltCacheLayout?
+     ) -> (eligibility: FeatureEligibility, reason: String) {
+-        let resolvedLayout = resolvedLayout(profile: profile, document: document, layout: layout)
+-        guard let resolvedLayout, resolvedLayout.wapiIndex != nil else {
++        guard let resolvedLayout = layout, resolvedLayout.wapiIndex != nil else {
+             return (.unknown, L("The cache layout or values do not match this preset."))
+         }
+         guard let snapshot = document else {
+@@ -454,7 +456,9 @@ enum FeatureEligibilityEvaluator {
+         let isNativeHardware = profile.isNativeAppleIntelligence.value
+             ?? (productType.isEmpty ? false : DeviceAIEligibility.isNativeAppleIntelligence(productType: productType))
+         let liveOn = (liveAIEnabled ?? profile.liveAIEnabled.value) == true
+-        let resolvedLayout = resolvedLayout(profile: profile, document: document, layout: layout)
++        // The caller's layout is authoritative; a nil layout stays nil
++        // and fails closed in the slot checks below.
++        let resolvedLayout = layout
+ 
+         // Native proof: native hardware, the live probe reports Apple
+         // Intelligence on, and every resolvable native AdvAI slot
+@@ -592,17 +596,6 @@ enum FeatureEligibilityEvaluator {
+         return profile.regionCode.value ?? profile.liveRegionCode.value
+     }
+ 
+-    /// Resolved layout: the caller's layout first, then the profile's
+-    /// cached layout, then a resolve from the document itself.
+-    private static func resolvedLayout(
+-        profile: DeviceProfile, document: DocumentSnapshot?,
+-        layout: MobileGestaltCacheLayout?
+-    ) -> MobileGestaltCacheLayout? {
+-        if let layout { return layout }
+-        if let cached = profile.cacheLayout.value { return cached }
+-        guard let document else { return nil }
+-        return try? MobileGestaltCacheLayout.resolve(in: document.document)
+-    }
+ }
+ 
+ // MARK: - Capability + compatibility catalog
