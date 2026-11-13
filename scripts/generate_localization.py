@@ -420,6 +420,26 @@ Lock screen text updated.	锁屏文字已更新。
 China Unlock	国行一键解锁
 One-Tap Restore	一键还原
 One-Tap Unlock	一键解锁
+China AI	国行 AI
+Enable the six Apple Intelligence features on a China-model iPhone.	在国行 iPhone 上启用 6 项 Apple 智能功能。
+Enable China AI	启用国行 AI
+Restore AI	还原 AI
+eSIM & Region	eSIM 与地区
+Enable eSIM and set the region code to US (LL).	启用 eSIM，并将地区代码设为美国 (LL)。
+Enable eSIM & Region	启用 eSIM 与地区
+Restore eSIM & Region	还原 eSIM 与地区
+Modified Values	已修改的值
+Fields whose current value differs from the recorded original.	当前值与已记录原始值不同的字段。
+Read the device first to see modified values.	请先读取本机数据，再查看已修改的值。
+No recorded originals. Whether anything was modified cannot be determined.	没有已记录的原始值，无法判断是否修改过。
+Only changes with a recorded original are listed.	仅列出有已记录原始值的改动。
+No modifications found	未发现修改
+Modified %d fields	已修改 %d 项
+Not set	未设定
+Regulatory Model	监管型号
+Product Type	产品类型
+eSIM (green-tea)	eSIM（green-tea）
+eSIM (not-green-tea)	eSIM（not-green-tea）
 Device Information	设备信息
 Included AI Features	查看包含的 AI 功能
 Review the changes, apply them, then restart the device.	先查看并应用更改，然后重启设备。
@@ -543,16 +563,10 @@ CacheData[0x%X] · slot %d	CacheData[0x%X] · 槽位 %d
 Other CacheData bytes changed	其他 CacheData 字节已更改
 Unrelated cache bytes changed — apply will be refused.	存在无关缓存字节更改，将拒绝应用。
 No US regulatory model known for this device — region code only.	未知此设备的美国监管型号，仅使用地区代码。
-Region mode	地区模式
-Region code only (LL)	仅地区代码 (LL)
-Full US (LL + LL/A)	完整美国 (LL + LL/A)
-Keeps the CH/A suffix and factory model — safest for dual-SIM phones.	保留 CH/A 后缀与出厂型号，双卡手机最安全。
-Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.	同时设置销售地区与美国型号，最一致，但可能与双卡硬件冲突。
 Apple Intelligence readiness	Apple 智能就绪检查
 Ready %d/4	就绪 %d/4
 Live status unknown	本机状态未知
 Fix	修复
-Regulatory model	监管型号
 Regulatory model (factory model kept)	监管型号（保留出厂型号）
 eSIM gate and conflicts	eSIM 门控与冲突
 On-device AI eligibility	本机 AI 资格

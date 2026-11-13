@@ -292,20 +292,17 @@ struct AIReadinessCheckup: Equatable {
 
     /// Pure evaluation of the four factors from staged values, the live
     /// probe answers and the slot-only conflicts. `regModel` is the staged
-    /// regulatory model; `expectedUSModel` is the mapped US model for Full
-    /// US mode (`nil` when no mapping is known). `stagingDecision` is the
-    /// `AIStagingGuard` outcome for the proposed combination, when one
-    /// was computed: a `.block` or `.warn` decision fails the eSIM /
-    /// conflict factor with the decision's specific reason, so a
-    /// conflicting or unverified combination is never reported 4/4 ready
-    /// and never auto-staged silently. `nil` (no guard computed) keeps
-    /// the previous behaviour.
+    /// regulatory model; the one-tap unlock always keeps the factory
+    /// model, so any present value passes — a US model is never required.
+    /// `stagingDecision` is the `AIStagingGuard` outcome for the proposed
+    /// combination, when one was computed: a `.block` or `.warn` decision
+    /// fails the eSIM / conflict factor with the decision's specific
+    /// reason, so a conflicting or unverified combination is never
+    /// reported 4/4 ready and never auto-staged silently. `nil` (no guard
+    /// computed) keeps the previous behaviour.
     static func evaluate(
         regionCode: String?,
-        sysconfig: String?,
         regModel: String?,
-        regionMode: ChinaUnlockRegionMode,
-        expectedUSModel: String?,
         esimEnabled: Bool,
         conflicts: [AIConflict],
         aiEnabledCount: Int,
@@ -318,45 +315,22 @@ struct AIReadinessCheckup: Equatable {
     ) -> AIReadinessCheckup {
         let native = DeviceAIEligibility.isNativeAppleIntelligence(productType: productType)
 
-        // Region: the staged code must be LL; in Full US mode the staged
-        // sales-region suffix must be LL/A as well.
+        // Region: the staged code must be LL. The sales-region suffix is
+        // never staged by the one-tap, so it is not required here.
         let regionReady = regionCode == "LL"
-            && (regionMode == .regionCodeOnly || sysconfig == "LL/A")
-        let regionDetail: String
-        if regionMode == .fullUS, let sysconfig {
-            regionDetail = "\(regionCode ?? L("Not present")) · \(sysconfig)"
-        } else {
-            regionDetail = regionCode ?? L("Not present")
-        }
         let region = AIReadinessFactor(
             title: L("Region Code"),
-            detail: regionDetail,
+            detail: regionCode ?? L("Not present"),
             isReady: regionReady,
             isLiveActive: liveRegionCode.map { $0 != "CH" && $0 != "ZA" })
 
-        let regModelReady: Bool
-        let regModelTitle: String
-        if regionMode == .fullUS {
-            regModelTitle = L("Regulatory model")
-            regModelReady = expectedUSModel.map { $0 == regModel } ?? (regModel?.isEmpty == false)
-        } else {
-            // LL-only mode keeps the factory model: any kept value passes.
-            regModelTitle = L("Regulatory model (factory model kept)")
-            regModelReady = regModel?.isEmpty == false
-        }
-        let regModelLive: Bool?
-        if let liveRegModel {
-            regModelLive = regionMode == .fullUS
-                ? (expectedUSModel.map { $0 == liveRegModel } ?? true)
-                : !liveRegModel.isEmpty
-        } else {
-            regModelLive = nil
-        }
+        // The one-tap unlock keeps the factory model: any kept value
+        // passes. A US model is never required.
         let regModelFactor = AIReadinessFactor(
-            title: regModelTitle,
+            title: L("Regulatory model (factory model kept)"),
             detail: regModel ?? L("Not present"),
-            isReady: regModelReady,
-            isLiveActive: regModelLive)
+            isReady: regModel?.isEmpty == false,
+            isLiveActive: liveRegModel.map { !$0.isEmpty })
 
         let esimDetail: String
         let esimReady: Bool

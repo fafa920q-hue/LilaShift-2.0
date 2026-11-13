@@ -362,7 +362,13 @@ struct ContentView: View {
 
                 ChinaUnlockCard { showsChanges = true }
 
+                ChinaAIOnlyCard { showsChanges = true }
+
+                ChinaESIMRegionCard { showsChanges = true }
+
                 AppleIntelligenceCheckupCard { showsChanges = true }
+
+                ModifiedValuesCard()
 
                 if model.isReading {
                     GlassReadProgressCard(title: L("Reading device data…"))
@@ -554,29 +560,6 @@ private struct ChinaUnlockCard: View {
                 statusColumn(title: L("Apple Intelligence"), value: model.hasDocument ? "\(model.chinaUnlockAIEnabledCount)/\(ChinaUnlock.aiCapabilities.count)" : L("Not read yet"))
             }
 
-            // Region mode (opt-in Full US). Shown for China hardware and
-            // while the unlock is staged. The two options use a menu
-            // picker: the full labels do not fit a segmented control on a
-            // phone screen. Changing the mode re-stages the unlock.
-            if model.hasDocument && (model.isChinaUnlockStaged || model.snapshot?.document.extra[GestaltKeys.regionCode] as? String == "CH") {
-                VStack(alignment: .leading, spacing: 6) {
-                    Picker(L("Region mode"), selection: Binding(
-                        get: { model.chinaUnlockRegionMode },
-                        set: { model.setChinaUnlockRegionMode($0) }
-                    )) {
-                        ForEach(ChinaUnlockRegionMode.allCases) { mode in
-                            Text(L(mode.title)).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    Text(L(model.chinaUnlockRegionMode.detail))
-                        .font(.caption).foregroundStyle(.secondary)
-                    if let note = model.regionModeNote {
-                        Text(note).font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-            }
-
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(ChinaUnlock.aiCapabilities) { capability in
@@ -669,6 +652,203 @@ private struct ChinaUnlockCard: View {
     }
 }
 
+/// Standalone AI-only preset: stages only the six Apple Intelligence
+/// presets (the AI part of the one-tap unlock), without eSIM or region.
+/// Not blocked by the eSIM cache layout. Mirrors the one-tap card.
+private struct ChinaAIOnlyCard: View {
+    let onReviewChanges: () -> Void
+    @EnvironmentObject private var model: GestaltManager
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var heroTint: Color {
+        colorScheme == .dark
+            ? Color(red: 0.16, green: 0.13, blue: 0.28).opacity(0.65)
+            : Color.lavenderGlass.opacity(0.65)
+    }
+
+    var body: some View {
+        GlassCard(cornerRadius: 22, tint: heroTint) {
+            VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                GlassIconPedestal(systemImage: "sparkles", tint: .gestaltAccent, size: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L("China AI"))
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    Text(L("Enable the six Apple Intelligence features on a China-model iPhone."))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            HStack(spacing: 0) {
+                statusColumn(title: L("Apple Intelligence"), value: model.hasDocument ? "\(model.chinaUnlockAIEnabledCount)/\(ChinaUnlock.aiCapabilities.count)" : L("Not read yet"))
+            }
+
+            if model.hasDocument {
+                if model.isChinaAIOnlyStaged && model.changeCount > 0 {
+                    Button(L("Review Changes")) { onReviewChanges() }
+                        .buttonStyle(GlassPrimaryButtonStyle())
+                    Button(L("Restore AI")) { stageChanges(restoring: true) }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.gestaltAccent)
+                        .frame(maxWidth: .infinity)
+                        .disabled(model.isBusy)
+                        .opacity(model.isBusy ? 0.5 : 1)
+                } else {
+                    let restoring = model.isChinaAIOnlyApplied
+                    Button(L(restoring ? "Restore AI" : "Enable China AI")) { stageChanges(restoring: restoring) }
+                        .buttonStyle(GlassPrimaryButtonStyle())
+                        .disabled(model.isBusy)
+                        .opacity(model.isBusy ? 0.5 : 1)
+                }
+
+                Text(L(model.sourceIsDevice
+                       ? "Review the changes, apply them, then restart the device."
+                       : "This edits the opened file in LilaShift. Export it to save a copy; the system file is not changed."))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                Button(L(model.isBusy ? "Reading…" : "Read Device")) {
+                    Task { await model.connect() }
+                }
+                .buttonStyle(GlassPrimaryButtonStyle())
+                .disabled(model.isBusy)
+                .opacity(model.isBusy ? 0.5 : 1)
+                Text(L("Read the device before choosing a preset."))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+            .padding(16)
+        }
+    }
+
+    private func statusColumn(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.headline)
+                .foregroundStyle(.primary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 4)
+    }
+
+    private func stageChanges(restoring: Bool) {
+        let staged = restoring ? model.restoreChinaAIOnly() : model.stageChinaAIOnly()
+        if staged && model.changeCount > 0 { onReviewChanges() }
+    }
+}
+
+/// Standalone eSIM+region preset: stages only the eSIM cache flags and
+/// the region code US (LL) — the eSIM+region part of the one-tap unlock,
+/// without the six AI presets. Blocked by the eSIM cache layout, exactly
+/// like the one-tap. Mirrors the one-tap card.
+private struct ChinaESIMRegionCard: View {
+    let onReviewChanges: () -> Void
+    @EnvironmentObject private var model: GestaltManager
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var heroTint: Color {
+        colorScheme == .dark
+            ? Color(red: 0.16, green: 0.13, blue: 0.28).opacity(0.65)
+            : Color.lavenderGlass.opacity(0.65)
+    }
+
+    var body: some View {
+        GlassCard(cornerRadius: 22, tint: heroTint) {
+            VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                GlassIconPedestal(systemImage: "simcard.fill", tint: .gestaltAccent, size: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L("eSIM & Region"))
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    Text(L("Enable eSIM and set the region code to US (LL)."))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            HStack(spacing: 0) {
+                statusColumn(title: "eSIM", value: esimStatus ?? L("Not read yet"))
+                Divider().frame(height: 36).background(Color.primary.opacity(0.12))
+                statusColumn(title: L("Region Code"), value: model.previewRegionCode ?? L("Not read yet"))
+            }
+
+            if model.hasDocument {
+                if model.isChinaESIMRegionStaged && model.changeCount > 0 {
+                    Button(L("Review Changes")) { onReviewChanges() }
+                        .buttonStyle(GlassPrimaryButtonStyle())
+                    Button(L("Restore eSIM & Region")) { stageChanges(restoring: true) }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.gestaltAccent)
+                        .frame(maxWidth: .infinity)
+                        .disabled(model.isBusy)
+                        .opacity(model.isBusy ? 0.5 : 1)
+                } else {
+                    let restoring = model.isChinaESIMRegionApplied
+                    Button(L(restoring ? "Restore eSIM & Region" : "Enable eSIM & Region")) { stageChanges(restoring: restoring) }
+                        .buttonStyle(GlassPrimaryButtonStyle())
+                        .disabled(model.isBusy || model.previewESIMFlags == nil)
+                        .opacity(model.isBusy || model.previewESIMFlags == nil ? 0.5 : 1)
+                }
+
+                if model.previewESIMFlags == nil {
+                    Text(model.cacheLayoutError ?? L("eSIM settings are unavailable. You can still configure region and AI under Intelligence."))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(L(model.sourceIsDevice
+                           ? "Review the changes, apply them, then restart the device."
+                           : "This edits the opened file in LilaShift. Export it to save a copy; the system file is not changed."))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Button(L(model.isBusy ? "Reading…" : "Read Device")) {
+                    Task { await model.connect() }
+                }
+                .buttonStyle(GlassPrimaryButtonStyle())
+                .disabled(model.isBusy)
+                .opacity(model.isBusy ? 0.5 : 1)
+                Text(L("Read the device before choosing a preset."))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+            .padding(16)
+        }
+    }
+
+    private var esimStatus: String? {
+        guard model.hasDocument else { return nil }
+        guard let flags = model.previewESIMFlags else { return L("Unsupported") }
+        return L(flags == .enabled ? "Configured" : "Not Configured")
+    }
+
+    private func statusColumn(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.headline)
+                .foregroundStyle(.primary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 4)
+    }
+
+    private func stageChanges(restoring: Bool) {
+        let staged = restoring ? model.restoreChinaESIMRegion() : model.stageChinaESIMRegion()
+        if staged && model.changeCount > 0 { onReviewChanges() }
+    }
+}
+
 /// Apple Intelligence readiness checkup (item 4): four factors with live
 /// on-device state when the probe can answer, and a one-tap Fix button.
 /// Read-only until Fix is tapped: Fix only stages through the normal
@@ -751,6 +931,96 @@ private struct AppleIntelligenceCheckupCard: View {
         case true: return L("Live probe: on")
         case false: return L("Live probe: off — restart to apply")
         case nil: return L("Live status unknown")
+        }
+    }
+}
+
+/// Read-only "Modified Values" card: lists every field in the
+/// live-read document whose current value differs from its recorded
+/// original, showing original → current. It stages nothing and writes
+/// nothing. A field appears only when both its original and its
+/// current value are known and verified; a field with no recorded
+/// original is never shown with a made-up original. An empty list
+/// after a comparison honestly means no modification was found,
+/// because a baseline existed to compare against — but "no recorded
+/// originals" is a different, honestly labeled state, never a claim
+/// that nothing was modified.
+private struct ModifiedValuesCard: View {
+    @EnvironmentObject private var model: GestaltManager
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var heroTint: Color {
+        colorScheme == .dark
+            ? Color(red: 0.16, green: 0.13, blue: 0.28).opacity(0.65)
+            : Color.lavenderGlass.opacity(0.65)
+    }
+
+    var body: some View {
+        GlassCard(cornerRadius: 22, tint: heroTint) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 12) {
+                    GlassIconPedestal(systemImage: "list.bullet", tint: .gestaltAccent, size: 44)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Modified Values"))
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        Text(L("Fields whose current value differs from the recorded original."))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                switch model.modifiedValuesReport {
+                case .noDocument:
+                    Text(L("Read the device first to see modified values."))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button(L(model.isBusy ? "Reading…" : "Read Device")) {
+                        Task { await model.connect() }
+                    }
+                    .buttonStyle(GlassPrimaryButtonStyle())
+                    .disabled(model.isBusy)
+                    .opacity(model.isBusy ? 0.5 : 1)
+                case .noRecordedOriginals:
+                    Text(L("No recorded originals. Whether anything was modified cannot be determined."))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(L("Only changes with a recorded original are listed."))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                case .compared(let rows):
+                    if rows.isEmpty {
+                        Text(L("No modifications found"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(String(format: L("Modified %d fields"), rows.count))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(rows) { row in
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(L(row.title))
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundStyle(.primary)
+                                    HStack(spacing: 4) {
+                                        Text(row.originalText)
+                                        Text("→")
+                                        Text(row.currentText)
+                                    }
+                                    .font(.subheadline.monospaced())
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                                }
+                            }
+                        }
+                    }
+                    Text(L("Only changes with a recorded original are listed."))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(16)
         }
     }
 }
@@ -1708,13 +1978,10 @@ struct ChangeReviewView: View {
         return code
     }
 
-    /// Region row's after-value: in Full US mode the staged sales-region
-    /// suffix is shown too, so the "9 items" summary never understates
-    /// the two extra staged fields.
+    /// Region row's after-value: the one-tap unlock stages the region
+    /// code only, so the after-value is just the LL display string.
     private var regionAfterText: String {
-        let code = regionDisplay(code: "LL")
-        guard model.chinaUnlockRegionMode == .fullUS else { return code }
-        return code + " · LL/A"
+        regionDisplay(code: "LL")
     }
 
     private var fieldChanges: some View {
