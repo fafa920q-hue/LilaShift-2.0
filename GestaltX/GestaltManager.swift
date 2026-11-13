@@ -260,6 +260,14 @@ final class GestaltManager: ObservableObject {
         isESIMUnlockedInPreview && previewRegionCode == "LL"
     }
 
+    /// Read-only "Modified Values" report: fields in the live-read
+    /// document whose current value differs from the recorded original.
+    /// Computed on demand from the snapshot; never stages or writes
+    /// anything.
+    var modifiedValuesReport: ModifiedValuesReport {
+        ModifiedValues.report(for: snapshot)
+    }
+
     // MARK: - AI readiness checkup (item 4)
 
     /// Live on-device probe answers (MGCopyAnswer). `nil` means the probe

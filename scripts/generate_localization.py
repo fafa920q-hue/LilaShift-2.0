@@ -428,6 +428,18 @@ eSIM & Region	eSIM 与地区
 Enable eSIM and set the region code to US (LL).	启用 eSIM，并将地区代码设为美国 (LL)。
 Enable eSIM & Region	启用 eSIM 与地区
 Restore eSIM & Region	还原 eSIM 与地区
+Modified Values	已修改的值
+Fields whose current value differs from the recorded original.	当前值与已记录原始值不同的字段。
+Read the device first to see modified values.	请先读取本机数据，再查看已修改的值。
+No recorded originals. Whether anything was modified cannot be determined.	没有已记录的原始值，无法判断是否修改过。
+Only changes with a recorded original are listed.	仅列出有已记录原始值的改动。
+No modifications found	未发现修改
+Modified %d fields	已修改 %d 项
+Not set	未设定
+Regulatory Model	监管型号
+Product Type	产品类型
+eSIM (green-tea)	eSIM（green-tea）
+eSIM (not-green-tea)	eSIM（not-green-tea）
 Device Information	设备信息
 Included AI Features	查看包含的 AI 功能
 Review the changes, apply them, then restart the device.	先查看并应用更改，然后重启设备。

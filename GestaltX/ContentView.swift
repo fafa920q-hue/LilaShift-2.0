@@ -368,6 +368,8 @@ struct ContentView: View {
 
                 AppleIntelligenceCheckupCard { showsChanges = true }
 
+                ModifiedValuesCard()
+
                 if model.isReading {
                     GlassReadProgressCard(title: L("Reading device data…"))
                 }
@@ -929,6 +931,96 @@ private struct AppleIntelligenceCheckupCard: View {
         case true: return L("Live probe: on")
         case false: return L("Live probe: off — restart to apply")
         case nil: return L("Live status unknown")
+        }
+    }
+}
+
+/// Read-only "Modified Values" card: lists every field in the
+/// live-read document whose current value differs from its recorded
+/// original, showing original → current. It stages nothing and writes
+/// nothing. A field appears only when both its original and its
+/// current value are known and verified; a field with no recorded
+/// original is never shown with a made-up original. An empty list
+/// after a comparison honestly means no modification was found,
+/// because a baseline existed to compare against — but "no recorded
+/// originals" is a different, honestly labeled state, never a claim
+/// that nothing was modified.
+private struct ModifiedValuesCard: View {
+    @EnvironmentObject private var model: GestaltManager
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var heroTint: Color {
+        colorScheme == .dark
+            ? Color(red: 0.16, green: 0.13, blue: 0.28).opacity(0.65)
+            : Color.lavenderGlass.opacity(0.65)
+    }
+
+    var body: some View {
+        GlassCard(cornerRadius: 22, tint: heroTint) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 12) {
+                    GlassIconPedestal(systemImage: "list.bullet", tint: .gestaltAccent, size: 44)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Modified Values"))
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        Text(L("Fields whose current value differs from the recorded original."))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                switch model.modifiedValuesReport {
+                case .noDocument:
+                    Text(L("Read the device first to see modified values."))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button(L(model.isBusy ? "Reading…" : "Read Device")) {
+                        Task { await model.connect() }
+                    }
+                    .buttonStyle(GlassPrimaryButtonStyle())
+                    .disabled(model.isBusy)
+                    .opacity(model.isBusy ? 0.5 : 1)
+                case .noRecordedOriginals:
+                    Text(L("No recorded originals. Whether anything was modified cannot be determined."))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(L("Only changes with a recorded original are listed."))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                case .compared(let rows):
+                    if rows.isEmpty {
+                        Text(L("No modifications found"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(String(format: L("Modified %d fields"), rows.count))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(rows) { row in
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(L(row.title))
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundStyle(.primary)
+                                    HStack(spacing: 4) {
+                                        Text(row.originalText)
+                                        Text("→")
+                                        Text(row.currentText)
+                                    }
+                                    .font(.subheadline.monospaced())
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                                }
+                            }
+                        }
+                    }
+                    Text(L("Only changes with a recorded original are listed."))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(16)
         }
     }
 }
