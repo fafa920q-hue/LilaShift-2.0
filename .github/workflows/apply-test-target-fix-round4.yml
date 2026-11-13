@@ -1,0 +1,84 @@
+# Apply the test-target fix-round-4 delta patch (one-shot)
+#
+# Manually dispatched once, on the dev/p0-security-fixes branch: applies
+# test-target-fix-round4.patch (fix round 4: hoist try read out of the &&
+# expression, missing try on fixtureData/wapi/originalWAPI) on top of the
+# branch HEAD and commits the result to the current branch. Do NOT re-run
+# after the patch is applied: git apply --check fails when the changes
+# are already in the tree, and the run stops before committing.
+name: Apply test-target fix-round-4 patch
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Apply the delta patch and verify localizations
+        run: |
+          git apply --check test-target-fix-round4.patch
+          git apply test-target-fix-round4.patch
+          python3 -X utf8 scripts/generate_localization.py
+          python3 -X utf8 tests/LocalizationTests.py
+          python3 -X utf8 tests/ThirdPartyNoticesTests.py
+
+      - name: Commit the applied delta
+        run: |
+          git config user.name "fafa920q-hue"
+          git config user.email "fafa920q-hue@users.noreply.github.com"
+          git add -A
+          git status --short
+          git commit -m "Fix round-4 test-target build errors (CI: Run Swift Tests #43423734178)
+
+          SystemSettingsTests:40 hoist try read(file) out of the &&
+          expression; SystemVaultTests:31/34/36/38/40 add missing try to
+          fixtureData(...) calls; WAPITests:39 XCTAssertFalse(try
+          DeviceCacheOptions.wapi(...)); WAPITests:86 add try before
+          loaded.originalWAPI(). No assertions changed."
+          git push
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
