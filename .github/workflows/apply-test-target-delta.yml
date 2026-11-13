@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  workflows: write
 
 jobs:
   apply:
@@ -49,6 +50,7 @@ jobs:
           run-swift-tests.yml runs xcodebuild test on iPhone 17 simulator.
           9-item one-tap preset unchanged; #178 decision still pending."
           git push
+
 
 
 
