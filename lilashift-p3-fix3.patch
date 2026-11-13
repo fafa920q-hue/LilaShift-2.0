@@ -1,0 +1,27 @@
+diff --git a/tests/PresetCatalogTests.swift b/tests/PresetCatalogTests.swift
+index f608120..76fd00a 100644
+--- a/tests/PresetCatalogTests.swift
++++ b/tests/PresetCatalogTests.swift
+@@ -61,8 +61,10 @@ final class PresetCatalogTests: XCTestCase {
+     }
+ 
+     /// The three groups contain exactly the members the stage paths
+-    /// use: one-tap is the 9 items (eSIM + region + 6 AI), AI-only
+-    /// is the 6 AI keys, eSIM+region is the 2 items.
++    /// use: one-tap stages 9 fields (2 eSIM flags + region + 6 AI)
++    /// as 8 member feature IDs — the eSIM virtual feature bundles
++    /// the two CacheData flags under one id — AI-only is the 6 AI
++    /// keys, eSIM+region is the 2 virtual features (3 fields).
+     func testGroupMembers() {
+         guard let oneTap = PresetCatalog.entry(for: "preset.oneTap"),
+               let aiOnly = PresetCatalog.entry(for: "preset.aiOnly"),
+@@ -74,7 +76,8 @@ final class PresetCatalogTests: XCTestCase {
+                        [FeatureEligibilityEvaluator.esimFeatureID,
+                         FeatureEligibilityEvaluator.regionCodeFeatureID]
+                         + ChinaUnlock.aiCapabilityIDs)
+-        XCTAssertEqual(oneTap.memberIDs.count, 9)
++        XCTAssertEqual(oneTap.memberIDs.count, 8,
++                       "9 staged fields map to 8 member feature IDs: the eSIM virtual feature bundles the two CacheData flags (green-tea + not-green-tea) under one id")
+         XCTAssertEqual(aiOnly.memberIDs, ChinaUnlock.aiCapabilityIDs)
+         XCTAssertEqual(aiOnly.memberIDs.count, 6)
+         XCTAssertEqual(esimRegion.memberIDs,
