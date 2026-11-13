@@ -89,7 +89,7 @@ final class DocumentTests: XCTestCase {
         var wapiEdited = wapiDocument
         try wapiEdited.setWAPI(false, using: layout)
         try DeviceCacheOptions.validateEdit(from: wapiDocument, to: wapiEdited, using: layout)
-        XCTAssert(!try DeviceCacheOptions.wapi(in: wapiEdited, using: layout), "Use relocated WAPI offsets")
+        XCTAssert(try !DeviceCacheOptions.wapi(in: wapiEdited, using: layout), "Use relocated WAPI offsets")
         var absentWAPI = descriptors
         put(UInt64(0), into: &absentWAPI, at: 128)
         let withoutWAPI = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [absentWAPI])
