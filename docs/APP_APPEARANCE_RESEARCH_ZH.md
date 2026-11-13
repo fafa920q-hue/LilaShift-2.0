@@ -4,10 +4,16 @@
 **严禁将预览称为真正修改已安装微信。** 本分支不修改微信 Bundle、签名、聊天数据、SpringBoard、LaunchServices 或系统图标缓存。
 
 ## 已实现
-- 在现有「启动图」详情页增加隔离的「App Icon & Name · Research Preview」分区。
-- 从相册导入图片并预览自定义图标，输入并预览自定义桌面名称；预览不持久化，也不执行系统写入。
-- `AppAppearanceProposal` 严格验证 Bundle ID 与名称（空白、超长、控制字符），`canApplyNatively` 固定为 false。
-- 新增 XCTest 验证预览状态和失败关闭原则。以上均须由真实 CI 编译、测试、真机 UI 检查后才能宣称通过。
+- 在现有「启动图」详情页增加隔离的「App Icon & Name · Preview Only」分区（`AppAppearancePreviewView`，独立文件 `GestaltX/AppAppearanceViews.swift`；启动图编辑器本身不再承载预览状态）。
+- 从相册导入图片并预览自定义图标，输入并预览自定义桌面名称；预览不持久化到目标 App，也不执行系统写入。
+- 图片校验（`AppAppearanceValidatedImage`）：按 magic bytes 识别 PNG / JPEG / HEIC，拒绝空文件、超过 5 MB 的文件、不支持的格式、无法解码的文件、任一边超过 4096 px 的图片；每次失败都给出具体原因，不静默丢弃。
+- 预览图用 ImageIO 下采样后裁剪（最长边不超过 512 px），不把原图全分辨率解码进内存；HEIC 按原始字节导入，不经过 `.compatible` 转码。
+- 自定义裁剪（`AppAppearanceCrop`）：全图 / 居中正方形 / 自定义边距（0–40%），裁剪矩形按真实像素尺寸计算并钳制；圆角预览滑块 0–27。
+- 撤销（`AppAppearancePreviewHistory`）：每次离散修改入栈，连续输入（打字、拖滑块）不淹没历史；拖动滑块松手后才作为一次可撤销操作提交。
+- 本地草稿（`AppAppearanceDraft`）：只保存在紫序自己的 Application Support 目录（`GestaltX/AppAppearance/Drafts/<bundleID>.plist`），PropertyList 原子写 + 回读校验；文件内含图片 SHA-256，篡改、改名冒用、损坏文件均被拒绝。
+- `AppAppearanceProposal` 严格验证 Bundle ID 与名称（空白、超长、控制字符），`canApplyNatively` 固定为 false，新增 `capability` 固定为 `.unknown`（默认未知，永不默认可写）。
+- 新增 XCTest：格式识别、校验五种失败、裁剪矩形、裁剪缩略图尺寸、撤销历史、草稿保存/读取/篡改拒绝、名称边界、能力默认未知；并修复了原测试中 `"WX\\nBad"` 的错误断言（字面反斜杠不是控制字符，应为真实换行）。
+- 所有新增界面文案均走 `L()` 本地化（10 语种同步）。以上均须由真实 CI 编译、测试、真机 UI 检查后才能宣称通过。
 
 ## 已验证的不同技术路径
 1. **启动快照**：已有 `LaunchArtworkFiles.swift` 访问 app 数据容器的 `Library/SplashBoard/Snapshots/<bundle> - {DEFAULT GROUP}`。这是启动过程中短暂出现的图片，不是主屏幕图标。

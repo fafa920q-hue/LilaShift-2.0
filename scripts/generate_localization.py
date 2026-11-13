@@ -588,6 +588,30 @@ Restart required. Apple Intelligence also depends on device and region. This sta
 Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.	需要重启。Apple 智能还取决于设备与地区。具体入口取决于设备与系统版本。此操作暂存 CacheExtra 键；CacheData 槽位是另一个独立值。
 Live probe: on	实时探针：开启
 Live probe: off — restart to apply	实时探针：关闭 — 重启后生效
+Custom Home Screen Name	自定义桌面名称
+Choose Preview Icon	选择预览图标
+App Icon & Name · Preview Only	应用图标与名称 · 仅预览
+Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.	仅预览，不会修改已安装的 App、其桌面图标、SpringBoard 或 LaunchServices。
+Use 1–32 characters without control characters.	请使用 1–32 个字符，且不含控制字符。
+Native write capability: Unknown — not verified	原生写入能力：未知 — 未验证
+This image is empty.	这张图片是空的。
+This image is too large. Choose an image under %d MB.	这张图片太大了，请选择小于 %d MB 的图片。
+This image format is not supported. Use PNG, JPEG, or HEIC.	不支持这种图片格式，请使用 PNG、JPEG 或 HEIC。
+This image is too large in pixels. Choose an image up to %d pixels on its longest side.	这张图片像素太大了，请选择最长边不超过 %d 像素的图片。
+Image: %@ · %d × %d · %d KB	图片：%@ · %d × %d · %d KB
+Crop	裁剪
+Full	完整
+Square	正方形
+Custom	自定义
+Crop inset	裁剪边距
+Corner radius	圆角半径
+Undo	撤销
+Save Draft	保存草稿
+Load Draft	读取草稿
+Reset	重置
+Draft saved.	草稿已保存。
+Draft loaded.	草稿已读取。
+No draft found.	未找到草稿。
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():

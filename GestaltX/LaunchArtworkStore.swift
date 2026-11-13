@@ -41,6 +41,11 @@ struct AppAppearanceProposal: Equatable, Sendable {
     /// Never represents a successful native icon/name edit. Callers must
     /// separately probe and validate any future write-capable backend.
     var canApplyNatively: Bool { false }
+
+    /// The native-write capability is unknown until a real backend probe
+    /// exists. It must never be `.verifiedWritable` without a verified
+    /// write path, and it never defaults to writable.
+    var capability: AppAppearanceCapability { .unknown }
 }
 
 actor LaunchArtworkStore {
