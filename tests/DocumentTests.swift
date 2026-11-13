@@ -538,7 +538,9 @@ final class DocumentTests: XCTestCase {
 
         for mode in ["partial-failure", "wrong-readback"] {
             try originalData.write(to: device)
+            let faultTrace = AccessTrace()
             let broken = GestaltFileStore(deviceURL: device, backupDirectory: root.appendingPathComponent(mode), deviceID: "fixture-installation", acquire: { 1 }, release: { _ in }, writeData: { data, url in
+                faultTrace.writes += 1
                 if mode == "partial-failure" { try Data("partial".utf8).write(to: url); throw GestaltFailure("injected failure") }
                 var wrong = try GestaltDocument(data: data); wrong.set("unexpected", for: "tamper")
                 try wrong.encoded().write(to: url)
@@ -546,6 +548,7 @@ final class DocumentTests: XCTestCase {
             let snapshot = try await broken.loadDevice()
             do { _ = try await broken.commit(document, expected: snapshot); throw TestFailure(message: "Must reject " + mode) }
             catch is GestaltFailure {}
+            XCTAssertEqual(faultTrace.writes, 1, "Recovery must not call the failed writer again")
             XCTAssert(try Data(contentsOf: device) == originalData, "Recovery restores exact previous bytes: " + mode)
         }
         let occupied = root.appendingPathComponent("not-a-directory")

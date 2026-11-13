@@ -33,6 +33,7 @@ enum DevicePlistWriter {
     enum WriteError: LocalizedError, Equatable {
         case emptyData
         case unreadableOriginal
+        case staleOriginal
         case openFailed(Int32)
         case notRegularFile
         case unexpectedTarget
@@ -50,6 +51,8 @@ enum DevicePlistWriter {
                 return "Refused to write 0 bytes to the device file."
             case .unreadableOriginal:
                 return "The original device file could not be read, so the write was stopped."
+            case .staleOriginal:
+                return L("MobileGestalt changed since it was loaded. Refresh before applying your edits.")
             case .openFailed(let errnoValue):
                 return "Could not open the device file for writing (errno=\(errnoValue))."
             case .notRegularFile:
@@ -78,8 +81,8 @@ enum DevicePlistWriter {
     /// and production callers never pass one; the flags exist so the
     /// failure paths (short write, failed write/sync/truncate, readback
     /// mismatch, failed open) can be exercised without a device.
-    /// Faults are deliberately NOT applied to the rollback: a rollback
-    /// must use the real syscalls even when the write itself was faulted.
+    /// Forward-write and rollback faults are separate so a test can exercise
+    /// a failed transaction with either a successful or failed recovery.
     struct FaultInjection: Sendable {
         var failOpen = false
         var shortWriteOnce = false
@@ -87,6 +90,8 @@ enum DevicePlistWriter {
         var failSync = false
         var failTruncate = false
         var corruptReadback = false
+        var failRollbackSync = false
+        var corruptRollbackReadback = false
     }
 
     /// Writes `data` over the file at `url` in place, preserving its inode.
@@ -107,7 +112,7 @@ enum DevicePlistWriter {
     /// with `Data(contentsOf:)`, so the bytes a rollback would restore are
     /// guaranteed to belong to the inode that was opened.
     static func write(_ data: Data, to url: URL, expectedURL: URL? = nil,
-                      faults: FaultInjection = FaultInjection()) throws {
+                      expectedOriginal: Data? = nil, faults: FaultInjection = FaultInjection()) throws {
         guard !data.isEmpty else { throw WriteError.emptyData }
         if let expectedURL {
             guard canonicalPath(url) == canonicalPath(expectedURL) else {
@@ -150,6 +155,8 @@ enum DevicePlistWriter {
         } catch {
             throw WriteError.unreadableOriginal
         }
+        if let expectedOriginal, original != expectedOriginal { throw WriteError.staleOriginal }
+        try verifyTarget(fd, at: url, size: original.count)
         do {
             try pwriteAll(fd, data, startOffset: 0, faults: faults)
             if data.count < original.count {
@@ -165,19 +172,24 @@ enum DevicePlistWriter {
             guard !faults.corruptReadback, readback == data else {
                 throw WriteError.verificationFailed
             }
+            try verifyTarget(fd, at: url, size: data.count)
         } catch {
-            // Best-effort in-place rollback of the original bytes, using
-            // the real syscalls (never the injected faults). If the
-            // rollback itself cannot complete, report that distinctly: the
-            // caller must not claim the previous file is intact. Any
-            // rollback failure is reported as rollbackFailed, never as the
-            // original write error restated.
+            // Recover only through the original descriptor. Confirm the
+            // original bytes, length and path before reporting recovery.
             do {
+                try verifyTarget(fd, at: url)
                 try pwriteAll(fd, original, startOffset: 0, faults: FaultInjection())
                 guard ftruncate(fd, off_t(original.count)) == 0 else {
                     throw WriteError.rollbackFailed(errno)
                 }
-                _ = fullSync(fd, faults: FaultInjection())
+                guard fullSync(fd, faults: FaultInjection(failSync: faults.failRollbackSync)) else {
+                    throw WriteError.rollbackFailed(faults.failRollbackSync ? EIO : errno)
+                }
+                let recovered = try readAll(fd, count: original.count)
+                guard !faults.corruptRollbackReadback, recovered == original else {
+                    throw WriteError.rollbackFailed(EIO)
+                }
+                try verifyTarget(fd, at: url, size: original.count)
             } catch let rollbackError as WriteError {
                 switch rollbackError {
                 case .rollbackFailed:
@@ -185,13 +197,23 @@ enum DevicePlistWriter {
                 case .writeFailed(let code):
                     throw WriteError.rollbackFailed(code)
                 default:
-                    throw WriteError.rollbackFailed(0)
+                    throw WriteError.rollbackFailed(EIO)
                 }
             } catch {
                 throw WriteError.rollbackFailed(errno)
             }
             throw error
         }
+    }
+
+    private static func verifyTarget(_ fd: Int32, at url: URL, size: Int? = nil) throws {
+        var path = stat()
+        var descriptor = stat()
+        guard url.path.withCString({ lstat($0, &path) }) == 0,
+              fstat(fd, &descriptor) == 0,
+              path.st_dev == descriptor.st_dev, path.st_ino == descriptor.st_ino,
+              path.st_mode == descriptor.st_mode else { throw WriteError.identityMismatch }
+        if let size, descriptor.st_size != off_t(size) { throw WriteError.verificationFailed }
     }
 
     /// Resolves symlinks in both the target and the expected path, so the

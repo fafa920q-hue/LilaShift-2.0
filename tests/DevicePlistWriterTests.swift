@@ -138,6 +138,24 @@ final class DevicePlistWriterTests: XCTestCase {
         expect(try Data(contentsOf: faultFile) == longer,
                    "Injected open failure must leave the file untouched")
 
+        // A failed recovery has a different result from a verified rollback.
+        let payload = Data("rollback fault".utf8)
+        let rollbackFaults: [DevicePlistWriter.FaultInjection] = [
+            .init(corruptReadback: true, failRollbackSync: true),
+            .init(corruptReadback: true, corruptRollbackReadback: true),
+        ]
+        for faults in rollbackFaults {
+            try longer.write(to: faultFile)
+            XCTAssertThrowsError(try DevicePlistWriter.write(payload, to: faultFile, faults: faults)) { error in
+                XCTAssertEqual(error as? DevicePlistWriter.WriteError, .rollbackFailed(EIO))
+            }
+        }
+        try longer.write(to: faultFile)
+        XCTAssertThrowsError(try DevicePlistWriter.write(payload, to: faultFile, expectedOriginal: original)) { error in
+            XCTAssertEqual(error as? DevicePlistWriter.WriteError, .staleOriginal)
+        }
+        expect(try Data(contentsOf: faultFile) == longer, "A stale pre-write backup must not authorize overwriting the current file")
+
         // Store level: the default `writeData` seam is the hardened writer,
         // and a device commit through it still verifies on readback.
         let device = directory.appendingPathComponent("store-device.plist")

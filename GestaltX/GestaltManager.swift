@@ -95,11 +95,7 @@ final class GestaltManager: ObservableObject {
             throw GestaltFailure("MobileGestalt access was denied. Check the OS version and App Group signing.")
             #endif
         }, release: { worse_query_release($0) },
-        // Pin the writer to the device cache path: DevicePlistWriter
-        // refuses any other target (P0-1), so a swapped path can never be
-        // written through the production store. The store only ever calls
-        // this closure with the device URL (commit + recovery write).
-        writeData: { try DevicePlistWriter.write($0, to: $1, expectedURL: URL(fileURLWithPath: GestaltKeys.devicePath)) },
+        expectedDeviceURL: URL(fileURLWithPath: GestaltKeys.devicePath),
         eventSink: { text in
             NotificationCenter.default.post(name: Notification.Name("GestaltX.worse_query.log"), object: nil,
                                             userInfo: ["message": text])

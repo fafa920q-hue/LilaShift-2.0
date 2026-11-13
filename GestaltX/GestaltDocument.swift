@@ -436,19 +436,22 @@ actor GestaltFileStore {
     private let deviceID: String
     private let acquire: @Sendable () throws -> Int64
     private let release: @Sendable (Int64) -> Void
-    private let writeData: @Sendable (Data, URL) throws -> Void
+    private let writeData: (@Sendable (Data, URL) throws -> Void)?
+    private let expectedDeviceURL: URL?
     private let removeBackupItem: @Sendable (URL) throws -> Void
     private let eventSink: @Sendable (String) -> Void
 
     init(deviceURL: URL, backupDirectory: URL, deviceID: String,
          acquire: @escaping @Sendable () throws -> Int64,
          release: @escaping @Sendable (Int64) -> Void,
-         writeData: @escaping @Sendable (Data, URL) throws -> Void = { try DevicePlistWriter.write($0, to: $1) },
+         writeData: (@Sendable (Data, URL) throws -> Void)? = nil,
+         expectedDeviceURL: URL? = nil,
          removeBackupItem: @escaping @Sendable (URL) throws -> Void = { try FileManager.default.removeItem(at: $0) },
          eventSink: @escaping @Sendable (String) -> Void = { _ in }) {
         self.deviceURL = deviceURL; self.backupDirectory = backupDirectory; self.deviceID = deviceID
         self.acquire = acquire; self.release = release; self.writeData = writeData; self.eventSink = eventSink
         self.removeBackupItem = removeBackupItem
+        self.expectedDeviceURL = expectedDeviceURL
     }
 
     private func withAccess<T>(_ operation: () throws -> T) throws -> T {
@@ -1009,34 +1012,47 @@ actor GestaltFileStore {
             // This record is separate from deletable full-file backups.
             try saveOriginals(originals, for: expected.document)
             guard try Data(contentsOf: deviceURL) == current else { throw GestaltFailure("MobileGestalt changed since it was loaded. Refresh before applying your edits.") }
-            do {
-                // Atomic replacement needs directory-create access which some extensions lack.
-                // Keep the device file's existing inode; backups are already durable.
-                // `writeData` is the hardened in-place writer (pwrite, no
-                // pre-truncate, F_FULLFSYNC, descriptor readback, rollback).
-                eventSink("Write: \(output.count) bytes")
-                try writeData(output, deviceURL)
-                eventSink("Readback: comparing full plist and value types")
-                let readback = try Data(contentsOf: deviceURL)
-                guard try edited.matches(GestaltDocument(data: readback)) else { throw GestaltFailure("The write did not match the readback.") }
-                eventSink("Readback: verified")
-                // A restored snapshot carries the restored backup's
-                // provenance; a freshly written snapshot is new state.
-                return DocumentSnapshot(data: readback, document: edited, source: .device, name: expected.name, originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions, wapiOriginal: originals.wapi,
-                                        provenance: record?.provenance ?? .unknown)
-            } catch {
-                eventSink("Write/readback failed: " + error.localizedDescription)
-                eventSink("Recovery: restoring previous bytes")
+            let readback: Data
+            eventSink("Write: \(output.count) bytes")
+            if let writeData {
+                readback = try writeInjected(output, edited: edited, original: current, using: writeData)
+            } else {
+                // The production writer checks exact readback and, on failure,
+                // rolls back through its existing descriptor.
                 do {
-                    // The recovery write uses the same hardened in-place
-                    // writer: the old `current.write(to:)` was itself a
-                    // truncating write with the same 0-byte window.
-                    try writeData(current, deviceURL)
-                    guard try Data(contentsOf: deviceURL) == current else { throw GestaltFailure("The original file could not be restored.") }
-                } catch { throw GestaltFailure("Write verification and recovery failed. Keep the backup and recover the device file before trying again.") }
-                eventSink("Recovery: previous bytes restored and verified")
-                throw GestaltFailure("The write failed. The previous file was restored and verified.")
+                    try DevicePlistWriter.write(output, to: deviceURL, expectedURL: expectedDeviceURL,
+                                                expectedOriginal: current)
+                    readback = output
+                } catch let failure as DevicePlistWriter.WriteError {
+                    eventSink("Write/readback failed: " + failure.localizedDescription)
+                    throw GestaltFailure(failure.localizedDescription)
+                }
             }
+            eventSink("Readback: verified")
+            return DocumentSnapshot(data: readback, document: edited, source: .device, name: expected.name,
+                                    originals: originals.fields, cachedOptionsOriginal: originals.cachedOptions,
+                                    wapiOriginal: originals.wapi, provenance: record?.provenance ?? .unknown)
+        }
+    }
+
+    private func writeInjected(_ output: Data, edited: GestaltDocument, original: Data,
+                               using writeData: (Data, URL) throws -> Void) throws -> Data {
+        do {
+            try writeData(output, deviceURL)
+            let readback = try Data(contentsOf: deviceURL)
+            guard try edited.matches(GestaltDocument(data: readback)) else {
+                throw GestaltFailure("The write did not match the readback.")
+            }
+            return readback
+        } catch {
+            eventSink("Write/readback failed: " + error.localizedDescription)
+            do {
+                try DevicePlistWriter.write(original, to: deviceURL, expectedURL: expectedDeviceURL)
+            } catch {
+                throw GestaltFailure("Write verification and recovery failed. Keep the backup and recover the device file before trying again.")
+            }
+            eventSink("Recovery: previous bytes restored and verified")
+            throw GestaltFailure("The write failed. The previous file was restored and verified.")
         }
     }
 }
