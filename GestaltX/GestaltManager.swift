@@ -25,6 +25,13 @@ final class GestaltManager: ObservableObject {
     @Published private(set) var deviceAccessible = false
     @Published private(set) var backups: [BackupRecord] = []
     @Published private(set) var logs: [String] = []
+    /// Structured operation events recorded this session (reads and
+    /// backups only — see `OperationEventRecorder`). Observation
+    /// only: recording never changes an operation's outcome.
+    let operationEvents = OperationEventRecorder()
+    /// When the last successful read happened, or `nil` when no read
+    /// has happened yet. Read-path state only.
+    @Published private(set) var lastReadAt: Date?
     @Published var message: String?
     @Published var isRespringing = false
     @Published var needsRespring = false
@@ -170,6 +177,16 @@ final class GestaltManager: ObservableObject {
         let time = Date.now.formatted(date: .omitted, time: .standard)
         logs.append("[\(time)] \(text)")
         if logs.count > 1000 { logs.removeFirst(logs.count - 1000) }
+    }
+    /// Records one structured operation event. Observation only:
+    /// the recorder never changes the operation, and recording is
+    /// fire-and-forget — a slow record cannot affect the manager.
+    /// Callers invoke this only after an operation's outcome is
+    /// known, and never from inside the write path (`apply()` /
+    /// `stage*` / `restore*` / `DevicePlistWriter`).
+    private func recordOperationEvent(_ kind: OperationEventKind, detail: String) {
+        let event = OperationEvent(kind: kind, detail: detail)
+        Task { await operationEvents.record(event) }
     }
     private func failed(_ error: Error) { message = error.localizedDescription; log(error.localizedDescription) }
     private func accept(_ loaded: DocumentSnapshot) {
@@ -832,12 +849,16 @@ final class GestaltManager: ObservableObject {
         do {
             let result = try await files.loadDevice()
             accept(result); deviceAccessible = true; status = "Device connected"
+            lastReadAt = Date()
             log("[read] plist: \(result.data.count) bytes")
             for line in summarize(result.document) { log("[read] " + line) }
             log(L("Device connected"))
+            recordOperationEvent(.readSucceeded, detail: String(
+                format: L("Read %lld bytes from the device."), result.data.count))
         } catch {
             deviceAccessible = false; status = "Device access unavailable"
             if showErrorAlert { failed(error) } else { log(error.localizedDescription) }
+            recordOperationEvent(.readFailed, detail: error.localizedDescription)
         }
         await reloadBackups()
     }
@@ -854,10 +875,15 @@ final class GestaltManager: ObservableObject {
             guard (values.fileSize ?? 0) <= 16 * 1024 * 1024 else { throw GestaltFailure("Choose a plist smaller than 16 MB.") }
             let result = try await files.loadLocal(data: Data(contentsOf: url), name: url.lastPathComponent)
             accept(result); status = "Local file opened"; needsRespring = false
+            lastReadAt = Date()
             log("[open] \(url.lastPathComponent): \(result.data.count) bytes")
             for line in summarize(result.document) { log("[open] " + line) }
             log(L("Local file opened") + ": " + url.lastPathComponent)
-        } catch { failed(error) }
+            recordOperationEvent(.readSucceeded, detail: L("Local file opened") + ": " + url.lastPathComponent)
+        } catch {
+            failed(error)
+            recordOperationEvent(.readFailed, detail: error.localizedDescription)
+        }
     }
 
     #endif
@@ -1009,7 +1035,11 @@ final class GestaltManager: ObservableObject {
     func backup() async {
         guard !isBusy, let snapshot else { return }
         isBusy = true; defer { isBusy = false }
-        do { try await files.backup(snapshot); log(L("Backup saved")); message = L("Backup saved"); await reloadBackups() }
+        do {
+            try await files.backup(snapshot); log(L("Backup saved")); message = L("Backup saved")
+            recordOperationEvent(.backupCreated, detail: L("Backup saved"))
+            await reloadBackups()
+        }
         catch { failed(error) }
     }
     func reloadBackups() async {

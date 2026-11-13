@@ -986,6 +986,76 @@ This combination is a plan only. It is not connected to staging or applying.	此
 Unknown preset: %@	未知预设：%@
 Upstream	上游
 iPad hardware	iPad 硬件
+%d of 32 characters	%d / 32 个字符
+%lld files	%lld 个文件
+A custom preset cannot contain the same preset twice.	自定义预设不能两次包含同一预设。
+A preset name is 1–32 characters.	预设名称为 1–32 个字符。
+All Tools cards are hidden. Re-enable them in the Personalization Center.	工具页卡片已全部隐藏，请在个性化中心重新开启。
+App Cache	应用缓存
+App cache cleared.	应用缓存已清理。
+Application Support	应用支持文件
+Available	可用
+Battery	电池
+Battery health, cycle count and capacity are not available through public iOS APIs.	电池健康、循环次数与容量无法通过 iOS 公开 API 获取。
+Battery level	电量
+Battery state	电池状态
+Battery, app cache, connection status and the operation log — read-only.	电池、应用缓存、连接状态与操作日志——仅读取。
+Cache Read	缓存读取
+Caches	缓存
+Catalog Sort	目录排序
+Charging	充电中
+Clear App Cache	清理应用缓存
+Connection Status	连接状态
+Custom Presets	自定义预设
+Custom presets are plans only. They are not connected to staging or applying.	自定义预设仅为计划，未连接暂存或套用。
+Custom presets, catalog sort and Tools page cards — saved on this device only.	自定义预设、目录排序与工具页卡片——仅保存在本机。
+Delete this custom preset?	删除此自定义预设？
+Describe what this preset does.	请描述此预设的作用。
+Description	描述
+Diagnostics Expansion	诊断扩展
+Edit	编辑
+Explain the risk of this preset.	请说明此预设的风险。
+Full	已充满
+Give the custom preset a name.	请给自定义预设起个名字。
+Last Read	上次读取
+New Custom Preset	新建自定义预设
+No custom presets yet.	暂无自定义预设。
+No operation events recorded yet.	尚未记录任何操作事件。
+OS Build	系统构建
+Operation Log	操作日志
+Personalization Center	个性化中心
+Personalization Settings	个性化设置
+Preset Name	预设名称
+Read %lld bytes from the device.	从设备读取了 %lld 字节。
+Read succeeded	读取成功
+Read the device first to check this preset.	请先读取设备以检查此预设。
+Read: %lld bytes	已读取：%lld 字节
+Refusing to clear a directory that is not the app's Caches directory.	拒绝清理非本应用 Caches 的目录。
+Restore succeeded	还原成功
+Risk Reason	风险原因
+Save Changes	保存更改
+Save Custom Preset	保存自定义预设
+Show or hide each card on the Tools page. The Personalization Center card itself always stays on this page.	选择在工具页显示哪些卡片。个性化中心卡片始终保留在本页。
+Sort by Category	按分类排序
+Sort by Name	按名称排序
+Sort by Risk	按风险排序
+Temporary	临时文件
+The app cache could not be cleared.	应用缓存无法清理。
+The custom presets could not be read. No system changes were made.	自定义预设无法读取，未做任何系统更改。
+The custom presets could not be saved and verified. No system changes were made.	自定义预设无法保存并验证，未做任何系统更改。
+The settings could not be read. Defaults are used.	设置无法读取，已使用默认值。
+The settings could not be saved and verified. No system changes were made.	设置无法保存并验证，未做任何系统更改。
+These custom presets belong to a different device.	这些自定义预设属于另一台设备。
+These custom presets use a newer format this version cannot read.	这些自定义预设使用了本版本无法读取的新格式。
+These settings belong to a different device.	这些设置属于另一台设备。
+These settings use a newer format this version cannot read.	这些设置使用了本版本无法读取的新格式。
+This clears only this app's own Caches directory. It never touches system caches.	仅清理本应用自己的 Caches 目录，绝不触碰系统缓存。
+Tools Page Cards	工具页卡片
+Total	合计
+Unplugged	未充电
+Wallpaper and Launch Images	壁纸与启动图
+Write, restore and guard events are not recorded yet: the only hook points are inside the write path, which this version must not touch.	写入、还原与守卫事件尚未记录：唯一的接入点在写入路径内部，本版本不得触碰。
+iOS offers no public API for an app to change the system wallpaper or another app's launch image. Save an image to Photos and set it manually.	iOS 未提供公开 API 供 App 更改系统壁纸或他 App 的启动图。请把图片保存到相册后手动设置。
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():

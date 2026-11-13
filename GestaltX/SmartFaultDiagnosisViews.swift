@@ -11,11 +11,13 @@
 // disclaimer. The card never writes anything: it only reads the same
 // inputs the other cards already compute.
 //
-// Structured operation events (write / restore / guard firings) are
-// not recorded by the app yet, so the report says so; the diagnosis
-// still covers everything the other inputs can show. The "I
-// restarted" toggle mirrors the acceptance card: the region-reverted
-// diagnosis only fires after a confirmed restart.
+// Structured operation events are supplied when the manager
+// recorded them this session (reads and backups since P4); write,
+// restore and guard events are not connected yet, so the report
+// says so when none were recorded. The diagnosis still covers
+// everything the other inputs can show. The "I restarted" toggle
+// mirrors the acceptance card: the region-reverted diagnosis only
+// fires after a confirmed restart.
 import SwiftUI
 
 struct SmartFaultDiagnosisCard: View {
@@ -27,6 +29,11 @@ struct SmartFaultDiagnosisCard: View {
     @State private var fingerprintError: String?
     @State private var restartConfirmed = false
     @State private var showingDetails = false
+    /// Structured operation events recorded this session (reads and
+    /// backups). Write, restore and guard events are not connected
+    /// yet — see `OperationEventRecorder` — so the report says so
+    /// when none were recorded.
+    @State private var recordedEvents: [OperationEvent] = []
 
     private var heroTint: Color {
         colorScheme == .dark
@@ -92,8 +99,10 @@ struct SmartFaultDiagnosisCard: View {
     }
 
     /// The diagnosis report, or `nil` when the device has not been
-    /// read yet. Structured operation events are not recorded by the
-    /// app yet, so none are supplied — the report says so.
+    /// read yet. Structured operation events recorded this session
+    /// (reads and backups) are supplied; write, restore and guard
+    /// events are not connected yet, so the report says so when
+    /// none were recorded.
     private var diagnosisReport: FaultDiagnosisReport? {
         guard let report = deviceReport else { return nil }
         let verifications = RestoreIntelligence.verifyBackups(model.backups, against: model.working)
@@ -105,7 +114,7 @@ struct SmartFaultDiagnosisCard: View {
             backupRecords: model.backups,
             backupVerifications: verifications,
             evaluations: report.evaluations,
-            events: []))
+            events: recordedEvents))
     }
 
     var body: some View {
@@ -204,8 +213,8 @@ struct SmartFaultDiagnosisCard: View {
                 }
             }
         }
-        .onAppear { reloadHistory(); reloadFingerprint() }
-        .onChange(of: model.working != nil) { _, _ in reloadHistory(); reloadFingerprint() }
+        .onAppear { reloadHistory(); reloadFingerprint(); reloadRecordedEvents() }
+        .onChange(of: model.working != nil) { _, _ in reloadHistory(); reloadFingerprint(); reloadRecordedEvents() }
     }
 
     private func severityColor(_ severity: FaultSeverity) -> Color {
@@ -230,6 +239,16 @@ struct SmartFaultDiagnosisCard: View {
         } catch {
             records = []
             historyError = L("The change history could not be read. No system changes were made.")
+        }
+    }
+
+    /// Loads the structured operation events recorded this session
+    /// from the manager's recorder. The recorder is an actor, so
+    /// the read is async; the diagnosis recomputes when the events
+    /// arrive.
+    private func reloadRecordedEvents() {
+        Task {
+            recordedEvents = await model.operationEvents.recordedEvents()
         }
     }
 
