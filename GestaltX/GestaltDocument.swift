@@ -238,7 +238,12 @@ struct GestaltDocument: @unchecked Sendable {
     func preservesDeviceIdentity(of original: Self) -> Bool {
         // Keep each actual field and its plist type unchanged. Normalizing an
         // identifier here would also permit edits that invalidate saved history.
-        let keys = ["UniqueDeviceID", "re6Zb+zwFKJNlkQTUeT+/w",
+        // The product type and model number are hardware-identity fields too:
+        // changing them can break Face ID or make the system discard the
+        // whole cache at boot, so they must fail this check like the
+        // device-identity keys.
+        let keys = [GestaltKeys.productType, GestaltKeys.modelNumber,
+                    "UniqueDeviceID", "re6Zb+zwFKJNlkQTUeT+/w",
                     "SerialNumber", "VasUgeSzVyHdB27g2XpN0g",
                     "UniqueChipID", "TF31PAB6aO8KAbPyNKSxKA"]
         for key in keys {

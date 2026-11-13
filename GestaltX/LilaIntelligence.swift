@@ -382,8 +382,11 @@ enum FeatureEligibilityEvaluator {
         layout: MobileGestaltCacheLayout?
     ) -> (eligibility: FeatureEligibility, reason: String) {
         // Layout first: without resolved slots there is nothing to stage.
-        let resolvedLayout = resolvedLayout(profile: profile, document: document, layout: layout)
-        guard let resolvedLayout else {
+        // The caller's layout is authoritative: a nil layout means the
+        // layout could not be resolved, and the evaluator must not
+        // re-resolve it from a cached profile or the document — that
+        // would defeat fail-closed.
+        guard let resolvedLayout = layout else {
             let lockReason = document.flatMap { MobileGestaltCacheLayout.lockReason(in: $0.document) }
                 ?? L("Unable to resolve this device's MobileGestalt cache layout.")
             return (.unknown, lockReason)
@@ -423,8 +426,7 @@ enum FeatureEligibilityEvaluator {
         profile: DeviceProfile, document: DocumentSnapshot?,
         layout: MobileGestaltCacheLayout?
     ) -> (eligibility: FeatureEligibility, reason: String) {
-        let resolvedLayout = resolvedLayout(profile: profile, document: document, layout: layout)
-        guard let resolvedLayout, resolvedLayout.wapiIndex != nil else {
+        guard let resolvedLayout = layout, resolvedLayout.wapiIndex != nil else {
             return (.unknown, L("The cache layout or values do not match this preset."))
         }
         guard let snapshot = document else {
@@ -454,7 +456,9 @@ enum FeatureEligibilityEvaluator {
         let isNativeHardware = profile.isNativeAppleIntelligence.value
             ?? (productType.isEmpty ? false : DeviceAIEligibility.isNativeAppleIntelligence(productType: productType))
         let liveOn = (liveAIEnabled ?? profile.liveAIEnabled.value) == true
-        let resolvedLayout = resolvedLayout(profile: profile, document: document, layout: layout)
+        // The caller's layout is authoritative; a nil layout stays nil
+        // and fails closed in the slot checks below.
+        let resolvedLayout = layout
 
         // Native proof: native hardware, the live probe reports Apple
         // Intelligence on, and every resolvable native AdvAI slot
@@ -592,17 +596,6 @@ enum FeatureEligibilityEvaluator {
         return profile.regionCode.value ?? profile.liveRegionCode.value
     }
 
-    /// Resolved layout: the caller's layout first, then the profile's
-    /// cached layout, then a resolve from the document itself.
-    private static func resolvedLayout(
-        profile: DeviceProfile, document: DocumentSnapshot?,
-        layout: MobileGestaltCacheLayout?
-    ) -> MobileGestaltCacheLayout? {
-        if let layout { return layout }
-        if let cached = profile.cacheLayout.value { return cached }
-        guard let document else { return nil }
-        return try? MobileGestaltCacheLayout.resolve(in: document.document)
-    }
 }
 
 // MARK: - Capability + compatibility catalog

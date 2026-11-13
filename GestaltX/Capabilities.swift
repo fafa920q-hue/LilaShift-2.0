@@ -99,7 +99,13 @@ struct Capability: Identifiable, Equatable {
         default: "Respring first. Restart the device if the change does not appear."
         }
     }
-    var enabled: Any { id == "ipadApps" ? [1, 2] : NSNumber(value: 1) }
+    /// The enable value for a plain boolean capability flag. This must
+    /// be a real Boolean (`true`), not the integer 1: the codebase
+    /// distinguishes Boolean from integer ("Do not conflate Boolean
+    /// and integer"), and `ChangeValue` reports them as different
+    /// types. Capabilities whose enable value is not a plain boolean
+    /// declare it explicitly in `values`.
+    var enabled: Any { id == "ipadApps" ? [1, 2] : true }
 
     func isEnabled(in document: GestaltDocument?) -> Bool {
         guard let fields = document?.extra else { return false }
