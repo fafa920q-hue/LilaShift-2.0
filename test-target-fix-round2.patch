@@ -1,0 +1,323 @@
+diff --git a/GestaltX.xcodeproj/project.pbxproj b/GestaltX.xcodeproj/project.pbxproj
+index 2f8e3a3..991eef4 100644
+--- a/GestaltX.xcodeproj/project.pbxproj
++++ b/GestaltX.xcodeproj/project.pbxproj
+@@ -41,6 +41,7 @@
+ 		037360E369A261806D52AF31 /* ImportedWallpaperDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A024E2E78DDAAA6677F9E729 /* ImportedWallpaperDeletionTests.swift */; };
+ 		269052B7A8143F3E82A35BCA /* IntegerValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0F50FD3ADC1929D1CC3B85 /* IntegerValueTests.swift */; };
+ 		A0F21082FE6CB469422C91B6 /* ItemProviderLoadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475E5A1BC768951D2FB60F63 /* ItemProviderLoadTests.swift */; };
++		0EB36D6A637C4BA2B60DB4DE /* ItemProviderLoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4C01D754C14C8B9BB28F96 /* ItemProviderLoad.swift */; };
+ 		B5F54A51FFC8657D1005C824 /* LaunchArtworkCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB689D46E45297F0E6E5267 /* LaunchArtworkCatalogTests.swift */; };
+ 		3F447AFD98A8E7B9E15C9C4E /* LaunchArtworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55CFDC593C9F492C228C6E5C /* LaunchArtworkTests.swift */; };
+ 		D1688B80E2E84216D418FA7E /* LocalRestoreProvenanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831E94EA9919DED802AA03BD /* LocalRestoreProvenanceTests.swift */; };
+@@ -501,6 +502,7 @@
+ 				443EE49A669EFCA204007C08 /* FieldValuePrecisionTests.swift in Sources */,
+ 				037360E369A261806D52AF31 /* ImportedWallpaperDeletionTests.swift in Sources */,
+ 				269052B7A8143F3E82A35BCA /* IntegerValueTests.swift in Sources */,
++				0EB36D6A637C4BA2B60DB4DE /* ItemProviderLoad.swift in Sources */,
+ 				A0F21082FE6CB469422C91B6 /* ItemProviderLoadTests.swift in Sources */,
+ 				B5F54A51FFC8657D1005C824 /* LaunchArtworkCatalogTests.swift in Sources */,
+ 				3F447AFD98A8E7B9E15C9C4E /* LaunchArtworkTests.swift in Sources */,
+diff --git a/tests/AIReadinessTests.swift b/tests/AIReadinessTests.swift
+index fa5c457..34d650a 100644
+--- a/tests/AIReadinessTests.swift
++++ b/tests/AIReadinessTests.swift
+@@ -67,32 +67,32 @@ final class AIReadinessTests: XCTestCase {
+                    "Personal Translator has no forced baseline on iPad")
+ 
+         // All-ready evaluation (LL-only, native hardware, staged unlock).
+-        let ready = evaluate(liveRegionCode: "LL", liveAIEnabled: true)
++        let ready = Self.evaluate(liveRegionCode: "LL", liveAIEnabled: true)
+         XCTAssert(ready.readyCount == 4 && ready.isReady, "Staged unlock on native hardware is 4/4 ready")
+         XCTAssert(ready.factors[0].isLiveActive == true && ready.factors[3].isLiveActive == true,
+                    "Live probe answers flow into the region and AI factors")
+-        let unknownLive = evaluate()
++        let unknownLive = Self.evaluate()
+         XCTAssert(unknownLive.factors[0].isLiveActive == nil,
+                    "No probe answer renders live: unknown, never faked")
+ 
+         // LL-only mode passes on any kept factory model; Full US mode
+         // requires the mapped US model.
+-        let kept = evaluate(regModel: "A3518")
++        let kept = Self.evaluate(regModel: "A3518")
+         XCTAssert(kept.factors[1].isReady, "LL-only passes on the kept factory model")
+-        let fullUS = evaluate(regionMode: .fullUS, sysconfig: "LL/A", regModel: "A3260",
++        let fullUS = Self.evaluate(sysconfig: "LL/A", regModel: "A3260", regionMode: .fullUS,
+                               expectedUSModel: "A3260")
+         XCTAssert(fullUS.factors[0].isReady && fullUS.factors[1].isReady,
+                    "Full US passes with LL/A and the mapped model")
+-        let fullUSWrong = evaluate(regionMode: .fullUS, sysconfig: "LL/A", regModel: "A3518",
++        let fullUSWrong = Self.evaluate(sysconfig: "LL/A", regModel: "A3518", regionMode: .fullUS,
+                                    expectedUSModel: "A3260")
+         XCTAssert(!fullUSWrong.factors[1].isReady, "Full US fails when the model is not the mapped US model")
+ 
+         // A slot conflict fails the eSIM/conflict factor and names itself.
+         let conflict = AIConflict.personalTranslatorSlotDisabled(slot: 266)
+-        let conflicted = evaluate(conflicts: [conflict])
++        let conflicted = Self.evaluate(conflicts: [conflict])
+         XCTAssert(!conflicted.factors[2].isReady && conflicted.factors[2].detail == conflict.detail,
+                    "A conflict fails factor 3 and its detail names the conflict")
+-        let locked = evaluate(regionCode: "CH", esimEnabled: false, aiEnabledCount: 0,
++        let locked = Self.evaluate(regionCode: "CH", esimEnabled: false, aiEnabledCount: 0,
+                               productType: "iPhone15,4")
+         XCTAssert(locked.readyCount == 1, "Locked non-native device is 1/4 ready (regulatory model only)")
+ 
+@@ -123,7 +123,7 @@ final class AIReadinessTests: XCTestCase {
+         let blocked = AIStagingGuard.decide(AIStagingRequest(
+             productType: "iPhone16,2", audioIntelligenceExtra: true,
+             audioIntelligenceSlot: true, audioIntelligenceSlotIndex: 178))
+-        let blockedCheckup = evaluate(stagingDecision: blocked)
++        let blockedCheckup = Self.evaluate(stagingDecision: blocked)
+         XCTAssert(!blockedCheckup.factors[2].isReady && blockedCheckup.factors[2].detail == blocked.reason,
+                    "A blocked staging decision fails factor 3 with its specific reason")
+         let warned = AIStagingGuard.decide(AIStagingRequest(
+@@ -131,12 +131,12 @@ final class AIReadinessTests: XCTestCase {
+             personalTranslatorExtra: true, audioIntelligenceSlot: false,
+             personalTranslatorSlot: true, audioIntelligenceSlotIndex: 178,
+             personalTranslatorSlotIndex: 266))
+-        let warnedCheckup = evaluate(stagingDecision: warned)
++        let warnedCheckup = Self.evaluate(stagingDecision: warned)
+         XCTAssert(!warnedCheckup.factors[2].isReady && warnedCheckup.factors[2].detail == warned.reason,
+                    "A warned (#178 unverified) decision fails factor 3 with its reason instead of silently staging")
+         let allowed = AIStagingGuard.decide(AIStagingRequest(
+             productType: "iPhone16,2", personalTranslatorExtra: true, personalTranslatorSlot: true))
+-        let allowedCheckup = evaluate(stagingDecision: allowed)
++        let allowedCheckup = Self.evaluate(stagingDecision: allowed)
+         XCTAssert(allowedCheckup.factors[2].isReady, "An allowed staging decision leaves factor 3 ready")
+ 
+         // AdvAI slot machinery on a synthetic scanned layout.
+@@ -153,9 +153,9 @@ final class AIReadinessTests: XCTestCase {
+         }
+         var descriptors = Data(repeating: 0, count: keys.count * 64)
+         for i in keys.indices {
+-            put(pointers[i], into: &descriptors, at: i * 64)
+-            put(Int16(i), into: &descriptors, at: i * 64 + 0x3A)
+-            put(UInt32(11), into: &descriptors, at: i * 64 + 0x3C)
++            Self.put(pointers[i], into: &descriptors, at: i * 64)
++            Self.put(Int16(i), into: &descriptors, at: i * 64 + 0x3A)
++            Self.put(UInt32(11), into: &descriptors, at: i * 64 + 0x3C)
+         }
+         let layout = try MobileGestaltCacheLayout.scan(strings: strings, stringAddress: address, constants: [descriptors])
+         XCTAssert(layout.audioIntellIndex == 4 && layout.personalTranslatorIndex == 5,
+diff --git a/tests/ArtworkPreservationTests.swift b/tests/ArtworkPreservationTests.swift
+index 6fbd78b..9b24381 100644
+--- a/tests/ArtworkPreservationTests.swift
++++ b/tests/ArtworkPreservationTests.swift
+@@ -35,9 +35,9 @@ final class ArtworkPreservationTests: XCTestCase {
+             // Both an absent value and an existing empty dictionary remain editable.
+             let emptyArtwork: [Any?] = [nil, [String: Any]()]
+             for initial in emptyArtwork {
+-                var edited = try document(artwork: initial, format: format)
++                var edited = try Self.document(artwork: initial, format: format)
+                 for (key, value) in edits { _ = edited.setArtwork(value, for: key) }
+-                let expected = try document(artwork: Dictionary(uniqueKeysWithValues: edits), format: format)
++                let expected = try Self.document(artwork: Dictionary(uniqueKeysWithValues: edits), format: format)
+                 XCTAssert(edited.matches(expected), "Create missing artwork fields without changing other values")
+                 XCTAssert(try GestaltDocument(data: edited.encoded()).matches(expected), "New artwork survives serialization")
+             }
+@@ -47,17 +47,17 @@ final class ArtworkPreservationTests: XCTestCase {
+                 "VendorBytes": Data([0, 1, 255]),
+                 "VendorValues": ["enabled": true, "count": NSNumber(value: 7), "scale": NSNumber(value: 0.5)],
+             ]
+-            var edited = try document(artwork: originalArtwork, format: format)
++            var edited = try Self.document(artwork: originalArtwork, format: format)
+             for (key, value) in edits { _ = edited.setArtwork(value, for: key) }
+             var expectedArtwork = originalArtwork
+             expectedArtwork["ArtworkDeviceProductDescription"] = "Edited model"
+             expectedArtwork["ArtworkDeviceSubType"] = NSNumber(value: 2556)
+-            let expected = try document(artwork: expectedArtwork, format: format)
++            let expected = try Self.document(artwork: expectedArtwork, format: format)
+             XCTAssert(edited.matches(expected), "Retain unknown artwork keys and their exact types")
+             XCTAssert(try GestaltDocument(data: edited.encoded()).matches(expected), "Existing artwork survives serialization")
+ 
+             for (kind, value) in malformed {
+-                let original = try document(artwork: value, format: format)
++                let original = try Self.document(artwork: value, format: format)
+                 for (key, replacement) in edits {
+                     var unchanged = original
+                     // Ignore the return value so this regression also runs against
+diff --git a/tests/BackupIntegrityTests.swift b/tests/BackupIntegrityTests.swift
+index dd4f641..7ffa5ff 100644
+--- a/tests/BackupIntegrityTests.swift
++++ b/tests/BackupIntegrityTests.swift
+@@ -29,9 +29,9 @@ final class BackupIntegrityTests: XCTestCase {
+         let replacement = try altered.encoded()
+         XCTAssert(replacement.count == record.byteCount, "Fixture replacement is a different valid plist of identical size")
+         try replacement.write(to: backupURL)
+-        await expectRejected(store, record: record)
++        await Self.expectRejected(store, record: record)
+         try Data(bytes.dropLast()).write(to: backupURL)
+-        await expectRejected(store, record: record)
++        await Self.expectRejected(store, record: record)
+         try bytes.write(to: backupURL)
+         let metadata = try JSONSerialization.jsonObject(with: Data(contentsOf: backups.appendingPathComponent(record.id.uuidString + ".json"))) as! [String: Any]
+         XCTAssert((metadata["sha256"] as? String)?.count == 64, "New backup metadata persists a SHA-256 digest")
+@@ -43,12 +43,12 @@ final class BackupIntegrityTests: XCTestCase {
+         let legacy = try JSONDecoder().decode(BackupRecord.self, from: JSONSerialization.data(withJSONObject: legacyJSON))
+         XCTAssert(try await store.backupData(legacy) == bytes, "Legacy backups of the recorded length remain readable")
+         try Data(bytes.dropLast()).write(to: backupURL)
+-        await expectRejected(store, record: legacy)
++        await Self.expectRejected(store, record: legacy)
+         try bytes.write(to: backupURL)
+         var wrongDigestJSON = metadata
+         wrongDigestJSON["sha256"] = String(repeating: "0", count: 64)
+         let wrongDigest = try JSONDecoder().decode(BackupRecord.self, from: JSONSerialization.data(withJSONObject: wrongDigestJSON))
+-        await expectRejected(store, record: wrongDigest)
++        await Self.expectRejected(store, record: wrongDigest)
+         XCTAssert(try Data(contentsOf: device) == bytes, "Rejected backup reads never modify the device")
+     }
+ }
+diff --git a/tests/CacheDataDiffTests.swift b/tests/CacheDataDiffTests.swift
+index ee3e6b8..77e4885 100644
+--- a/tests/CacheDataDiffTests.swift
++++ b/tests/CacheDataDiffTests.swift
+@@ -31,7 +31,7 @@ final class CacheDataDiffTests: XCTestCase {
+     }
+ 
+     func testCacheDataDiff() throws {
+-        let original = try fixture()
++        let original = try Self.fixture()
+ 
+         // A green-tea change explains both eSIM bytes with hex/slot rows.
+         var edited = original
+@@ -52,7 +52,7 @@ final class CacheDataDiffTests: XCTestCase {
+                    "Identical CacheData has no diff")
+ 
+         // One extra changed byte at an unrelated offset is unexplained.
+-        let tampered = try tampered(original, offset: 100, value: 1)
++        let tampered = try Self.tampered(original, offset: 100, value: 1)
+         guard let diff2 = DeviceCacheOptions.diff(from: original, to: tampered) else {
+             throw Failure(message: "Diff exists for a tampered CacheData")
+         }
+diff --git a/tests/CacheLayoutGatingTests.swift b/tests/CacheLayoutGatingTests.swift
+index 0056ec1..015e4cf 100644
+--- a/tests/CacheLayoutGatingTests.swift
++++ b/tests/CacheLayoutGatingTests.swift
+@@ -62,13 +62,13 @@ final class CacheLayoutGatingTests: XCTestCase {
+         // 47-bit PAC mask: a pointer with bit 47 set still resolves.
+         // With the old 48-bit mask the tagged pointer would miss the hash
+         // table and the scan would fail.
+-        let pac = try table(uuid: uuid, keys: keys, pacBit47: [1])
++        let pac = try Self.table(uuid: uuid, keys: keys, pacBit47: [1])
+         let pacLayout = try MobileGestaltCacheLayout.scan(strings: pac.strings, stringAddress: pac.address, constants: pac.constants)
+         XCTAssert(pacLayout.greenTeaIndex == 1 && pacLayout.notGreenTeaIndex == 2,
+                    "PAC-tagged pointer with bit 47 set resolves under the 47-bit mask")
+ 
+         // cfUUIDs rescue a table whose UUID left `__cstring`.
+-        let noUUID = try table(uuid: uuid, keys: keys, includeUUID: false)
++        let noUUID = try Self.table(uuid: uuid, keys: keys, includeUUID: false)
+         XCTAssertThrowsError(try MobileGestaltCacheLayout.scan(strings: noUUID.strings, stringAddress: noUUID.address, constants: noUUID.constants), "No UUID anywhere fails the scan")
+         let rescued = try MobileGestaltCacheLayout.scan(strings: noUUID.strings, stringAddress: noUUID.address,
+                                                          constants: noUUID.constants, cfUUIDs: [uuid])
+@@ -79,7 +79,7 @@ final class CacheLayoutGatingTests: XCTestCase {
+                                                                cfUUIDs: [uuid, "BBBBBBBB-1111-2222-3333-123456789ABC"]), "Two distinct cfUUIDs are ambiguous")
+ 
+         // Apple Intelligence slots resolve dynamically, like wapi.
+-        let full = try table(uuid: uuid, keys: keys)
++        let full = try Self.table(uuid: uuid, keys: keys)
+         let layout = try MobileGestaltCacheLayout.scan(strings: full.strings, stringAddress: full.address, constants: full.constants)
+         XCTAssert(layout.audioIntellIndex == 4 && layout.personalTranslatorIndex == 5,
+                    "Audio Intelligence and Personal Translator slots resolve from their descriptors")
+@@ -92,7 +92,7 @@ final class CacheLayoutGatingTests: XCTestCase {
+         // the eSIM pair still resolves (unlike wapi, which fails the scan).
+         var ambiguous = full.constants[0]
+         ambiguous.append(full.constants[0].subdata(in: 5 * 64..<6 * 64))
+-        put(Int16(0), into: &ambiguous, at: full.constants[0].count + 0x3A)
++        Self.put(Int16(0), into: &ambiguous, at: full.constants[0].count + 0x3A)
+         let partial = try MobileGestaltCacheLayout.scan(strings: full.strings, stringAddress: full.address, constants: [ambiguous])
+         XCTAssert(partial.personalTranslatorIndex == nil && partial.audioIntellIndex == 4
+                    && partial.greenTeaIndex == 1,
+@@ -100,7 +100,7 @@ final class CacheLayoutGatingTests: XCTestCase {
+ 
+         // A wapi descriptor at an index colliding with green-tea fails.
+         var colliding = full.constants[0]
+-        put(Int16(1), into: &colliding, at: 3 * 64 + 0x3A)
++        Self.put(Int16(1), into: &colliding, at: 3 * 64 + 0x3A)
+         XCTAssertThrowsError(try MobileGestaltCacheLayout.scan(strings: full.strings, stringAddress: full.address, constants: [colliding]), "A wapi descriptor colliding with green-tea fails the scan")
+ 
+         // Layout-scan failure locks with a reason instead of falling back.
+@@ -108,7 +108,7 @@ final class CacheLayoutGatingTests: XCTestCase {
+         XCTAssertThrowsError(try MobileGestaltCacheLayout.scan(strings: Data(), stringAddress: 0x180100000, constants: []), "An empty scan fails rather than resolving a layout")
+ 
+         // A document on the offline profile resolves and has no lock reason.
+-        let matching = try fixtureDocument()
++        let matching = try Self.fixtureDocument()
+         XCTAssert(MobileGestaltCacheLayout.lockReason(in: matching) == nil,
+                    "A document matching the resolved layout has no lock reason")
+ 
+@@ -117,14 +117,14 @@ final class CacheLayoutGatingTests: XCTestCase {
+         // show why, instead of silently borrowing the offline profile.
+         // (On a device build the same throw comes from the failed runtime
+         // scan; the hardcoded profile is never substituted there.)
+-        let wrongUUID = try fixtureDocument(cacheUUID: "00000000-0000-0000-0000-000000000000")
++        let wrongUUID = try Self.fixtureDocument(cacheUUID: "00000000-0000-0000-0000-000000000000")
+         XCTAssertThrowsError(try MobileGestaltCacheLayout.resolve(in: wrongUUID), "A document with an unknown CacheUUID fails to resolve")
+         let uuidReason = MobileGestaltCacheLayout.lockReason(in: wrongUUID)
+         XCTAssert(uuidReason != nil && uuidReason!.contains("Unable to resolve"),
+                    "An unresolvable layout locks with a reason naming the failure")
+ 
+         // A document with the wrong CacheData length fails the same way.
+-        let wrongLength = try fixtureDocument(cacheData: Data(count: 10))
++        let wrongLength = try Self.fixtureDocument(cacheData: Data(count: 10))
+         XCTAssertThrowsError(try MobileGestaltCacheLayout.resolve(in: wrongLength), "A document with the wrong CacheData length fails to resolve")
+         XCTAssert(MobileGestaltCacheLayout.lockReason(in: wrongLength) != nil,
+                    "A wrong-length CacheData locks with a reason")
+diff --git a/tests/ChinaUnlockTests.swift b/tests/ChinaUnlockTests.swift
+index 1edca92..d3f2e52 100644
+--- a/tests/ChinaUnlockTests.swift
++++ b/tests/ChinaUnlockTests.swift
+@@ -63,7 +63,7 @@ final class ChinaUnlockTests: XCTestCase {
+         XCTAssert(!empty.isChinaUnlockStaged && !empty.isChinaUnlockedInPreview && empty.preview == nil,
+                    "No document: China Unlock stages and restores nothing")
+ 
+-        let unsupported = try fixture(cacheUUID: "unsupported-layout")
++        let unsupported = try Self.fixture(cacheUUID: "unsupported-layout")
+         let unsupportedSnapshot = try DocumentSnapshot(
+             data: unsupported.encoded(), document: unsupported, source: .local, name: "unsupported fixture"
+         )
+@@ -80,7 +80,7 @@ final class ChinaUnlockTests: XCTestCase {
+         XCTAssert(!empty.restoreChinaUnlock(), "Unsupported layout: nothing to restore")
+ 
+         let layout = MobileGestaltCacheLayout.originalProfile
+-        let original = try fixture()
++        let original = try Self.fixture()
+         let data = try original.encoded()
+         let snapshot = DocumentSnapshot(data: data, document: original, source: .local, name: "fixture")
+         let manager = GestaltManager()
+@@ -106,12 +106,12 @@ final class ChinaUnlockTests: XCTestCase {
+         XCTAssert(preview.extra[GestaltKeys.regionInfo] as? String == "CH/A"
+                    && preview.extra[GestaltKeys.legacyRegionInfo] as? String == "CH/A",
+                    "Sales-region suffixes stay CH/A")
+-        for key in aiKeys {
++        for key in Self.aiKeys {
+             XCTAssert((preview.extra[key] as? NSNumber)?.intValue == 1,
+                        "Preview enables AI key \(key)")
+         }
+         XCTAssert(manager.chinaUnlockAIEnabledCount == 6, "All six AI presets read as enabled")
+-        XCTAssert((preview.extra[siriKey] as? NSNumber)?.intValue == 2,
++        XCTAssert((preview.extra[Self.siriKey] as? NSNumber)?.intValue == 2,
+                    "siriOnDevice keeps its device-specific value")
+         XCTAssert((manager.choices["siriOnDevice"] ?? .keep) == .keep,
+                    "siriOnDevice is never staged by China Unlock")
+@@ -127,7 +127,7 @@ final class ChinaUnlockTests: XCTestCase {
+             let after = preview.extra[key] as? NSObject
+             return (before?.isEqual(after) ?? (after == nil)) == false
+         }
+-        XCTAssert(changedKeys == Set([GestaltKeys.regionCode] + aiKeys),
++        XCTAssert(changedKeys == Set([GestaltKeys.regionCode] + Self.aiKeys),
+                    "Staging changes exactly region + six AI keys, got \(changedKeys.sorted())")
+         // 7 CacheExtra keys (region code + 6 AI keys) + 2 cache bytes.
+         XCTAssert(manager.changeCount == 9,
+@@ -148,10 +148,10 @@ final class ChinaUnlockTests: XCTestCase {
+                    "Restore returns the eSIM flags to restricted")
+         XCTAssert(restored.extra[GestaltKeys.regionCode] as? String == "CH",
+                    "Restore returns RegionCode to CH")
+-        for key in aiKeys {
++        for key in Self.aiKeys {
+             XCTAssert(restored.extra[key] == nil, "Restore removes AI key \(key)")
+         }
+-        XCTAssert((restored.extra[siriKey] as? NSNumber)?.intValue == 2,
++        XCTAssert((restored.extra[Self.siriKey] as? NSNumber)?.intValue == 2,
+                    "Restore preserves the device-specific Siri value")
+         XCTAssert(restored.extra[GestaltKeys.modelNumber] as? String == "A3518",
+                    "Restore preserves the model number")
