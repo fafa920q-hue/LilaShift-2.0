@@ -157,6 +157,9 @@ private struct LaunchArtworkEditor: View {
     @ObservedObject var customizations: CustomizationModel
     @StateObject private var model = LaunchArtworkModel()
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var appearancePhoto: PhotosPickerItem?
+    @State private var appearanceIcon: UIImage?
+    @State private var appearanceName = ""
     @State private var showsPhotos = false
     @State private var asksApply = false
     @State private var asksRestore = false
@@ -193,6 +196,41 @@ private struct LaunchArtworkEditor: View {
                     .disabled(model.state?.canRestore != true)
                 Button { Task { await model.load(app) } } label: { Label(L("Read Again"), systemImage: "arrow.clockwise") }
             }
+            Section {
+                TextField("Custom Home Screen Name", text: $appearanceName)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                PhotosPicker(selection: $appearancePhoto, matching: .images) {
+                    Label("Choose Preview Icon", systemImage: "app.badge")
+                }
+                HStack(spacing: 12) {
+                    if let icon = appearanceIcon {
+                        Image(uiImage: icon).resizable().scaledToFill()
+                            .frame(width: 54, height: 54).clipShape(RoundedRectangle(cornerRadius: 12))
+                    } else {
+                        RoundedRectangle(cornerRadius: 12).fill(Color(uiColor: .tertiarySystemFill))
+                            .frame(width: 54, height: 54)
+                            .overlay(Image(systemName: "app").foregroundStyle(.secondary))
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(appearanceName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            ? app.name : appearanceName).lineLimit(1)
+                        Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                }
+                if !appearanceName.isEmpty {
+                    let proposal = AppAppearanceProposal(bundleID: app.id, currentName: app.name,
+                                                         proposedName: appearanceName)
+                    if proposal.check == .invalidName {
+                        Text("Use 1–32 characters without control characters.")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
+                }
+            } header: {
+                Text("App Icon & Name · Research Preview")
+            } footer: {
+                Text("Local preview only. Does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices. The launch-image editor above is a different feature.")
+            }
             if model.state?.count == 0 {
                 Section { Text(L("No launch images found. Open the app once, close it, then read again.")).foregroundStyle(.secondary) }
             }
@@ -205,6 +243,16 @@ private struct LaunchArtworkEditor: View {
         .onChange(of: blocksImport, initial: true) { _, presenting in customizations.setPresenting(presenting, owner: presentationOwner) }
         .onDisappear { if !showsPhotos { customizations.setPresenting(false, owner: presentationOwner) } }
         .photosPicker(isPresented: $showsPhotos, selection: $selectedPhoto, matching: .images, preferredItemEncoding: .compatible)
+        .onChange(of: appearancePhoto) { _, item in
+            guard let item else { return }
+            appearancePhoto = nil
+            Task {
+                guard let bytes = try? await item.loadTransferable(type: Data.self),
+                      bytes.count <= 5 * 1024 * 1024,
+                      let image = UIImage(data: bytes) else { return }
+                appearanceIcon = image
+            }
+        }
         .onChange(of: selectedPhoto) { _, item in
             guard let item else { return }
             selectedPhoto = nil
