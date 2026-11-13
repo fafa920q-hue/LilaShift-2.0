@@ -1,90 +1,30 @@
-# Apply the test-target delta patch (one-shot)
+# Delete test-target scaffolding (one-shot)
 #
-# Manually dispatched once, on the dev/p0-security-fixes branch: applies
-# test-target-delta.patch (decision B: XCTest unit-test target GestaltXTests
-# + CI workflow running the Swift tests) on top of the P0 branch HEAD and
-# commits the result to the current branch. Do NOT re-run after the patch is
-# applied: git apply --check fails when the changes are already in the tree,
-# and the run stops before committing.
-# NOTE: GITHUB_TOKEN cannot push a new workflow file (GitHub refuses a
-# GitHub App token without the workflows permission, and workflows is not
-# a valid permissions key), so run-swift-tests.yml is excluded from the
-# pushed commit and uploaded as an artifact instead; it is added to the
-# branch by a human commit afterwards.
-name: Apply test-target delta patch
+# Manually dispatched once, on the dev/p0-security-fixes branch: removes
+# test-target-delta.patch and this workflow file itself in a single commit,
+# after the delta patch has been applied and run-swift-tests.yml added.
+name: Delete test-target scaffolding
 on:
   workflow_dispatch:
 
 jobs:
-  apply:
+  delete:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - name: Check out the branch
         uses: actions/checkout@v7
         with:
           persist-credentials: true
 
-      - name: Apply the delta patch and verify localizations
-        run: |
-          git apply --check test-target-delta.patch
-          git apply test-target-delta.patch
-          python3 -X utf8 scripts/generate_localization.py
-          python3 -X utf8 tests/LocalizationTests.py
-          python3 -X utf8 tests/ThirdPartyNoticesTests.py
-
-      - name: Commit the applied delta
+      - name: Delete scaffolding files and push
         run: |
           git config user.name "fafa920q-hue"
           git config user.email "fafa920q-hue@users.noreply.github.com"
-          git add -A
-          git reset -q -- .github/workflows/run-swift-tests.yml
+          git rm test-target-delta.patch .github/workflows/apply-test-target-delta.yml
           git status --short
-          git commit -m "Add XCTest unit-test target GestaltXTests and run Swift tests in CI
-
-          Decision B (user 2026-11-13): add a unit-test target now so CI
-          actually runs the Swift tests; PR #1 merges only after P0 tests
-          are verified green.
-          All 46 P0-era @main test files converted to XCTestCase (same
-          assertions, harness only); 3 tests skip by design (external
-          fixtures / child-process self-reinvocation / CLI-arg archive
-          path). XCTest target GestaltXTests (app-hosted); CI workflow
-          run-swift-tests.yml runs xcodebuild test on iPhone 17 simulator.
-          9-item one-tap preset unchanged; #178 decision still pending."
+          git commit -m "Delete test-target scaffolding"
           git push
-
-      - name: Upload run-swift-tests.yml as an artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: run-swift-tests-yml
-          path: .github/workflows/run-swift-tests.yml
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
