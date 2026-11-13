@@ -1,0 +1,41 @@
+# Apply the P2 patch (one-shot)
+#
+# Manually dispatched once, on the feature/lila-p2-20261114 branch: applies
+# lilashift-p2.patch (P2: Smart Fault Diagnosis, backup verification, live
+# probe in post-modification acceptance) on top of the branch HEAD and
+# commits the result to the current branch. Do NOT re-run after the patch is
+# applied: git apply --check fails when the changes are already in the tree,
+# and the run stops before committing.
+name: Apply P2 patch
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Apply the P2 patch and verify localizations
+        run: |
+          git apply --check lilashift-p2.patch
+          git apply lilashift-p2.patch
+          python3 -X utf8 scripts/generate_localization.py
+          python3 -X utf8 tests/LocalizationTests.py
+          python3 -X utf8 tests/ThirdPartyNoticesTests.py
+
+      - name: Commit the applied P2 patch
+        run: |
+          git config user.name "fafa920q-hue"
+          git config user.email "fafa920q-hue@users.noreply.github.com"
+          git add -A
+          git status --short
+          git commit -m "Apply P2 patch (lilashift-p2.patch)"
+          git push
