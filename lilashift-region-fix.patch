@@ -1,0 +1,1104 @@
+diff --git a/GestaltX/AIReadinessCheckup.swift b/GestaltX/AIReadinessCheckup.swift
+index c8f11aa..b50fb82 100644
+--- a/GestaltX/AIReadinessCheckup.swift
++++ b/GestaltX/AIReadinessCheckup.swift
+@@ -292,20 +292,17 @@ struct AIReadinessCheckup: Equatable {
+ 
+     /// Pure evaluation of the four factors from staged values, the live
+     /// probe answers and the slot-only conflicts. `regModel` is the staged
+-    /// regulatory model; `expectedUSModel` is the mapped US model for Full
+-    /// US mode (`nil` when no mapping is known). `stagingDecision` is the
+-    /// `AIStagingGuard` outcome for the proposed combination, when one
+-    /// was computed: a `.block` or `.warn` decision fails the eSIM /
+-    /// conflict factor with the decision's specific reason, so a
+-    /// conflicting or unverified combination is never reported 4/4 ready
+-    /// and never auto-staged silently. `nil` (no guard computed) keeps
+-    /// the previous behaviour.
++    /// regulatory model; the one-tap unlock always keeps the factory
++    /// model, so any present value passes — a US model is never required.
++    /// `stagingDecision` is the `AIStagingGuard` outcome for the proposed
++    /// combination, when one was computed: a `.block` or `.warn` decision
++    /// fails the eSIM / conflict factor with the decision's specific
++    /// reason, so a conflicting or unverified combination is never
++    /// reported 4/4 ready and never auto-staged silently. `nil` (no guard
++    /// computed) keeps the previous behaviour.
+     static func evaluate(
+         regionCode: String?,
+-        sysconfig: String?,
+         regModel: String?,
+-        regionMode: ChinaUnlockRegionMode,
+-        expectedUSModel: String?,
+         esimEnabled: Bool,
+         conflicts: [AIConflict],
+         aiEnabledCount: Int,
+@@ -318,45 +315,22 @@ struct AIReadinessCheckup: Equatable {
+     ) -> AIReadinessCheckup {
+         let native = DeviceAIEligibility.isNativeAppleIntelligence(productType: productType)
+ 
+-        // Region: the staged code must be LL; in Full US mode the staged
+-        // sales-region suffix must be LL/A as well.
++        // Region: the staged code must be LL. The sales-region suffix is
++        // never staged by the one-tap, so it is not required here.
+         let regionReady = regionCode == "LL"
+-            && (regionMode == .regionCodeOnly || sysconfig == "LL/A")
+-        let regionDetail: String
+-        if regionMode == .fullUS, let sysconfig {
+-            regionDetail = "\(regionCode ?? L("Not present")) · \(sysconfig)"
+-        } else {
+-            regionDetail = regionCode ?? L("Not present")
+-        }
+         let region = AIReadinessFactor(
+             title: L("Region Code"),
+-            detail: regionDetail,
++            detail: regionCode ?? L("Not present"),
+             isReady: regionReady,
+             isLiveActive: liveRegionCode.map { $0 != "CH" && $0 != "ZA" })
+ 
+-        let regModelReady: Bool
+-        let regModelTitle: String
+-        if regionMode == .fullUS {
+-            regModelTitle = L("Regulatory model")
+-            regModelReady = expectedUSModel.map { $0 == regModel } ?? (regModel?.isEmpty == false)
+-        } else {
+-            // LL-only mode keeps the factory model: any kept value passes.
+-            regModelTitle = L("Regulatory model (factory model kept)")
+-            regModelReady = regModel?.isEmpty == false
+-        }
+-        let regModelLive: Bool?
+-        if let liveRegModel {
+-            regModelLive = regionMode == .fullUS
+-                ? (expectedUSModel.map { $0 == liveRegModel } ?? true)
+-                : !liveRegModel.isEmpty
+-        } else {
+-            regModelLive = nil
+-        }
++        // The one-tap unlock keeps the factory model: any kept value
++        // passes. A US model is never required.
+         let regModelFactor = AIReadinessFactor(
+-            title: regModelTitle,
++            title: L("Regulatory model (factory model kept)"),
+             detail: regModel ?? L("Not present"),
+-            isReady: regModelReady,
+-            isLiveActive: regModelLive)
++            isReady: regModel?.isEmpty == false,
++            isLiveActive: liveRegModel.map { !$0.isEmpty })
+ 
+         let esimDetail: String
+         let esimReady: Bool
+diff --git a/GestaltX/Capabilities.swift b/GestaltX/Capabilities.swift
+index 7d91f70..d8bdfc2 100644
+--- a/GestaltX/Capabilities.swift
++++ b/GestaltX/Capabilities.swift
+@@ -223,28 +223,18 @@ enum DeviceModelDecision: Equatable {
+     }
+ }
+ 
+-/// Region mode for China Unlock, kept outside the 9-item definition so the
+-/// default unlock is byte-identical to before. Default stays
+-/// region-code-only (LL): the shipped 9-item definition, and the safest
+-/// choice for CN dual-physical-SIM + eSIM hardware (Erosion-CN's own note
+-/// warns a full-US mapping to a US model can conflict on dual-SIM
+-/// hardware). Full US is an explicit opt-in that additionally stages the
+-/// sales-region suffix (LL/A) and the mapped US regulatory model number.
++/// Region mode for China Unlock. The one-tap unlock always stages exactly
++/// the 9-item definition (eSIM + region code LL + six AI keys) in either
++/// mode — the sales-region suffix and the regulatory model number are
++/// never staged by the one-tap, because a regulatory model that does not
++/// match the hardware makes the system discard the whole MobileGestalt
++/// cache at boot and rebuild it from factory data, so the region change
++/// does not stick. The mode only affects manual region presets (which
++/// sales-region key is created on iOS 27) and restoring an unlock applied
++/// by an older build.
+ enum ChinaUnlockRegionMode: String, CaseIterable, Identifiable {
+     case regionCodeOnly, fullUS
+     var id: String { rawValue }
+-    var title: String {
+-        switch self {
+-        case .regionCodeOnly: "Region code only (LL)"
+-        case .fullUS: "Full US (LL + LL/A)"
+-        }
+-    }
+-    var detail: String {
+-        switch self {
+-        case .regionCodeOnly: "Keeps the CH/A suffix and factory model — safest for dual-SIM phones."
+-        case .fullUS: "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware."
+-        }
+-    }
+     static let userDefaultsKey = "GestaltX.chinaUnlockRegionMode"
+     static var stored: Self {
+         get {
+diff --git a/GestaltX/ContentView.swift b/GestaltX/ContentView.swift
+index e0a3908..80abfdb 100644
+--- a/GestaltX/ContentView.swift
++++ b/GestaltX/ContentView.swift
+@@ -554,29 +554,6 @@ private struct ChinaUnlockCard: View {
+                 statusColumn(title: L("Apple Intelligence"), value: model.hasDocument ? "\(model.chinaUnlockAIEnabledCount)/\(ChinaUnlock.aiCapabilities.count)" : L("Not read yet"))
+             }
+ 
+-            // Region mode (opt-in Full US). Shown for China hardware and
+-            // while the unlock is staged. The two options use a menu
+-            // picker: the full labels do not fit a segmented control on a
+-            // phone screen. Changing the mode re-stages the unlock.
+-            if model.hasDocument && (model.isChinaUnlockStaged || model.snapshot?.document.extra[GestaltKeys.regionCode] as? String == "CH") {
+-                VStack(alignment: .leading, spacing: 6) {
+-                    Picker(L("Region mode"), selection: Binding(
+-                        get: { model.chinaUnlockRegionMode },
+-                        set: { model.setChinaUnlockRegionMode($0) }
+-                    )) {
+-                        ForEach(ChinaUnlockRegionMode.allCases) { mode in
+-                            Text(L(mode.title)).tag(mode)
+-                        }
+-                    }
+-                    .pickerStyle(.menu)
+-                    Text(L(model.chinaUnlockRegionMode.detail))
+-                        .font(.caption).foregroundStyle(.secondary)
+-                    if let note = model.regionModeNote {
+-                        Text(note).font(.caption).foregroundStyle(.secondary)
+-                    }
+-                }
+-            }
+-
+             DisclosureGroup {
+                 VStack(alignment: .leading, spacing: 10) {
+                     ForEach(ChinaUnlock.aiCapabilities) { capability in
+@@ -1708,13 +1685,10 @@ struct ChangeReviewView: View {
+         return code
+     }
+ 
+-    /// Region row's after-value: in Full US mode the staged sales-region
+-    /// suffix is shown too, so the "9 items" summary never understates
+-    /// the two extra staged fields.
++    /// Region row's after-value: the one-tap unlock stages the region
++    /// code only, so the after-value is just the LL display string.
+     private var regionAfterText: String {
+-        let code = regionDisplay(code: "LL")
+-        guard model.chinaUnlockRegionMode == .fullUS else { return code }
+-        return code + " · LL/A"
++        regionDisplay(code: "LL")
+     }
+ 
+     private var fieldChanges: some View {
+diff --git a/GestaltX/GestaltManager.swift b/GestaltX/GestaltManager.swift
+index 6515771..e3f7762 100644
+--- a/GestaltX/GestaltManager.swift
++++ b/GestaltX/GestaltManager.swift
+@@ -32,13 +32,12 @@ final class GestaltManager: ObservableObject {
+     @Published var regionID = "keep"
+     @Published var regionCodeID = "keep"
+     @Published var modelID = "keep"
+-    /// Opt-in region mode for China Unlock (default region-code-only).
++    /// Region mode for China Unlock (default region-code-only).
+     /// Persisted across launches; never reset by loading a document.
++    /// The one-tap unlock stages the same 9 items in either mode; the
++    /// mode only affects manual region presets and restoring an unlock
++    /// applied by an older build.
+     @Published var chinaUnlockRegionMode: ChinaUnlockRegionMode = .regionCodeOnly
+-    /// US regulatory model staged by the Full US mode, if a mapping is
+-    /// known for this device. `nil` means the mode stages region +
+-    /// sales region only (see `regionModeNote`).
+-    @Published var fullUSModelNumber: String?
+     /// The user explicitly confirmed an unverified (warned) AI staging
+     /// combination after reading its reason on the checkup card, by
+     /// tapping Fix. In-memory only, never persisted: a fresh launch
+@@ -46,9 +45,6 @@ final class GestaltManager: ObservableObject {
+     /// Only ever converts a `.warn` decision into `.allow` (see
+     /// `AIStagingGuard`); a `.block` is never overridden by it.
+     @Published var userConfirmedUnverifiedAICombination = false
+-    /// Shown under the region-mode picker when Full US cannot map this
+-    /// device to a US regulatory model.
+-    @Published var regionModeNote: String?
+     @Published var changesName = false
+     @Published var modelName = ""
+     @Published var subtype = 0
+@@ -167,9 +163,6 @@ final class GestaltManager: ObservableObject {
+                         regionCode: RegionPreset.all.first { $0.id == regionCodeID },
+                         skipCreatingRegionInfoOnModernOS: chinaUnlockRegionMode == .fullUS)
+         doc.applyModel(ModelPreset.all.first { $0.id == modelID })
+-        if chinaUnlockRegionMode == .fullUS, let model = fullUSModelNumber {
+-            doc.set(model, for: GestaltKeys.modelNumber)
+-        }
+         return doc
+     }
+ 
+@@ -182,7 +175,6 @@ final class GestaltManager: ObservableObject {
+     private func accept(_ loaded: DocumentSnapshot) {
+         snapshot = loaded; working = loaded.document
+         choices = [:]; regionID = "keep"; regionCodeID = "keep"; modelID = "keep"; changesName = false; subtype = 0
+-        fullUSModelNumber = nil; regionModeNote = nil
+         userConfirmedUnverifiedAICombination = false
+         cacheOptionChoice = .keep
+         wapiChoice = .keep
+@@ -229,40 +221,13 @@ final class GestaltManager: ObservableObject {
+     var chinaUnlockAIEnabledCount: Int { chinaUnlockEnabledAICapabilityIDs.count }
+ 
+     /// True when the preview already shows the full unlock, whether it was
+-    /// just staged or applied in an earlier session. In Full US mode it
+-    /// also requires the sales-region suffix (LL/A) and, when a US model
+-    /// is known for this device, the mapped regulatory model number.
++    /// just staged or applied in an earlier session: eSIM enabled, region
++    /// code LL and all six AI presets enabled. The sales-region suffix
++    /// and the regulatory model number are never part of the unlock, so
++    /// they are not required here.
+     var isChinaUnlockedInPreview: Bool {
+-        guard isESIMUnlockedInPreview, previewRegionCode == "LL",
+-              chinaUnlockAIEnabledCount == ChinaUnlock.aiCapabilityIDs.count else { return false }
+-        guard chinaUnlockRegionMode == .fullUS else { return true }
+-        let sysconfig = preview?.extra[GestaltKeys.legacyRegionInfo] as? String
+-        let regionInfo = preview?.extra[GestaltKeys.regionInfo] as? String
+-        guard sysconfig == "LL/A" || regionInfo == "LL/A" else { return false }
+-        if let expected = expectedFullUSModelNumber {
+-            return preview?.extra[GestaltKeys.modelNumber] as? String == expected
+-        }
+-        return true
+-    }
+-
+-    /// US regulatory model for the Full US mode, from the recorded
+-    /// original model number and product type. `nil` means unknown: the
+-    /// mode then stages region + sales region only.
+-    var expectedFullUSModelNumber: String? {
+-        guard let snapshot else { return nil }
+-        let originalRegModel = snapshot.originalValue(for: GestaltKeys.modelNumber) as? String
+-            ?? snapshot.document.extra[GestaltKeys.modelNumber] as? String
+-        let productType = snapshot.document.extra[GestaltKeys.productType] as? String ?? ""
+-        return USRegulatoryModelMapping.usRegulatoryModel(originalRegModel: originalRegModel,
+-                                                          productType: productType)
+-    }
+-
+-    /// Switches the region mode (persisted). If the unlock is currently
+-    /// staged, it is re-staged under the new mode so the review reflects it.
+-    func setChinaUnlockRegionMode(_ mode: ChinaUnlockRegionMode) {
+-        chinaUnlockRegionMode = mode
+-        ChinaUnlockRegionMode.stored = mode
+-        if isChinaUnlockStaged { _ = stageChinaUnlock() }
++        isESIMUnlockedInPreview && previewRegionCode == "LL"
++            && chinaUnlockAIEnabledCount == ChinaUnlock.aiCapabilityIDs.count
+     }
+ 
+     // MARK: - AI readiness checkup (item 4)
+@@ -401,10 +366,7 @@ final class GestaltManager: ObservableObject {
+             ?? snapshot.document.extra[GestaltKeys.productType] as? String ?? ""
+         return AIReadinessCheckup.evaluate(
+             regionCode: preview.extra[GestaltKeys.regionCode] as? String,
+-            sysconfig: preview.extra[GestaltKeys.legacyRegionInfo] as? String,
+             regModel: preview.extra[GestaltKeys.modelNumber] as? String,
+-            regionMode: chinaUnlockRegionMode,
+-            expectedUSModel: expectedFullUSModelNumber,
+             esimEnabled: isESIMUnlockedInPreview,
+             conflicts: aiConflicts,
+             aiEnabledCount: chinaUnlockAIEnabledCount,
+@@ -522,14 +484,14 @@ final class GestaltManager: ObservableObject {
+     }
+ 
+     /// Stages the full China Unlock: eSIM cache flags, region code US and
+-    /// the six Apple Intelligence presets. Nothing is written here; the
+-    /// user still reviews the changes and applies them, and a restart is
+-    /// required before they take effect. Sales region, `siriOnDevice`,
+-    /// the model number and WAPI are left untouched in the default
+-    /// region-code-only mode. In the opt-in Full US mode the sales region
+-    /// (LL/A) and the mapped US regulatory model are staged as well; when
+-    /// no US model is known for this device the model number is left
+-    /// untouched and the reason is shown under the mode picker.
++    /// the six Apple Intelligence presets — exactly the 9 items, in either
++    /// region mode. Nothing is written here; the user still reviews the
++    /// changes and applies them, and a restart is required before they
++    /// take effect. The sales-region suffix, the regulatory model number,
++    /// `siriOnDevice` and WAPI are never staged: a regulatory model that
++    /// does not match the hardware makes the system discard the whole
++    /// MobileGestalt cache at boot and rebuild it from factory data, so
++    /// the region change does not stick.
+     ///
+     /// This is an explicit user action, so it is deliberately not gated
+     /// by the AI staging guard (see `AIStagingGuard`): it stages
+@@ -552,20 +514,7 @@ final class GestaltManager: ObservableObject {
+         }
+         guard stageCacheOption(.enable) else { return false }
+         regionCodeID = ChinaUnlock.regionCodeID
+-        if chinaUnlockRegionMode == .fullUS {
+-            regionID = "US"
+-            if let mapped = expectedFullUSModelNumber {
+-                fullUSModelNumber = mapped
+-                regionModeNote = nil
+-            } else {
+-                fullUSModelNumber = nil
+-                regionModeNote = L("No US regulatory model known for this device — region code only.")
+-            }
+-        } else {
+-            regionID = "keep"
+-            fullUSModelNumber = nil
+-            regionModeNote = nil
+-        }
++        regionID = "keep"
+         for id in ChinaUnlock.aiCapabilityIDs { choices[id] = .enable }
+         return true
+     }
+@@ -573,15 +522,15 @@ final class GestaltManager: ObservableObject {
+     /// Stages a restore of the full China Unlock: eSIM flags back to the
+     /// recorded originals, region code back to its recorded original and
+     /// the six AI presets back to their recorded originals (`.disable`
+-    /// removes keys that were originally absent). `siriOnDevice`, the
+-    /// model number, WAPI and the sales region are left untouched.
++    /// removes keys that were originally absent). `siriOnDevice` and WAPI
++    /// are left untouched. The sales-region suffixes and the model number
++    /// are also restored when the stored mode is Full US, so an unlock
++    /// applied by an older build can still be reverted.
+     @discardableResult
+     func restoreChinaUnlock() -> Bool {
+         guard stageCacheOption(.restoreOriginal) else { return false }
+         regionCodeID = "keep"
+         regionID = "keep"
+-        fullUSModelNumber = nil
+-        regionModeNote = nil
+         if let snapshot, var document = working {
+             // The region overlay is preview-only, so stopping the overlay
+             // alone would leave a previously applied `LL` in `working`.
+@@ -922,7 +871,7 @@ final class GestaltManager: ObservableObject {
+         // Explicit field edits take precedence: discard presets that would overwrite the key.
+         let changedKeys = Set([key, draft.originalKey].compactMap { $0 })
+         for capability in Capability.all where !changedKeys.isDisjoint(with: capability.keys) { choices[capability.id] = .keep }
+-        if !changedKeys.isDisjoint(with: [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo]) { regionID = "keep"; regionCodeID = "keep"; fullUSModelNumber = nil }
++        if !changedKeys.isDisjoint(with: [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo]) { regionID = "keep"; regionCodeID = "keep" }
+         if changedKeys.contains(GestaltKeys.artwork) { subtype = 0 }
+         if changedKeys.contains(GestaltKeys.modelNumber) { modelID = "keep" }
+         if !changedKeys.isDisjoint(with: [GestaltKeys.artwork, "Z/dqyWS6OZTRy10UcmUAhw", "bbtR9jQx50Fv5Af/affNtA"]) { changesName = false }
+@@ -930,7 +879,7 @@ final class GestaltManager: ObservableObject {
+     func removeField(_ key: String) {
+         working?.set(nil, for: key)
+         for capability in Capability.all where capability.keys.contains(key) { choices[capability.id] = .keep }
+-        if [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo].contains(key) { regionID = "keep"; regionCodeID = "keep"; fullUSModelNumber = nil }
++        if [GestaltKeys.regionCode, GestaltKeys.regionInfo, GestaltKeys.legacyRegionInfo].contains(key) { regionID = "keep"; regionCodeID = "keep" }
+         if key == GestaltKeys.artwork { subtype = 0 }
+         if key == GestaltKeys.modelNumber { modelID = "keep" }
+         if [GestaltKeys.artwork, "Z/dqyWS6OZTRy10UcmUAhw", "bbtR9jQx50Fv5Af/affNtA"].contains(key) { changesName = false }
+diff --git a/GestaltX/Localizable.xcstrings b/GestaltX/Localizable.xcstrings
+index 1c3103c..6e5f999 100644
+--- a/GestaltX/Localizable.xcstrings
++++ b/GestaltX/Localizable.xcstrings
+@@ -34625,326 +34625,6 @@
+         }
+       }
+     },
+-    "Region mode": {
+-      "localizations": {
+-        "en": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Region mode"
+-          }
+-        },
+-        "zh-Hans": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "地区模式"
+-          }
+-        },
+-        "es": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Modo de región"
+-          }
+-        },
+-        "fa": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "حالت منطقه"
+-          }
+-        },
+-        "ja": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "地域モード"
+-          }
+-        },
+-        "ko": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "지역 모드"
+-          }
+-        },
+-        "ru": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Режим региона"
+-          }
+-        },
+-        "vi": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Chế độ vùng"
+-          }
+-        },
+-        "zh-Hant-HK": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "地區模式"
+-          }
+-        },
+-        "zh-Hant-TW": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "地區模式"
+-          }
+-        }
+-      }
+-    },
+-    "Region code only (LL)": {
+-      "localizations": {
+-        "en": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Region code only (LL)"
+-          }
+-        },
+-        "zh-Hans": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "仅地区代码 (LL)"
+-          }
+-        },
+-        "es": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Solo código de región (LL)"
+-          }
+-        },
+-        "fa": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "فقط کد منطقه (LL)"
+-          }
+-        },
+-        "ja": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "地域コードのみ (LL)"
+-          }
+-        },
+-        "ko": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "지역 코드만 (LL)"
+-          }
+-        },
+-        "ru": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Только код региона (LL)"
+-          }
+-        },
+-        "vi": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Chỉ mã vùng (LL)"
+-          }
+-        },
+-        "zh-Hant-HK": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "僅地區代碼 (LL)"
+-          }
+-        },
+-        "zh-Hant-TW": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "僅地區代碼 (LL)"
+-          }
+-        }
+-      }
+-    },
+-    "Full US (LL + LL/A)": {
+-      "localizations": {
+-        "en": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Full US (LL + LL/A)"
+-          }
+-        },
+-        "zh-Hans": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "完整美国 (LL + LL/A)"
+-          }
+-        },
+-        "es": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "EE. UU. completo (LL + LL/A)"
+-          }
+-        },
+-        "fa": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "کامل آمریکا (LL + LL/A)"
+-          }
+-        },
+-        "ja": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "米国完全版 (LL + LL/A)"
+-          }
+-        },
+-        "ko": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "미국 전체 (LL + LL/A)"
+-          }
+-        },
+-        "ru": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Полный США (LL + LL/A)"
+-          }
+-        },
+-        "vi": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Đầy đủ Hoa Kỳ (LL + LL/A)"
+-          }
+-        },
+-        "zh-Hant-HK": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "完整美國 (LL + LL/A)"
+-          }
+-        },
+-        "zh-Hant-TW": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "完整美國 (LL + LL/A)"
+-          }
+-        }
+-      }
+-    },
+-    "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": {
+-      "localizations": {
+-        "en": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Keeps the CH/A suffix and factory model — safest for dual-SIM phones."
+-          }
+-        },
+-        "zh-Hans": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "保留 CH/A 后缀与出厂型号，双卡手机最安全。"
+-          }
+-        },
+-        "es": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Conserva el sufijo CH/A y el modelo de fábrica; lo más seguro para teléfonos de doble SIM."
+-          }
+-        },
+-        "fa": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "پسوند CH/A و مدل کارخانه را حفظ می‌کند — امن‌ترین گزینه برای گوشی‌های دو سیم‌کارته."
+-          }
+-        },
+-        "ja": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "CH/A サフィックスと出荷時モデルを保持します。デュアル SIM 端末に最も安全です。"
+-          }
+-        },
+-        "ko": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "CH/A 접미사와 출고 모델을 유지합니다. 듀얼 SIM 휴대전화에 가장 안전합니다."
+-          }
+-        },
+-        "ru": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Сохраняет суффикс CH/A и заводскую модель — безопаснее всего для телефонов с двумя SIM."
+-          }
+-        },
+-        "vi": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Giữ hậu tố CH/A và mẫu gốc — an toàn nhất cho điện thoại hai SIM."
+-          }
+-        },
+-        "zh-Hant-HK": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "保留 CH/A 後綴與出廠型號，雙卡手機最安全。"
+-          }
+-        },
+-        "zh-Hant-TW": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "保留 CH/A 後綴與出廠型號，雙卡手機最安全。"
+-          }
+-        }
+-      }
+-    },
+-    "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": {
+-      "localizations": {
+-        "en": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware."
+-          }
+-        },
+-        "zh-Hans": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "同时设置销售地区与美国型号，最一致，但可能与双卡硬件冲突。"
+-          }
+-        },
+-        "es": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "También establece la región de ventas y el número de modelo de EE. UU.; lo más coherente, pero puede entrar en conflicto con el hardware de doble SIM."
+-          }
+-        },
+-        "fa": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "منطقه فروش و شماره مدل آمریکا را نیز تنظیم می‌کند — سازگارترین حالت، اما ممکن است با سخت‌افزار دو سیم‌کارته تداخل داشته باشد."
+-          }
+-        },
+-        "ja": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "販売地域と米国モデル番号も設定します。最も一貫性がありますが、デュアル SIM ハードウェアと競合する可能性があります。"
+-          }
+-        },
+-        "ko": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "판매 지역과 미국 모델 번호도 설정합니다. 가장 일관되지만 듀얼 SIM 하드웨어와 충돌할 수 있습니다."
+-          }
+-        },
+-        "ru": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Также задаёт регион продаж и номер модели США — наиболее последовательно, но может конфликтовать с оборудованием для двух SIM."
+-          }
+-        },
+-        "vi": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Đồng thời đặt vùng bán hàng và số mẫu Hoa Kỳ — nhất quán nhất, nhưng có thể xung đột với phần cứng hai SIM."
+-          }
+-        },
+-        "zh-Hant-HK": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "同時設定銷售地區與美國型號，最一致，但可能與雙卡硬體衝突。"
+-          }
+-        },
+-        "zh-Hant-TW": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "同時設定銷售地區與美國型號，最一致，但可能與雙卡硬體衝突。"
+-          }
+-        }
+-      }
+-    },
+     "Apple Intelligence readiness": {
+       "localizations": {
+         "en": {
+@@ -35201,70 +34881,6 @@
+         }
+       }
+     },
+-    "Regulatory model": {
+-      "localizations": {
+-        "en": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Regulatory model"
+-          }
+-        },
+-        "zh-Hans": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "监管型号"
+-          }
+-        },
+-        "es": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Modelo regulatorio"
+-          }
+-        },
+-        "fa": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "مدل نظارتی"
+-          }
+-        },
+-        "ja": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "規制モデル"
+-          }
+-        },
+-        "ko": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "규제 모델"
+-          }
+-        },
+-        "ru": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Нормативная модель"
+-          }
+-        },
+-        "vi": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "Mẫu quy định"
+-          }
+-        },
+-        "zh-Hant-HK": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "監管型號"
+-          }
+-        },
+-        "zh-Hant-TW": {
+-          "stringUnit": {
+-            "state": "translated",
+-            "value": "監管型號"
+-          }
+-        }
+-      }
+-    },
+     "Regulatory model (factory model kept)": {
+       "localizations": {
+         "en": {
+diff --git a/localization/es.json b/localization/es.json
+index efa3362..6e5e0a0 100644
+--- a/localization/es.json
++++ b/localization/es.json
+@@ -540,16 +540,10 @@
+   "Other CacheData bytes changed": "Otros bytes de CacheData cambiaron",
+   "Unrelated cache bytes changed — apply will be refused.": "Cambiaron bytes de caché no relacionados; no se aplicará.",
+   "No US regulatory model known for this device — region code only.": "No se conoce el modelo regulatorio de EE. UU. para este dispositivo; solo código de región.",
+-  "Region mode": "Modo de región",
+-  "Region code only (LL)": "Solo código de región (LL)",
+-  "Full US (LL + LL/A)": "EE. UU. completo (LL + LL/A)",
+-  "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": "Conserva el sufijo CH/A y el modelo de fábrica; lo más seguro para teléfonos de doble SIM.",
+-  "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": "También establece la región de ventas y el número de modelo de EE. UU.; lo más coherente, pero puede entrar en conflicto con el hardware de doble SIM.",
+   "Apple Intelligence readiness": "Preparación de Apple Intelligence",
+   "Ready %d/4": "Listo %d/4",
+   "Live status unknown": "Estado en vivo desconocido",
+   "Fix": "Corregir",
+-  "Regulatory model": "Modelo regulatorio",
+   "Regulatory model (factory model kept)": "Modelo regulatorio (se conserva el de fábrica)",
+   "eSIM gate and conflicts": "Control de eSIM y conflictos",
+   "On-device AI eligibility": "Elegibilidad de IA en el dispositivo",
+diff --git a/localization/fa.json b/localization/fa.json
+index 8f01e48..ce7f25b 100644
+--- a/localization/fa.json
++++ b/localization/fa.json
+@@ -540,16 +540,10 @@
+   "Other CacheData bytes changed": "بایت‌های دیگر CacheData تغییر کردند",
+   "Unrelated cache bytes changed — apply will be refused.": "بایت‌های نامرتبط حافظه پنهان تغییر کردند — اعمال رد خواهد شد.",
+   "No US regulatory model known for this device — region code only.": "مدل نظارتی آمریکا برای این دستگاه مشخص نیست — فقط کد منطقه.",
+-  "Region mode": "حالت منطقه",
+-  "Region code only (LL)": "فقط کد منطقه (LL)",
+-  "Full US (LL + LL/A)": "کامل آمریکا (LL + LL/A)",
+-  "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": "پسوند CH/A و مدل کارخانه را حفظ می‌کند — امن‌ترین گزینه برای گوشی‌های دو سیم‌کارته.",
+-  "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": "منطقه فروش و شماره مدل آمریکا را نیز تنظیم می‌کند — سازگارترین حالت، اما ممکن است با سخت‌افزار دو سیم‌کارته تداخل داشته باشد.",
+   "Apple Intelligence readiness": "آمادگی Apple Intelligence",
+   "Ready %d/4": "آماده %d/4",
+   "Live status unknown": "وضعیت روی دستگاه مشخص نیست",
+   "Fix": "رفع",
+-  "Regulatory model": "مدل نظارتی",
+   "Regulatory model (factory model kept)": "مدل نظارتی (مدل کارخانه حفظ شده است)",
+   "eSIM gate and conflicts": "دروازه eSIM و تداخل‌ها",
+   "On-device AI eligibility": "واجد شرایط بودن هوش مصنوعی روی دستگاه",
+diff --git a/localization/ja.json b/localization/ja.json
+index 07eca2f..9f26fc1 100644
+--- a/localization/ja.json
++++ b/localization/ja.json
+@@ -540,16 +540,10 @@
+   "Other CacheData bytes changed": "その他の CacheData バイトが変更されました",
+   "Unrelated cache bytes changed — apply will be refused.": "無関係なキャッシュバイトが変更されました。適用は拒否されます。",
+   "No US regulatory model known for this device — region code only.": "このデバイスの米国規制モデルが不明です。地域コードのみ使用します。",
+-  "Region mode": "地域モード",
+-  "Region code only (LL)": "地域コードのみ (LL)",
+-  "Full US (LL + LL/A)": "米国完全版 (LL + LL/A)",
+-  "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": "CH/A サフィックスと出荷時モデルを保持します。デュアル SIM 端末に最も安全です。",
+-  "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": "販売地域と米国モデル番号も設定します。最も一貫性がありますが、デュアル SIM ハードウェアと競合する可能性があります。",
+   "Apple Intelligence readiness": "Apple Intelligence の準備状況",
+   "Ready %d/4": "準備完了 %d/4",
+   "Live status unknown": "デバイスの状態は不明",
+   "Fix": "修正",
+-  "Regulatory model": "規制モデル",
+   "Regulatory model (factory model kept)": "規制モデル（出荷時モデルを保持）",
+   "eSIM gate and conflicts": "eSIM ゲートと競合",
+   "On-device AI eligibility": "デバイス内 AI の対応状況",
+diff --git a/localization/ko.json b/localization/ko.json
+index f2d8981..40b8a09 100644
+--- a/localization/ko.json
++++ b/localization/ko.json
+@@ -540,16 +540,10 @@
+   "Other CacheData bytes changed": "기타 CacheData 바이트가 변경됨",
+   "Unrelated cache bytes changed — apply will be refused.": "관련 없는 캐시 바이트가 변경되어 적용이 거부됩니다.",
+   "No US regulatory model known for this device — region code only.": "이 기기의 미국 규제 모델을 알 수 없어 지역 코드만 사용합니다.",
+-  "Region mode": "지역 모드",
+-  "Region code only (LL)": "지역 코드만 (LL)",
+-  "Full US (LL + LL/A)": "미국 전체 (LL + LL/A)",
+-  "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": "CH/A 접미사와 출고 모델을 유지합니다. 듀얼 SIM 휴대전화에 가장 안전합니다.",
+-  "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": "판매 지역과 미국 모델 번호도 설정합니다. 가장 일관되지만 듀얼 SIM 하드웨어와 충돌할 수 있습니다.",
+   "Apple Intelligence readiness": "Apple Intelligence 준비 상태",
+   "Ready %d/4": "준비 완료 %d/4",
+   "Live status unknown": "기기 상태를 알 수 없음",
+   "Fix": "수정",
+-  "Regulatory model": "규제 모델",
+   "Regulatory model (factory model kept)": "규제 모델(출고 모델 유지)",
+   "eSIM gate and conflicts": "eSIM 게이트 및 충돌",
+   "On-device AI eligibility": "기기 내 AI 지원 여부",
+diff --git a/localization/ru.json b/localization/ru.json
+index c1cf06c..bf2388c 100644
+--- a/localization/ru.json
++++ b/localization/ru.json
+@@ -540,16 +540,10 @@
+   "Other CacheData bytes changed": "Изменены другие байты CacheData",
+   "Unrelated cache bytes changed — apply will be refused.": "Изменены несвязанные байты кэша — применение будет отклонено.",
+   "No US regulatory model known for this device — region code only.": "Нормативная модель США для этого устройства неизвестна — только код региона.",
+-  "Region mode": "Режим региона",
+-  "Region code only (LL)": "Только код региона (LL)",
+-  "Full US (LL + LL/A)": "Полный США (LL + LL/A)",
+-  "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": "Сохраняет суффикс CH/A и заводскую модель — безопаснее всего для телефонов с двумя SIM.",
+-  "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": "Также задаёт регион продаж и номер модели США — наиболее последовательно, но может конфликтовать с оборудованием для двух SIM.",
+   "Apple Intelligence readiness": "Готовность Apple Intelligence",
+   "Ready %d/4": "Готово %d/4",
+   "Live status unknown": "Состояние на устройстве неизвестно",
+   "Fix": "Исправить",
+-  "Regulatory model": "Нормативная модель",
+   "Regulatory model (factory model kept)": "Нормативная модель (заводская сохранена)",
+   "eSIM gate and conflicts": "Шлюз eSIM и конфликты",
+   "On-device AI eligibility": "Поддержка ИИ на устройстве",
+diff --git a/localization/vi.json b/localization/vi.json
+index f764437..930d308 100644
+--- a/localization/vi.json
++++ b/localization/vi.json
+@@ -540,16 +540,10 @@
+   "Other CacheData bytes changed": "Các byte CacheData khác đã thay đổi",
+   "Unrelated cache bytes changed — apply will be refused.": "Các byte bộ nhớ đệm không liên quan đã thay đổi — sẽ từ chối áp dụng.",
+   "No US regulatory model known for this device — region code only.": "Không rõ mẫu quy định của Hoa Kỳ cho thiết bị này — chỉ dùng mã vùng.",
+-  "Region mode": "Chế độ vùng",
+-  "Region code only (LL)": "Chỉ mã vùng (LL)",
+-  "Full US (LL + LL/A)": "Đầy đủ Hoa Kỳ (LL + LL/A)",
+-  "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": "Giữ hậu tố CH/A và mẫu gốc — an toàn nhất cho điện thoại hai SIM.",
+-  "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": "Đồng thời đặt vùng bán hàng và số mẫu Hoa Kỳ — nhất quán nhất, nhưng có thể xung đột với phần cứng hai SIM.",
+   "Apple Intelligence readiness": "Mức sẵn sàng của Apple Intelligence",
+   "Ready %d/4": "Sẵn sàng %d/4",
+   "Live status unknown": "Không rõ trạng thái trên thiết bị",
+   "Fix": "Sửa",
+-  "Regulatory model": "Mẫu quy định",
+   "Regulatory model (factory model kept)": "Mẫu quy định (giữ mẫu gốc)",
+   "eSIM gate and conflicts": "Cổng eSIM và xung đột",
+   "On-device AI eligibility": "Đủ điều kiện AI trên thiết bị",
+diff --git a/localization/zh-Hant-HK.json b/localization/zh-Hant-HK.json
+index d6ea9ea..56ae326 100644
+--- a/localization/zh-Hant-HK.json
++++ b/localization/zh-Hant-HK.json
+@@ -540,16 +540,10 @@
+   "Other CacheData bytes changed": "其他 CacheData 位元組已變更",
+   "Unrelated cache bytes changed — apply will be refused.": "存在無關快取位元組變更，將拒絕套用。",
+   "No US regulatory model known for this device — region code only.": "未知此裝置的美國監管型號，僅使用地區代碼。",
+-  "Region mode": "地區模式",
+-  "Region code only (LL)": "僅地區代碼 (LL)",
+-  "Full US (LL + LL/A)": "完整美國 (LL + LL/A)",
+-  "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": "保留 CH/A 後綴與出廠型號，雙卡手機最安全。",
+-  "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": "同時設定銷售地區與美國型號，最一致，但可能與雙卡硬體衝突。",
+   "Apple Intelligence readiness": "Apple 智能就緒檢查",
+   "Ready %d/4": "就緒 %d/4",
+   "Live status unknown": "本機狀態未知",
+   "Fix": "修復",
+-  "Regulatory model": "監管型號",
+   "Regulatory model (factory model kept)": "監管型號（保留出廠型號）",
+   "eSIM gate and conflicts": "eSIM 門控與衝突",
+   "On-device AI eligibility": "本機 AI 資格",
+diff --git a/localization/zh-Hant-TW.json b/localization/zh-Hant-TW.json
+index 9d977c8..2273f5a 100644
+--- a/localization/zh-Hant-TW.json
++++ b/localization/zh-Hant-TW.json
+@@ -540,16 +540,10 @@
+   "Other CacheData bytes changed": "其他 CacheData 位元組已變更",
+   "Unrelated cache bytes changed — apply will be refused.": "存在無關快取位元組變更，將拒絕套用。",
+   "No US regulatory model known for this device — region code only.": "未知此裝置的美國監管型號，僅使用地區代碼。",
+-  "Region mode": "地區模式",
+-  "Region code only (LL)": "僅地區代碼 (LL)",
+-  "Full US (LL + LL/A)": "完整美國 (LL + LL/A)",
+-  "Keeps the CH/A suffix and factory model — safest for dual-SIM phones.": "保留 CH/A 後綴與出廠型號，雙卡手機最安全。",
+-  "Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.": "同時設定銷售地區與美國型號，最一致，但可能與雙卡硬體衝突。",
+   "Apple Intelligence readiness": "Apple 智能就緒檢查",
+   "Ready %d/4": "就緒 %d/4",
+   "Live status unknown": "本機狀態未知",
+   "Fix": "修復",
+-  "Regulatory model": "監管型號",
+   "Regulatory model (factory model kept)": "監管型號（保留出廠型號）",
+   "eSIM gate and conflicts": "eSIM 門控與衝突",
+   "On-device AI eligibility": "本機 AI 資格",
+diff --git a/scripts/generate_localization.py b/scripts/generate_localization.py
+index 151029d..ea20e95 100644
+--- a/scripts/generate_localization.py
++++ b/scripts/generate_localization.py
+@@ -543,16 +543,10 @@ CacheData[0x%X] · slot %d	CacheData[0x%X] · 槽位 %d
+ Other CacheData bytes changed	其他 CacheData 字节已更改
+ Unrelated cache bytes changed — apply will be refused.	存在无关缓存字节更改，将拒绝应用。
+ No US regulatory model known for this device — region code only.	未知此设备的美国监管型号，仅使用地区代码。
+-Region mode	地区模式
+-Region code only (LL)	仅地区代码 (LL)
+-Full US (LL + LL/A)	完整美国 (LL + LL/A)
+-Keeps the CH/A suffix and factory model — safest for dual-SIM phones.	保留 CH/A 后缀与出厂型号，双卡手机最安全。
+-Also sets the sales region and US model number — most consistent, but can conflict on dual-SIM hardware.	同时设置销售地区与美国型号，最一致，但可能与双卡硬件冲突。
+ Apple Intelligence readiness	Apple 智能就绪检查
+ Ready %d/4	就绪 %d/4
+ Live status unknown	本机状态未知
+ Fix	修复
+-Regulatory model	监管型号
+ Regulatory model (factory model kept)	监管型号（保留出厂型号）
+ eSIM gate and conflicts	eSIM 门控与冲突
+ On-device AI eligibility	本机 AI 资格
+diff --git a/tests/AIReadinessTests.swift b/tests/AIReadinessTests.swift
+index 34d650a..2c7f63f 100644
+--- a/tests/AIReadinessTests.swift
++++ b/tests/AIReadinessTests.swift
+@@ -17,10 +17,8 @@ final class AIReadinessTests: XCTestCase {
+         withUnsafeBytes(of: &little) { data.replaceSubrange(offset..<(offset + $0.count), with: $0) }
+     }
+ 
+-    static func evaluate(regionCode: String? = "LL", sysconfig: String? = nil,
++    static func evaluate(regionCode: String? = "LL",
+                          regModel: String? = "A3518",
+-                         regionMode: ChinaUnlockRegionMode = .regionCodeOnly,
+-                         expectedUSModel: String? = nil,
+                          esimEnabled: Bool = true, conflicts: [AIConflict] = [],
+                          aiEnabledCount: Int = 6, aiTotal: Int = 6,
+                          productType: String = "iPhone16,2",
+@@ -28,8 +26,7 @@ final class AIReadinessTests: XCTestCase {
+                          liveAIEnabled: Bool? = nil,
+                          stagingDecision: AIStagingDecision? = nil) -> AIReadinessCheckup {
+         AIReadinessCheckup.evaluate(
+-            regionCode: regionCode, sysconfig: sysconfig, regModel: regModel,
+-            regionMode: regionMode, expectedUSModel: expectedUSModel,
++            regionCode: regionCode, regModel: regModel,
+             esimEnabled: esimEnabled, conflicts: conflicts,
+             aiEnabledCount: aiEnabledCount, aiTotal: aiTotal, productType: productType,
+             liveRegionCode: liveRegionCode, liveRegModel: liveRegModel, liveAIEnabled: liveAIEnabled,
+@@ -75,17 +72,17 @@ final class AIReadinessTests: XCTestCase {
+         XCTAssert(unknownLive.factors[0].isLiveActive == nil,
+                    "No probe answer renders live: unknown, never faked")
+ 
+-        // LL-only mode passes on any kept factory model; Full US mode
+-        // requires the mapped US model.
++        // The one-tap unlock keeps the factory model and never stages a
++        // sales-region suffix, so the checkup requires only the LL region
++        // code and a present model number — never an LL/A suffix or a
++        // mapped US model.
+         let kept = Self.evaluate(regModel: "A3518")
+-        XCTAssert(kept.factors[1].isReady, "LL-only passes on the kept factory model")
+-        let fullUS = Self.evaluate(sysconfig: "LL/A", regModel: "A3260", regionMode: .fullUS,
+-                              expectedUSModel: "A3260")
+-        XCTAssert(fullUS.factors[0].isReady && fullUS.factors[1].isReady,
+-                   "Full US passes with LL/A and the mapped model")
+-        let fullUSWrong = Self.evaluate(sysconfig: "LL/A", regModel: "A3518", regionMode: .fullUS,
+-                                   expectedUSModel: "A3260")
+-        XCTAssert(!fullUSWrong.factors[1].isReady, "Full US fails when the model is not the mapped US model")
++        XCTAssert(kept.factors[1].isReady, "The kept factory model passes")
++        XCTAssert(kept.factors[0].isReady, "The LL region code alone passes, with no sales-region suffix")
++        let noModel = Self.evaluate(regModel: nil)
++        XCTAssert(!noModel.factors[1].isReady, "A missing model number fails the regulatory-model factor")
++        let wrongRegion = Self.evaluate(regionCode: "CH")
++        XCTAssert(!wrongRegion.factors[0].isReady, "A CH region code fails the region factor")
+ 
+         // A slot conflict fails the eSIM/conflict factor and names itself.
+         let conflict = AIConflict.personalTranslatorSlotDisabled(slot: 266)
+diff --git a/tests/RegionModeTests.swift b/tests/RegionModeTests.swift
+index e096fa5..94d1e78 100644
+--- a/tests/RegionModeTests.swift
++++ b/tests/RegionModeTests.swift
+@@ -3,8 +3,11 @@ import XCTest
+ @testable import GestaltX
+ 
+ /// Offline tests for the item-5 region mode choice: the US regulatory
+-/// model mapping (refuses unknown models) and Full US staging/restore.
+-/// No device or signing is needed.
++/// model mapping (refuses unknown models) and the one-tap unlock, which
++/// stages exactly the 9 items in either region mode — the sales-region
++/// suffix and the regulatory model number are never staged, so a
++/// regulatory model that does not match the hardware cannot make the
++/// system discard the cache at boot. No device or signing is needed.
+ final class RegionModeTests: XCTestCase {
+     struct Failure: Error { let message: String }
+ 
+@@ -60,7 +63,9 @@ final class RegionModeTests: XCTestCase {
+         XCTAssert(manager.changeCount == 9 && manager.regionID == "keep",
+                    "Region-code-only staging still changes exactly 9 items")
+ 
+-        // Full US staging on the fixture: LL + LL/A + A3260.
++        // Full US mode stages exactly the same 9 items as region-code-only:
++        // the sales-region suffix and the regulatory model number are
++        // never staged by the one-tap, in either mode.
+         ChinaUnlockRegionMode.stored = .fullUS
+         let fullUS = GestaltManager()
+         fullUS.loadSnapshotForTests(snapshot)
+@@ -69,27 +74,26 @@ final class RegionModeTests: XCTestCase {
+         guard let preview = fullUS.preview else { throw Failure(message: "Preview exists after Full US staging") }
+         XCTAssert(preview.extra[GestaltKeys.regionCode] as? String == "LL",
+                    "Full US sets RegionCode to LL")
+-        XCTAssert(preview.extra[GestaltKeys.regionInfo] as? String == "LL/A"
+-                   && preview.extra[GestaltKeys.legacyRegionInfo] as? String == "LL/A",
+-                   "Full US sets both sales-region suffixes to LL/A")
+-        XCTAssert(preview.extra[GestaltKeys.modelNumber] as? String == "A3260",
+-                   "Full US maps A3518 to the US model A3260")
++        XCTAssert(preview.extra[GestaltKeys.regionInfo] as? String == "CH/A"
++                   && preview.extra[GestaltKeys.legacyRegionInfo] as? String == "CH/A",
++                   "Full US leaves both sales-region suffixes at CH/A")
++        XCTAssert(preview.extra[GestaltKeys.modelNumber] as? String == "A3518",
++                   "Full US keeps the factory model number")
+         XCTAssert(fullUS.isChinaUnlockedInPreview, "Full US preview reads as unlocked")
+-        // 10 CacheExtra keys (region code + 2 suffixes + model + 6 AI)
+-        // + 2 cache bytes = 12 staged changes.
+-        XCTAssert(fullUS.changeCount == 12, "Full US staging changes 12 items, got \(fullUS.changeCount)")
++        XCTAssert(fullUS.changeCount == 9 && fullUS.regionID == "keep",
++                   "Full US staging changes exactly 9 items, got \(fullUS.changeCount)")
+ 
+-        // Restore after Full US returns all three region/model keys.
++        // Restore after staging returns the original document.
+         fullUS.restoreChinaUnlock()
+         guard let restored = fullUS.preview else { throw Failure(message: "Preview exists after restore") }
+-        XCTAssert(restored.matches(original), "Restore after Full US returns the original document")
++        XCTAssert(restored.matches(original), "Restore returns the original document")
+         XCTAssert(restored.extra[GestaltKeys.regionInfo] as? String == "CH/A"
+                    && restored.extra[GestaltKeys.legacyRegionInfo] as? String == "CH/A"
+                    && restored.extra[GestaltKeys.modelNumber] as? String == "A3518",
+                    "Restore returns suffixes and model number to their originals")
+ 
+-        // Unknown device: Full US stages region + sales region only and
+-        // says so; the model number is left untouched.
++        // Unknown device: the one-tap still stages exactly the 9 items;
++        // the sales-region suffixes and the model number are untouched.
+         ChinaUnlockRegionMode.stored = .fullUS
+         let unknownOriginal = try fixture(productType: "iPhone99,9", modelNumber: "A9999")
+         let unknownSnapshot = DocumentSnapshot(data: try unknownOriginal.encoded(), document: unknownOriginal,
+@@ -99,14 +103,14 @@ final class RegionModeTests: XCTestCase {
+         unknown.stageChinaUnlock()
+         guard let unknownPreview = unknown.preview else { throw Failure(message: "Preview exists for unknown device") }
+         XCTAssert(unknownPreview.extra[GestaltKeys.regionCode] as? String == "LL"
+-                   && unknownPreview.extra[GestaltKeys.regionInfo] as? String == "LL/A",
+-                   "Unknown device still stages region code and sales region")
++                   && unknownPreview.extra[GestaltKeys.regionInfo] as? String == "CH/A",
++                   "Unknown device stages the region code and leaves the sales region alone")
+         XCTAssert(unknownPreview.extra[GestaltKeys.modelNumber] as? String == "A9999",
+                    "Unknown device leaves the model number untouched")
+-        XCTAssert(unknown.regionModeNote != nil,
+-                   "Unknown device shows the no-mapping note")
++        XCTAssert(unknown.changeCount == 9,
++                   "Unknown device stages exactly 9 items, got \(unknown.changeCount)")
+         XCTAssert(unknown.isChinaUnlockedInPreview,
+-                   "Unknown device still reads as unlocked without a mapped model")
++                   "Unknown device still reads as unlocked")
+ 
+         ChinaUnlockRegionMode.stored = .regionCodeOnly
+     }
