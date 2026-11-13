@@ -1,0 +1,2850 @@
+diff --git a/GestaltX/AppAppearance.swift b/GestaltX/AppAppearance.swift
+new file mode 100644
+index 0000000..9577074
+--- /dev/null
++++ b/GestaltX/AppAppearance.swift
+@@ -0,0 +1,295 @@
++// SPDX-License-Identifier: GPL-3.0-only
++import Foundation
++import CoreGraphics
++import ImageIO
++import UniformTypeIdentifiers
++
++/// Native-write capability of the App Appearance backend.
++///
++/// The default is `.unknown`: no write capability is claimed until a real
++/// probe verifies it. It must never be `.verifiedWritable` without a
++/// verified write path, and a preview must never present itself as a
++/// successful native edit.
++enum AppAppearanceCapability: String, Equatable, Sendable {
++    case unknown
++    case readOnly
++    case previewOnly
++    case verifiedWritable
++    case unsupported
++    case failed
++
++    /// The only safe starting state. A capability is never assumed.
++    static var defaultCapability: AppAppearanceCapability { .unknown }
++}
++
++/// Image formats the appearance preview accepts. Detection is by magic
++/// bytes only, so it never depends on a decoder succeeding, and it never
++/// trusts a file extension.
++enum AppAppearanceImageFormat: String, Equatable, Sendable {
++    case png
++    case jpeg
++    case heic
++    case unsupported
++
++    var displayName: String {
++        switch self {
++        case .png: return "PNG"
++        case .jpeg: return "JPEG"
++        case .heic: return "HEIC"
++        case .unsupported: return "—"
++        }
++    }
++
++    static func detect(from data: Data) -> AppAppearanceImageFormat {
++        guard !data.isEmpty else { return .unsupported }
++        if data.count >= 8, data.prefix(8) == Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) { return .png }
++        if data.count >= 3, data.prefix(3) == Data([0xFF, 0xD8, 0xFF]) { return .jpeg }
++        if data.count >= 12, data[4..<8] == Data("ftyp".utf8) {
++            // HEIC family brands, including the generic HEIF brands iOS
++            // Photos may emit. A brand match only says the container is
++            // HEIF; decodability is checked separately by validation.
++            let brand = String(data: data[8..<12], encoding: .ascii) ?? ""
++            if ["heic", "heix", "hevc", "hevx", "heim", "heis", "hevm", "hevs", "mif1", "msf1"].contains(brand) { return .heic }
++        }
++        return .unsupported
++    }
++}
++
++/// A validated appearance image: a supported format whose pixels could be
++/// read. The original bytes are kept so the preview can render a
++/// downsampled thumbnail without ever decoding the full image twice.
++struct AppAppearanceValidatedImage: Equatable, Sendable {
++    let format: AppAppearanceImageFormat
++    let width: Int
++    let height: Int
++    let byteCount: Int
++    let data: Data
++
++    /// Matches the existing preview import cap (5 MB).
++    static let maximumBytes = 5 * 1024 * 1024
++    /// Matches the LaunchArtworkImages dimension cap (4096 px).
++    static let maximumDimension = 4096
++
++    enum ValidationError: Swift.Error, Equatable {
++        case empty
++        case tooLarge
++        case unsupportedFormat
++        case undecodable
++        case dimensionsTooLarge
++    }
++
++    static func validate(_ data: Data) -> Result<AppAppearanceValidatedImage, ValidationError> {
++        guard !data.isEmpty else { return .failure(.empty) }
++        guard data.count <= maximumBytes else { return .failure(.tooLarge) }
++        let format = AppAppearanceImageFormat.detect(from: data)
++        guard format != .unsupported else { return .failure(.unsupportedFormat) }
++        guard let size = pixelSize(of: data) else { return .failure(.undecodable) }
++        guard size.width <= maximumDimension, size.height <= maximumDimension else { return .failure(.dimensionsTooLarge) }
++        return .success(AppAppearanceValidatedImage(format: format, width: size.width, height: size.height, byteCount: data.count, data: data))
++    }
++
++    private static func pixelSize(of data: Data) -> (width: Int, height: Int)? {
++        guard let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
++              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
++              let width = properties[kCGImagePropertyPixelWidth] as? Int,
++              let height = properties[kCGImagePropertyPixelHeight] as? Int,
++              width > 0, height > 0 else { return nil }
++        return (width, height)
++    }
++
++    /// Renders the cropped preview as PNG bytes, downsampled so the longest
++    /// side is at most `maxPixelSize`. The source is never fully decoded:
++    /// ImageIO downsamples during decode, then the crop is applied to the
++    /// small image. Returns nil when the source cannot be decoded.
++    static func croppedThumbnailPNG(from data: Data, crop: AppAppearanceCrop, maxPixelSize: Int = 512) -> Data? {
++        guard let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
++              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
++              let width = properties[kCGImagePropertyPixelWidth] as? Int,
++              let height = properties[kCGImagePropertyPixelHeight] as? Int,
++              width > 0, height > 0,
++              let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, [
++                kCGImageSourceCreateThumbnailFromImageAlways: true,
++                kCGImageSourceCreateThumbnailWithTransform: true,
++                kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
++                kCGImageSourceShouldCacheImmediately: true
++              ] as CFDictionary) else { return nil }
++        // Map the crop rect from original pixels to thumbnail pixels.
++        // The thumbnail preserves the aspect ratio, so the scale is uniform
++        // up to rounding; separate scales handle the rounding either way.
++        let cropRect = crop.rect(for: CGSize(width: width, height: height))
++        let scaleX = CGFloat(thumbnail.width) / CGFloat(width)
++        let scaleY = CGFloat(thumbnail.height) / CGFloat(height)
++        let thumbCrop = CGRect(x: cropRect.origin.x * scaleX, y: cropRect.origin.y * scaleY,
++                               width: cropRect.width * scaleX, height: cropRect.height * scaleY)
++            .intersection(CGRect(x: 0, y: 0, width: thumbnail.width, height: thumbnail.height))
++        guard thumbCrop.width >= 1, thumbCrop.height >= 1 else { return nil }
++        let cropped = thumbnail.cropping(to: thumbCrop.integral) ?? thumbnail
++        let output = NSMutableData()
++        guard let destination = CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil) else { return nil }
++        CGImageDestinationAddImage(destination, cropped, nil)
++        guard CGImageDestinationFinalize(destination) else { return nil }
++        return output as Data
++    }
++}
++
++extension AppAppearanceValidatedImage.ValidationError: LocalizedError {
++    var errorDescription: String? {
++        switch self {
++        case .empty: return L("This image is empty.")
++        case .tooLarge:
++            return String(format: L("This image is too large. Choose an image under %d MB."),
++                          AppAppearanceValidatedImage.maximumBytes / (1024 * 1024))
++        case .unsupportedFormat: return L("This image format is not supported. Use PNG, JPEG, or HEIC.")
++        case .undecodable: return L("This image could not be used. Choose another image.")
++        case .dimensionsTooLarge:
++            return String(format: L("This image is too large in pixels. Choose an image up to %d pixels on its longest side."),
++                          AppAppearanceValidatedImage.maximumDimension)
++        }
++    }
++}
++
++/// The crop applied to a preview image before it is shown. The rect is
++/// computed from the real pixel size, so a crop is never guessed from a
++/// thumbnail. All insets are fractions of the image size, clamped to
++/// 0...0.4, and the result always keeps at least one pixel.
++struct AppAppearanceCrop: Equatable, Codable, Sendable {
++    enum Mode: String, Equatable, Codable, Sendable {
++        case full
++        case square
++        case custom
++    }
++
++    var mode: Mode = .full
++    var top: CGFloat = 0
++    var leading: CGFloat = 0
++    var bottom: CGFloat = 0
++    var trailing: CGFloat = 0
++
++    /// The uniform inset when all four sides agree, otherwise their
++    /// average. The UI edits a single uniform inset; per-side values stay
++    /// available for drafts and future editing.
++    var uniformInset: CGFloat { (top + leading + bottom + trailing) / 4 }
++
++    /// The crop rect in the image's own pixel coordinates.
++    func rect(for size: CGSize) -> CGRect {
++        let width = max(1, size.width), height = max(1, size.height)
++        let bounds = CGRect(x: 0, y: 0, width: width, height: height)
++        switch mode {
++        case .full:
++            return bounds
++        case .square:
++            let side = min(width, height)
++            return CGRect(x: (width - side) / 2, y: (height - side) / 2, width: side, height: side)
++        case .custom:
++            let rect = CGRect(x: clamp(leading) * width, y: clamp(top) * height,
++                              width: max(1, width * (1 - clamp(leading) - clamp(trailing))),
++                              height: max(1, height * (1 - clamp(top) - clamp(bottom))))
++            return rect.intersection(bounds)
++        }
++    }
++
++    private func clamp(_ value: CGFloat) -> CGFloat { min(0.4, max(0, value)) }
++}
++
++/// One preview state: the imported image bytes (if any), the proposed name,
++/// the crop, and the corner radius. This is the unit of undo history and
++/// of draft saving. It never touches the installed app.
++struct AppAppearancePreviewState: Equatable, Codable, Sendable {
++    var imageData: Data?
++    var name: String
++    var crop: AppAppearanceCrop
++    var cornerRadius: CGFloat
++
++    static let maximumCornerRadius: CGFloat = 27
++    static let empty = AppAppearancePreviewState()
++
++    init(imageData: Data? = nil, name: String = "", crop: AppAppearanceCrop = AppAppearanceCrop(), cornerRadius: CGFloat = 12) {
++        self.imageData = imageData
++        self.name = name
++        self.crop = crop
++        self.cornerRadius = min(Self.maximumCornerRadius, max(0, cornerRadius))
++    }
++}
++
++/// Undo history for the preview. The stack holds every distinct state;
++/// undo returns to the previous one. The first entry is always the empty
++/// state, so undo can never go below "nothing imported".
++struct AppAppearancePreviewHistory: Equatable, Sendable {
++    private(set) var states: [AppAppearancePreviewState] = [.empty]
++
++    var current: AppAppearancePreviewState { states.last ?? .empty }
++    var canUndo: Bool { states.count > 1 }
++
++    mutating func push(_ state: AppAppearancePreviewState) {
++        guard state != current else { return }
++        states.append(state)
++    }
++
++    /// Updates the current state in place without adding a history entry.
++    /// Used for continuous edits (typing a name) that must not flood the
++    /// undo stack; discrete actions use `push`.
++    mutating func updateCurrent(_ transform: (inout AppAppearancePreviewState) -> Void) {
++        guard !states.isEmpty else { return }
++        transform(&states[states.count - 1])
++    }
++
++    /// Removes the current state and returns the new current one, or nil
++    /// when there is nothing to undo.
++    mutating func undo() -> AppAppearancePreviewState? {
++        guard states.count > 1 else { return nil }
++        states.removeLast()
++        return states.last
++    }
++
++    mutating func reset() { states = [.empty] }
++}
++
++/// A locally saved preview draft. It lives only in LilaShift's own
++/// container, never in the target app's container, and it records a
++/// SHA-256 digest of the image bytes so a tampered or truncated draft is
++/// refused instead of shown.
++struct AppAppearanceDraft: Equatable, Codable, Sendable {
++    var version: Int
++    var bundleID: String
++    var state: AppAppearancePreviewState
++    var imageDigest: String
++    var savedAt: Date
++
++    init(bundleID: String, state: AppAppearancePreviewState, savedAt: Date = Date()) {
++        self.version = 1
++        self.bundleID = bundleID
++        self.state = state
++        self.imageDigest = state.imageData.map { CustomizationFiles.digest($0) } ?? ""
++        self.savedAt = savedAt
++    }
++
++    /// Saves this draft under the app's own container directory.
++    /// The bundle ID must already be validated (it comes from the catalog).
++    func save(to directory: URL) throws {
++        guard LaunchArtworkDirectory.validIdentifier(bundleID) else {
++            throw CustomizationFailure("The archive is invalid or exceeds the size limit.")
++        }
++        try CustomizationFiles.saveVerified(self, to: directory.appendingPathComponent(bundleID + ".plist"))
++    }
++
++    /// Loads the draft for a bundle ID, or nil when none was saved.
++    /// Throws when the file exists but is corrupt, foreign, or tampered.
++    static func load(bundleID: String, from directory: URL) throws -> AppAppearanceDraft? {
++        guard LaunchArtworkDirectory.validIdentifier(bundleID) else {
++            throw CustomizationFailure("The archive is invalid or exceeds the size limit.")
++        }
++        let url = directory.appendingPathComponent(bundleID + ".plist")
++        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
++        let draft = try PropertyListDecoder().decode(AppAppearanceDraft.self, from: CustomizationFiles.read(url))
++        guard draft.version == 1, draft.bundleID == bundleID,
++              draft.imageDigest == (draft.state.imageData.map { CustomizationFiles.digest($0) } ?? "") else {
++            throw CustomizationFailure("The archive is invalid or exceeds the size limit.")
++        }
++        return draft
++    }
++
++    static func hasDraft(bundleID: String, in directory: URL) -> Bool {
++        guard LaunchArtworkDirectory.validIdentifier(bundleID) else { return false }
++        return FileManager.default.fileExists(atPath: directory.appendingPathComponent(bundleID + ".plist").path)
++    }
++}
+diff --git a/GestaltX/AppAppearanceViews.swift b/GestaltX/AppAppearanceViews.swift
+new file mode 100644
+index 0000000..93fe53c
+--- /dev/null
++++ b/GestaltX/AppAppearanceViews.swift
+@@ -0,0 +1,298 @@
++// SPDX-License-Identifier: GPL-3.0-only
++import SwiftUI
++import Combine
++import PhotosUI
++
++/// Preview-only model for a Home Screen icon and name. It never writes to
++/// the installed app, SpringBoard, LaunchServices, or IconServices: the
++/// native-write capability stays `.unknown` and `canApplyNatively` stays
++/// false. The model only imports an image, validates it, renders a
++/// downsampled thumbnail for display, and keeps undo history plus a local
++/// draft in LilaShift's own container.
++@MainActor
++final class AppAppearancePreviewModel: ObservableObject {
++    @Published private(set) var history = AppAppearancePreviewHistory()
++    @Published private(set) var displayImage: UIImage?
++    @Published private(set) var imageInfo: String?
++    @Published var errorMessage: String?
++    @Published private(set) var draftStatus: String?
++    @Published private(set) var busy = false
++    @Published private(set) var name: String = ""
++    @Published private(set) var cropMode: AppAppearanceCrop.Mode = .full
++    /// Transient slider values while a drag is in progress. They override
++    /// the committed state for display until the drag ends and commits, so
++    /// a drag is one undoable action instead of one entry per tick.
++    @Published var editingInset: CGFloat?
++    @Published var editingRadius: CGFloat?
++
++    private var displayTask: Task<Void, Never>?
++
++    var state: AppAppearancePreviewState { history.current }
++    var canUndo: Bool { history.canUndo }
++    /// The native-write capability is unknown until a real backend probe
++    /// exists. It is never assumed writable.
++    var capability: AppAppearanceCapability { .unknown }
++
++    var effectiveCrop: AppAppearanceCrop {
++        guard let inset = editingInset else { return state.crop }
++        var crop = state.crop
++        crop.mode = .custom
++        crop.top = inset; crop.leading = inset; crop.bottom = inset; crop.trailing = inset
++        return crop
++    }
++
++    var effectiveCornerRadius: CGFloat { editingRadius ?? state.cornerRadius }
++
++    private var draftsDirectory: URL {
++        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
++            .appendingPathComponent("GestaltX/AppAppearance/Drafts", isDirectory: true)
++    }
++
++    func hasDraft(for bundleID: String) -> Bool {
++        AppAppearanceDraft.hasDraft(bundleID: bundleID, in: draftsDirectory)
++    }
++
++    /// Imports an image for preview. A failure keeps the previous state
++    /// and reports the specific reason; it never clears the preview or
++    /// pretends the import succeeded.
++    func importImage(_ item: PhotosPickerItem) async {
++        guard !busy else { return }
++        busy = true
++        defer { busy = false }
++        guard let data = try? await item.loadTransferable(type: Data.self) else {
++            errorMessage = L("This image could not be used. Choose another image.")
++            return
++        }
++        switch AppAppearanceValidatedImage.validate(data) {
++        case .success(let validated):
++            var next = state
++            next.imageData = validated.data
++            push(next)
++            errorMessage = nil
++            draftStatus = nil
++        case .failure(let reason):
++            errorMessage = reason.errorDescription
++        }
++    }
++
++    /// Typing a name updates the current state in place; it does not add
++    /// a history entry per keystroke.
++    func setName(_ newName: String) {
++        name = newName
++        history.updateCurrent { $0.name = newName }
++    }
++
++    func setCropMode(_ mode: AppAppearanceCrop.Mode) {
++        guard mode != state.crop.mode else { return }
++        var next = state
++        next.crop.mode = mode
++        push(next)
++    }
++
++    /// Commits the inset slider's final value as one undoable action.
++    func commitInset() {
++        guard let inset = editingInset else { return }
++        editingInset = nil
++        var next = state
++        next.crop.mode = .custom
++        next.crop.top = inset; next.crop.leading = inset; next.crop.bottom = inset; next.crop.trailing = inset
++        push(next)
++    }
++
++    /// Commits the corner-radius slider's final value as one undoable action.
++    func commitRadius() {
++        guard let radius = editingRadius else { return }
++        editingRadius = nil
++        var next = state
++        next.cornerRadius = radius
++        push(next)
++    }
++
++    func undo() {
++        guard history.undo() != nil else { return }
++        syncEditingState()
++        refreshDisplayImage()
++    }
++
++    func reset() {
++        history.reset()
++        syncEditingState()
++        refreshDisplayImage()
++        draftStatus = nil
++        errorMessage = nil
++    }
++
++    func saveDraft(for bundleID: String) {
++        do {
++            try AppAppearanceDraft(bundleID: bundleID, state: state).save(to: draftsDirectory)
++            draftStatus = L("Draft saved.")
++            errorMessage = nil
++        } catch {
++            errorMessage = error.localizedDescription
++        }
++    }
++
++    func loadDraft(for bundleID: String) {
++        do {
++            guard let draft = try AppAppearanceDraft.load(bundleID: bundleID, from: draftsDirectory) else {
++                draftStatus = L("No draft found.")
++                return
++            }
++            history = AppAppearancePreviewHistory()
++            history.push(draft.state)
++            syncEditingState()
++            refreshDisplayImage()
++            draftStatus = L("Draft loaded.")
++            errorMessage = nil
++        } catch {
++            errorMessage = error.localizedDescription
++        }
++    }
++
++    private func push(_ next: AppAppearancePreviewState) {
++        history.push(next)
++        syncEditingState()
++        refreshDisplayImage()
++    }
++
++    private func syncEditingState() {
++        name = state.name
++        cropMode = state.crop.mode
++    }
++
++    private func refreshDisplayImage() {
++        displayTask?.cancel()
++        guard let data = state.imageData else {
++            displayImage = nil
++            imageInfo = nil
++            return
++        }
++        if case .success(let validated) = AppAppearanceValidatedImage.validate(data) {
++            imageInfo = String(format: L("Image: %@ · %d × %d · %d KB"),
++                               validated.format.displayName, validated.width, validated.height, validated.byteCount / 1024)
++        } else {
++            imageInfo = nil
++        }
++        let crop = effectiveCrop
++        displayTask = Task {
++            let png = await Task.detached(priority: .userInitiated) {
++                AppAppearanceValidatedImage.croppedThumbnailPNG(from: data, crop: crop)
++            }.value
++            guard !Task.isCancelled else { return }
++            if let png, let image = UIImage(data: png) {
++                displayImage = image
++            } else {
++                displayImage = nil
++            }
++        }
++    }
++}
++
++/// The App Appearance preview section. It is strictly a local preview:
++/// the installed app, its Home Screen icon, SpringBoard, LaunchServices,
++/// and IconServices are never modified, and the native-write path stays
++/// hard-disabled. The launch-image editor is a different feature.
++struct AppAppearancePreviewView: View {
++    let app: LaunchArtworkApp
++    @StateObject private var model = AppAppearancePreviewModel()
++    @State private var selectedPhoto: PhotosPickerItem?
++
++    var body: some View {
++        Section {
++            Text(L("Native write capability: Unknown — not verified"))
++                .font(.caption).foregroundStyle(.secondary)
++            TextField(L("Custom Home Screen Name"), text: Binding(get: { model.name }, set: { model.setName($0) }))
++                .textInputAutocapitalization(.never)
++                .autocorrectionDisabled()
++            if !model.name.isEmpty {
++                let proposal = AppAppearanceProposal(bundleID: app.id, currentName: app.name, proposedName: model.name)
++                if proposal.check == .invalidName {
++                    Text(L("Use 1–32 characters without control characters."))
++                        .font(.caption).foregroundStyle(.orange)
++                }
++            }
++            // No preferredItemEncoding: the default keeps the original
++            // bytes, so a HEIC photo stays HEIC and its format is detected
++            // instead of being silently transcoded to JPEG.
++            PhotosPicker(selection: $selectedPhoto, matching: .images) {
++                Label(L("Choose Preview Icon"), systemImage: "app.badge")
++            }
++            if let info = model.imageInfo {
++                Text(info).font(.caption).foregroundStyle(.secondary)
++            }
++            if let error = model.errorMessage {
++                Label(error, systemImage: "exclamationmark.triangle")
++                    .font(.caption).foregroundStyle(.red)
++            }
++            Picker(L("Crop"), selection: Binding(get: { model.cropMode }, set: { model.setCropMode($0) })) {
++                Text(L("Full")).tag(AppAppearanceCrop.Mode.full)
++                Text(L("Square")).tag(AppAppearanceCrop.Mode.square)
++                Text(L("Custom")).tag(AppAppearanceCrop.Mode.custom)
++            }
++            .pickerStyle(.segmented)
++            if model.cropMode == .custom {
++                HStack {
++                    Text(L("Crop inset"))
++                    Slider(value: Binding(
++                        get: { Double(model.editingInset ?? model.state.crop.uniformInset) },
++                        set: { model.editingInset = CGFloat($0) }
++                    ), in: 0...0.4, step: 0.01, onEditingChanged: { editing in
++                        if !editing { model.commitInset() }
++                    })
++                    Text("\(Int((model.editingInset ?? model.state.crop.uniformInset) * 100))%")
++                        .font(.caption).foregroundStyle(.secondary)
++                        .frame(width: 36, alignment: .trailing)
++                }
++            }
++            HStack {
++                Text(L("Corner radius"))
++                Slider(value: Binding(
++                    get: { Double(model.editingRadius ?? model.state.cornerRadius) },
++                    set: { model.editingRadius = CGFloat($0) }
++                ), in: 0...Double(AppAppearancePreviewState.maximumCornerRadius), step: 1, onEditingChanged: { editing in
++                    if !editing { model.commitRadius() }
++                })
++                Text("\(Int(model.editingRadius ?? model.state.cornerRadius))")
++                    .font(.caption).foregroundStyle(.secondary)
++                    .frame(width: 24, alignment: .trailing)
++            }
++            HStack(spacing: 12) {
++                Group {
++                    if let icon = model.displayImage {
++                        Image(uiImage: icon).resizable().scaledToFill()
++                    } else {
++                        Rectangle().fill(Color(uiColor: .tertiarySystemFill))
++                            .overlay(Image(systemName: "app").foregroundStyle(.secondary))
++                    }
++                }
++                .frame(width: 54, height: 54)
++                .clipShape(RoundedRectangle(cornerRadius: model.effectiveCornerRadius))
++                VStack(alignment: .leading, spacing: 3) {
++                    Text(model.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? app.name : model.name).lineLimit(1)
++                    Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
++                }
++            }
++            HStack {
++                Button(L("Undo")) { model.undo() }.disabled(!model.canUndo)
++                Button(L("Reset"), role: .destructive) { model.reset() }.disabled(model.state == .empty)
++                Spacer()
++                Button(L("Save Draft")) { model.saveDraft(for: app.id) }
++                Button(L("Load Draft")) { model.loadDraft(for: app.id) }.disabled(!model.hasDraft(for: app.id))
++            }
++            .font(.caption)
++            if let status = model.draftStatus {
++                Text(status).font(.caption).foregroundStyle(.secondary)
++            }
++        } header: {
++            Text(L("App Icon & Name · Preview Only"))
++        } footer: {
++            Text(L("Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices."))
++        }
++        .onChange(of: selectedPhoto) { _, item in
++            guard let item else { return }
++            selectedPhoto = nil
++            Task { await model.importImage(item) }
++        }
++        .disabled(model.busy)
++    }
++}
+diff --git a/GestaltX/LaunchArtworkStore.swift b/GestaltX/LaunchArtworkStore.swift
+index bf17621..083b9d5 100644
+--- a/GestaltX/LaunchArtworkStore.swift
++++ b/GestaltX/LaunchArtworkStore.swift
+@@ -41,6 +41,11 @@ struct AppAppearanceProposal: Equatable, Sendable {
+     /// Never represents a successful native icon/name edit. Callers must
+     /// separately probe and validate any future write-capable backend.
+     var canApplyNatively: Bool { false }
++
++    /// The native-write capability is unknown until a real backend probe
++    /// exists. It must never be `.verifiedWritable` without a verified
++    /// write path, and it never defaults to writable.
++    var capability: AppAppearanceCapability { .unknown }
+ }
+ 
+ actor LaunchArtworkStore {
+diff --git a/GestaltX/LaunchArtworkViews.swift b/GestaltX/LaunchArtworkViews.swift
+index 9a75977..a2f1500 100644
+--- a/GestaltX/LaunchArtworkViews.swift
++++ b/GestaltX/LaunchArtworkViews.swift
+@@ -157,9 +157,6 @@ private struct LaunchArtworkEditor: View {
+     @ObservedObject var customizations: CustomizationModel
+     @StateObject private var model = LaunchArtworkModel()
+     @State private var selectedPhoto: PhotosPickerItem?
+-    @State private var appearancePhoto: PhotosPickerItem?
+-    @State private var appearanceIcon: UIImage?
+-    @State private var appearanceName = ""
+     @State private var showsPhotos = false
+     @State private var asksApply = false
+     @State private var asksRestore = false
+@@ -196,41 +193,7 @@ private struct LaunchArtworkEditor: View {
+                     .disabled(model.state?.canRestore != true)
+                 Button { Task { await model.load(app) } } label: { Label(L("Read Again"), systemImage: "arrow.clockwise") }
+             }
+-            Section {
+-                TextField("Custom Home Screen Name", text: $appearanceName)
+-                    .textInputAutocapitalization(.never)
+-                    .autocorrectionDisabled()
+-                PhotosPicker(selection: $appearancePhoto, matching: .images) {
+-                    Label("Choose Preview Icon", systemImage: "app.badge")
+-                }
+-                HStack(spacing: 12) {
+-                    if let icon = appearanceIcon {
+-                        Image(uiImage: icon).resizable().scaledToFill()
+-                            .frame(width: 54, height: 54).clipShape(RoundedRectangle(cornerRadius: 12))
+-                    } else {
+-                        RoundedRectangle(cornerRadius: 12).fill(Color(uiColor: .tertiarySystemFill))
+-                            .frame(width: 54, height: 54)
+-                            .overlay(Image(systemName: "app").foregroundStyle(.secondary))
+-                    }
+-                    VStack(alignment: .leading, spacing: 3) {
+-                        Text(appearanceName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+-                            ? app.name : appearanceName).lineLimit(1)
+-                        Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+-                    }
+-                }
+-                if !appearanceName.isEmpty {
+-                    let proposal = AppAppearanceProposal(bundleID: app.id, currentName: app.name,
+-                                                         proposedName: appearanceName)
+-                    if proposal.check == .invalidName {
+-                        Text("Use 1–32 characters without control characters.")
+-                            .font(.caption).foregroundStyle(.orange)
+-                    }
+-                }
+-            } header: {
+-                Text("App Icon & Name · Research Preview")
+-            } footer: {
+-                Text("Local preview only. Does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices. The launch-image editor above is a different feature.")
+-            }
++            AppAppearancePreviewView(app: app)
+             if model.state?.count == 0 {
+                 Section { Text(L("No launch images found. Open the app once, close it, then read again.")).foregroundStyle(.secondary) }
+             }
+@@ -243,16 +206,6 @@ private struct LaunchArtworkEditor: View {
+         .onChange(of: blocksImport, initial: true) { _, presenting in customizations.setPresenting(presenting, owner: presentationOwner) }
+         .onDisappear { if !showsPhotos { customizations.setPresenting(false, owner: presentationOwner) } }
+         .photosPicker(isPresented: $showsPhotos, selection: $selectedPhoto, matching: .images, preferredItemEncoding: .compatible)
+-        .onChange(of: appearancePhoto) { _, item in
+-            guard let item else { return }
+-            appearancePhoto = nil
+-            Task {
+-                guard let bytes = try? await item.loadTransferable(type: Data.self),
+-                      bytes.count <= 5 * 1024 * 1024,
+-                      let image = UIImage(data: bytes) else { return }
+-                appearanceIcon = image
+-            }
+-        }
+         .onChange(of: selectedPhoto) { _, item in
+             guard let item else { return }
+             selectedPhoto = nil
+diff --git a/GestaltX/Localizable.xcstrings b/GestaltX/Localizable.xcstrings
+index 1c3103c..4b64b1e 100644
+--- a/GestaltX/Localizable.xcstrings
++++ b/GestaltX/Localizable.xcstrings
+@@ -37504,6 +37504,1542 @@
+           }
+         }
+       }
++    },
++    "Custom Home Screen Name": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Custom Home Screen Name"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "自定义桌面名称"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Nombre personalizado de la pantalla de inicio"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "نام سفارشی صفحه اصلی"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "カスタムホーム画面名"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "사용자 지정 홈 화면 이름"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Пользовательское имя на экране «Домой»"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Tên màn hình chính tùy chỉnh"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "自訂主畫面名稱"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "自訂主畫面名稱"
++          }
++        }
++      }
++    },
++    "Choose Preview Icon": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Choose Preview Icon"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "选择预览图标"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Elegir icono de vista previa"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "انتخاب نماد پیش‌نمایش"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "プレビューアイコンを選択"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "미리보기 아이콘 선택"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Выбрать значок предпросмотра"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Chọn biểu tượng xem trước"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "選擇預覽圖示"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "選擇預覽圖示"
++          }
++        }
++      }
++    },
++    "App Icon & Name · Preview Only": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "App Icon & Name · Preview Only"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "应用图标与名称 · 仅预览"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Icono y nombre de la app · Solo vista previa"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "نماد و نام برنامه · فقط پیش‌نمایش"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "アプリアイコンと名前 · プレビューのみ"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "앱 아이콘 및 이름 · 미리보기 전용"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Значок и имя приложения · Только предпросмотр"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Biểu tượng và tên ứng dụng · Chỉ xem trước"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "App 圖示與名稱 · 僅供預覽"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "App 圖示與名稱 · 僅供預覽"
++          }
++        }
++      }
++    },
++    "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "仅预览，不会修改已安装的 App、其桌面图标、SpringBoard 或 LaunchServices。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Solo vista previa. Esto no cambia la app instalada, su icono de la pantalla de inicio, SpringBoard ni LaunchServices."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "فقط پیش‌نمایش. این کار برنامه نصب‌شده، نماد صفحه اصلی آن، SpringBoard یا LaunchServices را تغییر نمی‌دهد."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "プレビューのみです。インストール済みアプリ、そのホーム画面アイコン、SpringBoard、LaunchServices は変更されません。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "미리보기 전용입니다. 설치된 앱, 홈 화면 아이콘, SpringBoard 또는 LaunchServices는 변경되지 않습니다."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Только предпросмотр. Установленное приложение, его значок на экране «Домой», SpringBoard и LaunchServices не изменяются."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Chỉ xem trước. Thao tác này không thay đổi ứng dụng đã cài đặt, biểu tượng màn hình chính, SpringBoard hay LaunchServices."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "僅供預覽，不會修改已安裝的 App、其主畫面圖示、SpringBoard 或 LaunchServices。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "僅供預覽，不會修改已安裝的 App、其主畫面圖示、SpringBoard 或 LaunchServices。"
++          }
++        }
++      }
++    },
++    "Use 1–32 characters without control characters.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Use 1–32 characters without control characters."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "请使用 1–32 个字符，且不含控制字符。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Usa de 1 a 32 caracteres sin caracteres de control."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "از 1 تا 32 نویسه بدون نویسه‌های کنترلی استفاده کنید."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "制御文字を含まない 1〜32 文字を使用してください。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "제어 문자 없이 1~32자를 사용하세요."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Используйте от 1 до 32 символов без управляющих символов."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Dùng 1–32 ký tự, không chứa ký tự điều khiển."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "請使用 1–32 個字元，且不含控制字元。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "請使用 1–32 個字元，且不含控制字元。"
++          }
++        }
++      }
++    },
++    "Native write capability: Unknown — not verified": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Native write capability: Unknown — not verified"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "原生写入能力：未知 — 未验证"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Capacidad de escritura nativa: desconocida — sin verificar"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "قابلیت نوشتن بومی: نامشخص — تأیید نشده"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "ネイティブ書き込み機能：不明 — 未検証"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "네이티브 쓰기 기능: 알 수 없음 — 확인되지 않음"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Возможность нативной записи: неизвестна — не проверено"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Khả năng ghi gốc: Không xác định — chưa được xác minh"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "原生寫入能力：未知 — 未驗證"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "原生寫入能力：未知 — 未驗證"
++          }
++        }
++      }
++    },
++    "This image is empty.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "This image is empty."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "这张图片是空的。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Esta imagen está vacía."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "این تصویر خالی است."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "この画像は空です。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "이 이미지가 비어 있습니다."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Это изображение пустое."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Hình ảnh này trống."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "這張圖片是空的。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "這張圖片是空的。"
++          }
++        }
++      }
++    },
++    "This image is too large. Choose an image under %d MB.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "This image is too large. Choose an image under %d MB."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "这张图片太大了，请选择小于 %d MB 的图片。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Esta imagen es demasiado grande. Elige una imagen de menos de %d MB."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "این تصویر خیلی بزرگ است. تصویری کمتر از %d مگابایت انتخاب کنید."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "この画像は大きすぎます。%d MB 未満の画像を選択してください。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "이 이미지가 너무 큽니다. %d MB 미만의 이미지를 선택하세요."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Это изображение слишком большое. Выберите изображение меньше %d МБ."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Hình ảnh này quá lớn. Hãy chọn hình ảnh dưới %d MB."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "這張圖片太大了，請選擇小於 %d MB 的圖片。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "這張圖片太大了，請選擇小於 %d MB 的圖片。"
++          }
++        }
++      }
++    },
++    "This image format is not supported. Use PNG, JPEG, or HEIC.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "This image format is not supported. Use PNG, JPEG, or HEIC."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "不支持这种图片格式，请使用 PNG、JPEG 或 HEIC。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Este formato de imagen no es compatible. Usa PNG, JPEG o HEIC."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "این قالب تصویر پشتیبانی نمی‌شود. از PNG، JPEG یا HEIC استفاده کنید."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "この画像形式はサポートされていません。PNG、JPEG、または HEIC を使用してください。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "이 이미지 형식은 지원되지 않습니다. PNG, JPEG 또는 HEIC를 사용하세요."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Этот формат изображения не поддерживается. Используйте PNG, JPEG или HEIC."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Định dạng hình ảnh này không được hỗ trợ. Hãy dùng PNG, JPEG hoặc HEIC."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "不支援這種圖片格式，請使用 PNG、JPEG 或 HEIC。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "不支援這種圖片格式，請使用 PNG、JPEG 或 HEIC。"
++          }
++        }
++      }
++    },
++    "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "This image is too large in pixels. Choose an image up to %d pixels on its longest side."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "这张图片像素太大了，请选择最长边不超过 %d 像素的图片。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Esta imagen es demasiado grande en píxeles. Elige una imagen de hasta %d píxeles en su lado más largo."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "این تصویر از نظر پیکسل خیلی بزرگ است. تصویری با ضلع بزرگ‌تر حداکثر %d پیکسل انتخاب کنید."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "この画像はピクセル数が大きすぎます。最長辺が %d ピクセル以下の画像を選択してください。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "이 이미지는 픽셀 수가 너무 많습니다. 가장 긴 변이 %d 픽셀 이하인 이미지를 선택하세요."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Это изображение слишком большое в пикселях. Выберите изображение, у которого самая длинная сторона не больше %d пикселей."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Hình ảnh này quá lớn theo số điểm ảnh. Hãy chọn hình ảnh có cạnh dài nhất tối đa %d điểm ảnh."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "這張圖片像素太大了，請選擇最長邊不超過 %d 像素的圖片。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "這張圖片像素太大了，請選擇最長邊不超過 %d 像素的圖片。"
++          }
++        }
++      }
++    },
++    "Image: %@ · %d × %d · %d KB": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Image: %@ · %d × %d · %d KB"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "图片：%@ · %d × %d · %d KB"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Imagen: %@ · %d × %d · %d KB"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "تصویر: %@ · %d × %d · %d KB"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "画像：%@ · %d × %d · %d KB"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "이미지: %@ · %d × %d · %d KB"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Изображение: %@ · %d × %d · %d КБ"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Hình ảnh: %@ · %d × %d · %d KB"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "圖片：%@ · %d × %d · %d KB"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "圖片：%@ · %d × %d · %d KB"
++          }
++        }
++      }
++    },
++    "Crop": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Crop"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "裁剪"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Recortar"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "برش"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "切り抜き"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "자르기"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Обрезать"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Cắt"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "裁剪"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "裁剪"
++          }
++        }
++      }
++    },
++    "Full": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Full"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "完整"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Completa"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "کامل"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "全体"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "전체"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Полностью"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Đầy đủ"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "完整"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "完整"
++          }
++        }
++      }
++    },
++    "Square": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Square"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "正方形"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Cuadrada"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "مربع"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "正方形"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "정사각형"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Квадрат"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Hình vuông"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "正方形"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "正方形"
++          }
++        }
++      }
++    },
++    "Custom": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Custom"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "自定义"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Personalizado"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "سفارشی"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "カスタム"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "사용자 지정"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Свой"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Tùy chỉnh"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "自訂"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "自訂"
++          }
++        }
++      }
++    },
++    "Crop inset": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Crop inset"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "裁剪边距"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Margen de recorte"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "حاشیه برش"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "切り抜き余白"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "자르기 여백"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Поле обрезки"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Lề cắt"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "裁剪邊距"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "裁剪邊距"
++          }
++        }
++      }
++    },
++    "Corner radius": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Corner radius"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "圆角半径"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Radio de esquina"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "شعاع گوشه"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "角の丸み"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "모서리 반경"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Радиус скругления"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Bán kính góc"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "圓角半徑"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "圓角半徑"
++          }
++        }
++      }
++    },
++    "Undo": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Undo"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "撤销"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Deshacer"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "واگرد"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "元に戻す"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "실행 취소"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Отменить"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Hoàn tác"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "復原"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "復原"
++          }
++        }
++      }
++    },
++    "Save Draft": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Save Draft"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "保存草稿"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Guardar borrador"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "ذخیره پیش‌نویس"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "下書きを保存"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "초안 저장"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Сохранить черновик"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Lưu bản nháp"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "儲存草稿"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "儲存草稿"
++          }
++        }
++      }
++    },
++    "Load Draft": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Load Draft"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "读取草稿"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Cargar borrador"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "بارگذاری پیش‌نویس"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "下書きを読み込む"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "초안 불러오기"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Загрузить черновик"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Tải bản nháp"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "讀取草稿"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "讀取草稿"
++          }
++        }
++      }
++    },
++    "Reset": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Reset"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "重置"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Restablecer"
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "بازنشانی"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "リセット"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "재설정"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Сбросить"
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Đặt lại"
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "重設"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "重設"
++          }
++        }
++      }
++    },
++    "Draft saved.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Draft saved."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "草稿已保存。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Borrador guardado."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "پیش‌نویس ذخیره شد."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "下書きを保存しました。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "초안이 저장되었습니다."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Черновик сохранён."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Đã lưu bản nháp."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "草稿已儲存。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "草稿已儲存。"
++          }
++        }
++      }
++    },
++    "Draft loaded.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Draft loaded."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "草稿已读取。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Borrador cargado."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "پیش‌نویس بارگذاری شد."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "下書きを読み込みました。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "초안을 불러왔습니다."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Черновик загружен."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Đã tải bản nháp."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "草稿已讀取。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "草稿已讀取。"
++          }
++        }
++      }
++    },
++    "No draft found.": {
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "No draft found."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "未找到草稿。"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "No se encontró ningún borrador."
++          }
++        },
++        "fa": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "پیش‌نویسی یافت نشد."
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "下書きが見つかりません。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "초안을 찾을 수 없습니다."
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Черновик не найден."
++          }
++        },
++        "vi": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Không tìm thấy bản nháp."
++          }
++        },
++        "zh-Hant-HK": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "找不到草稿。"
++          }
++        },
++        "zh-Hant-TW": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "找不到草稿。"
++          }
++        }
++      }
+     }
+   },
+   "version": "1.0"
+diff --git a/docs/APP_APPEARANCE_RESEARCH_ZH.md b/docs/APP_APPEARANCE_RESEARCH_ZH.md
+index 43d30d8..a9746d0 100644
+--- a/docs/APP_APPEARANCE_RESEARCH_ZH.md
++++ b/docs/APP_APPEARANCE_RESEARCH_ZH.md
+@@ -4,10 +4,16 @@
+ **严禁将预览称为真正修改已安装微信。** 本分支不修改微信 Bundle、签名、聊天数据、SpringBoard、LaunchServices 或系统图标缓存。
+ 
+ ## 已实现
+-- 在现有「启动图」详情页增加隔离的「App Icon & Name · Research Preview」分区。
+-- 从相册导入图片并预览自定义图标，输入并预览自定义桌面名称；预览不持久化，也不执行系统写入。
+-- `AppAppearanceProposal` 严格验证 Bundle ID 与名称（空白、超长、控制字符），`canApplyNatively` 固定为 false。
+-- 新增 XCTest 验证预览状态和失败关闭原则。以上均须由真实 CI 编译、测试、真机 UI 检查后才能宣称通过。
++- 在现有「启动图」详情页增加隔离的「App Icon & Name · Preview Only」分区（`AppAppearancePreviewView`，独立文件 `GestaltX/AppAppearanceViews.swift`；启动图编辑器本身不再承载预览状态）。
++- 从相册导入图片并预览自定义图标，输入并预览自定义桌面名称；预览不持久化到目标 App，也不执行系统写入。
++- 图片校验（`AppAppearanceValidatedImage`）：按 magic bytes 识别 PNG / JPEG / HEIC，拒绝空文件、超过 5 MB 的文件、不支持的格式、无法解码的文件、任一边超过 4096 px 的图片；每次失败都给出具体原因，不静默丢弃。
++- 预览图用 ImageIO 下采样后裁剪（最长边不超过 512 px），不把原图全分辨率解码进内存；HEIC 按原始字节导入，不经过 `.compatible` 转码。
++- 自定义裁剪（`AppAppearanceCrop`）：全图 / 居中正方形 / 自定义边距（0–40%），裁剪矩形按真实像素尺寸计算并钳制；圆角预览滑块 0–27。
++- 撤销（`AppAppearancePreviewHistory`）：每次离散修改入栈，连续输入（打字、拖滑块）不淹没历史；拖动滑块松手后才作为一次可撤销操作提交。
++- 本地草稿（`AppAppearanceDraft`）：只保存在紫序自己的 Application Support 目录（`GestaltX/AppAppearance/Drafts/<bundleID>.plist`），PropertyList 原子写 + 回读校验；文件内含图片 SHA-256，篡改、改名冒用、损坏文件均被拒绝。
++- `AppAppearanceProposal` 严格验证 Bundle ID 与名称（空白、超长、控制字符），`canApplyNatively` 固定为 false，新增 `capability` 固定为 `.unknown`（默认未知，永不默认可写）。
++- 新增 XCTest：格式识别、校验五种失败、裁剪矩形、裁剪缩略图尺寸、撤销历史、草稿保存/读取/篡改拒绝、名称边界、能力默认未知；并修复了原测试中 `"WX\\nBad"` 的错误断言（字面反斜杠不是控制字符，应为真实换行）。
++- 所有新增界面文案均走 `L()` 本地化（10 语种同步）。以上均须由真实 CI 编译、测试、真机 UI 检查后才能宣称通过。
+ 
+ ## 已验证的不同技术路径
+ 1. **启动快照**：已有 `LaunchArtworkFiles.swift` 访问 app 数据容器的 `Library/SplashBoard/Snapshots/<bundle> - {DEFAULT GROUP}`。这是启动过程中短暂出现的图片，不是主屏幕图标。
+diff --git a/localization/es.json b/localization/es.json
+index efa3362..9b16841 100644
+--- a/localization/es.json
++++ b/localization/es.json
+@@ -584,5 +584,29 @@
+   "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": "Es necesario reiniciar. Apple Intelligence también depende del dispositivo y la región. Esto prepara la clave CacheExtra; el slot de CacheData es un valor independiente.",
+   "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": "Es necesario reiniciar. Apple Intelligence también depende del dispositivo y la región. El punto de entrada exacto depende del dispositivo y la versión del sistema. Esto prepara la clave CacheExtra; el slot de CacheData es un valor independiente.",
+   "Live probe: on": "Sonda en vivo: activada",
+-  "Live probe: off — restart to apply": "Sonda en vivo: desactivada — reinicia para aplicar"
++  "Live probe: off — restart to apply": "Sonda en vivo: desactivada — reinicia para aplicar",
++  "Custom Home Screen Name": "Nombre personalizado de la pantalla de inicio",
++  "Choose Preview Icon": "Elegir icono de vista previa",
++  "App Icon & Name · Preview Only": "Icono y nombre de la app · Solo vista previa",
++  "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": "Solo vista previa. Esto no cambia la app instalada, su icono de la pantalla de inicio, SpringBoard ni LaunchServices.",
++  "Use 1–32 characters without control characters.": "Usa de 1 a 32 caracteres sin caracteres de control.",
++  "Native write capability: Unknown — not verified": "Capacidad de escritura nativa: desconocida — sin verificar",
++  "This image is empty.": "Esta imagen está vacía.",
++  "This image is too large. Choose an image under %d MB.": "Esta imagen es demasiado grande. Elige una imagen de menos de %d MB.",
++  "This image format is not supported. Use PNG, JPEG, or HEIC.": "Este formato de imagen no es compatible. Usa PNG, JPEG o HEIC.",
++  "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": "Esta imagen es demasiado grande en píxeles. Elige una imagen de hasta %d píxeles en su lado más largo.",
++  "Image: %@ · %d × %d · %d KB": "Imagen: %@ · %d × %d · %d KB",
++  "Crop": "Recortar",
++  "Full": "Completa",
++  "Square": "Cuadrada",
++  "Custom": "Personalizado",
++  "Crop inset": "Margen de recorte",
++  "Corner radius": "Radio de esquina",
++  "Undo": "Deshacer",
++  "Save Draft": "Guardar borrador",
++  "Load Draft": "Cargar borrador",
++  "Reset": "Restablecer",
++  "Draft saved.": "Borrador guardado.",
++  "Draft loaded.": "Borrador cargado.",
++  "No draft found.": "No se encontró ningún borrador."
+ }
+diff --git a/localization/fa.json b/localization/fa.json
+index 8f01e48..93f063c 100644
+--- a/localization/fa.json
++++ b/localization/fa.json
+@@ -584,5 +584,29 @@
+   "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": "راه‌اندازی مجدد لازم است. Apple Intelligence به دستگاه و منطقه نیز بستگی دارد. این کار کلید CacheExtra را آماده می‌کند؛ شکاف CacheData مقدار جداگانه‌ای است.",
+   "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": "راه‌اندازی مجدد لازم است. Apple Intelligence به دستگاه و منطقه نیز بستگی دارد. نقطه ورود دقیق به دستگاه و نسخه سیستم‌عامل بستگی دارد. این کار کلید CacheExtra را آماده می‌کند؛ شکاف CacheData مقدار جداگانه‌ای است.",
+   "Live probe: on": "پروب زنده: روشن",
+-  "Live probe: off — restart to apply": "پروب زنده: خاموش — برای اعمال راه‌اندازی مجدد کنید"
++  "Live probe: off — restart to apply": "پروب زنده: خاموش — برای اعمال راه‌اندازی مجدد کنید",
++  "Custom Home Screen Name": "نام سفارشی صفحه اصلی",
++  "Choose Preview Icon": "انتخاب نماد پیش‌نمایش",
++  "App Icon & Name · Preview Only": "نماد و نام برنامه · فقط پیش‌نمایش",
++  "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": "فقط پیش‌نمایش. این کار برنامه نصب‌شده، نماد صفحه اصلی آن، SpringBoard یا LaunchServices را تغییر نمی‌دهد.",
++  "Use 1–32 characters without control characters.": "از 1 تا 32 نویسه بدون نویسه‌های کنترلی استفاده کنید.",
++  "Native write capability: Unknown — not verified": "قابلیت نوشتن بومی: نامشخص — تأیید نشده",
++  "This image is empty.": "این تصویر خالی است.",
++  "This image is too large. Choose an image under %d MB.": "این تصویر خیلی بزرگ است. تصویری کمتر از %d مگابایت انتخاب کنید.",
++  "This image format is not supported. Use PNG, JPEG, or HEIC.": "این قالب تصویر پشتیبانی نمی‌شود. از PNG، JPEG یا HEIC استفاده کنید.",
++  "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": "این تصویر از نظر پیکسل خیلی بزرگ است. تصویری با ضلع بزرگ‌تر حداکثر %d پیکسل انتخاب کنید.",
++  "Image: %@ · %d × %d · %d KB": "تصویر: %@ · %d × %d · %d KB",
++  "Crop": "برش",
++  "Full": "کامل",
++  "Square": "مربع",
++  "Custom": "سفارشی",
++  "Crop inset": "حاشیه برش",
++  "Corner radius": "شعاع گوشه",
++  "Undo": "واگرد",
++  "Save Draft": "ذخیره پیش‌نویس",
++  "Load Draft": "بارگذاری پیش‌نویس",
++  "Reset": "بازنشانی",
++  "Draft saved.": "پیش‌نویس ذخیره شد.",
++  "Draft loaded.": "پیش‌نویس بارگذاری شد.",
++  "No draft found.": "پیش‌نویسی یافت نشد."
+ }
+diff --git a/localization/ja.json b/localization/ja.json
+index 07eca2f..5384484 100644
+--- a/localization/ja.json
++++ b/localization/ja.json
+@@ -584,5 +584,29 @@
+   "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": "再起動が必要です。Apple Intelligence はデバイスと地域にも依存します。これは CacheExtra キーをステージします。CacheData スロットは別の値です。",
+   "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": "再起動が必要です。Apple Intelligence はデバイスと地域にも依存します。正確な入口はデバイスと OS バージョンによって異なります。これは CacheExtra キーをステージします。CacheData スロットは別の値です。",
+   "Live probe: on": "ライブプローブ：オン",
+-  "Live probe: off — restart to apply": "ライブプローブ：オフ — 再起動後に適用"
++  "Live probe: off — restart to apply": "ライブプローブ：オフ — 再起動後に適用",
++  "Custom Home Screen Name": "カスタムホーム画面名",
++  "Choose Preview Icon": "プレビューアイコンを選択",
++  "App Icon & Name · Preview Only": "アプリアイコンと名前 · プレビューのみ",
++  "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": "プレビューのみです。インストール済みアプリ、そのホーム画面アイコン、SpringBoard、LaunchServices は変更されません。",
++  "Use 1–32 characters without control characters.": "制御文字を含まない 1〜32 文字を使用してください。",
++  "Native write capability: Unknown — not verified": "ネイティブ書き込み機能：不明 — 未検証",
++  "This image is empty.": "この画像は空です。",
++  "This image is too large. Choose an image under %d MB.": "この画像は大きすぎます。%d MB 未満の画像を選択してください。",
++  "This image format is not supported. Use PNG, JPEG, or HEIC.": "この画像形式はサポートされていません。PNG、JPEG、または HEIC を使用してください。",
++  "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": "この画像はピクセル数が大きすぎます。最長辺が %d ピクセル以下の画像を選択してください。",
++  "Image: %@ · %d × %d · %d KB": "画像：%@ · %d × %d · %d KB",
++  "Crop": "切り抜き",
++  "Full": "全体",
++  "Square": "正方形",
++  "Custom": "カスタム",
++  "Crop inset": "切り抜き余白",
++  "Corner radius": "角の丸み",
++  "Undo": "元に戻す",
++  "Save Draft": "下書きを保存",
++  "Load Draft": "下書きを読み込む",
++  "Reset": "リセット",
++  "Draft saved.": "下書きを保存しました。",
++  "Draft loaded.": "下書きを読み込みました。",
++  "No draft found.": "下書きが見つかりません。"
+ }
+diff --git a/localization/ko.json b/localization/ko.json
+index f2d8981..26c56d3 100644
+--- a/localization/ko.json
++++ b/localization/ko.json
+@@ -584,5 +584,29 @@
+   "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": "다시 시작해야 합니다. Apple Intelligence는 기기와 지역에도 따라 다릅니다. 이 작업은 CacheExtra 키를 스테이징합니다. CacheData 슬롯은 별개의 값입니다.",
+   "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": "다시 시작해야 합니다. Apple Intelligence는 기기와 지역에도 따라 다릅니다. 정확한 진입점은 기기와 OS 버전에 따라 다릅니다. 이 작업은 CacheExtra 키를 스테이징합니다. CacheData 슬롯은 별개의 값입니다.",
+   "Live probe: on": "실시간 프로브: 켜짐",
+-  "Live probe: off — restart to apply": "실시간 프로브: 꺼짐 — 다시 시작하면 적용됨"
++  "Live probe: off — restart to apply": "실시간 프로브: 꺼짐 — 다시 시작하면 적용됨",
++  "Custom Home Screen Name": "사용자 지정 홈 화면 이름",
++  "Choose Preview Icon": "미리보기 아이콘 선택",
++  "App Icon & Name · Preview Only": "앱 아이콘 및 이름 · 미리보기 전용",
++  "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": "미리보기 전용입니다. 설치된 앱, 홈 화면 아이콘, SpringBoard 또는 LaunchServices는 변경되지 않습니다.",
++  "Use 1–32 characters without control characters.": "제어 문자 없이 1~32자를 사용하세요.",
++  "Native write capability: Unknown — not verified": "네이티브 쓰기 기능: 알 수 없음 — 확인되지 않음",
++  "This image is empty.": "이 이미지가 비어 있습니다.",
++  "This image is too large. Choose an image under %d MB.": "이 이미지가 너무 큽니다. %d MB 미만의 이미지를 선택하세요.",
++  "This image format is not supported. Use PNG, JPEG, or HEIC.": "이 이미지 형식은 지원되지 않습니다. PNG, JPEG 또는 HEIC를 사용하세요.",
++  "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": "이 이미지는 픽셀 수가 너무 많습니다. 가장 긴 변이 %d 픽셀 이하인 이미지를 선택하세요.",
++  "Image: %@ · %d × %d · %d KB": "이미지: %@ · %d × %d · %d KB",
++  "Crop": "자르기",
++  "Full": "전체",
++  "Square": "정사각형",
++  "Custom": "사용자 지정",
++  "Crop inset": "자르기 여백",
++  "Corner radius": "모서리 반경",
++  "Undo": "실행 취소",
++  "Save Draft": "초안 저장",
++  "Load Draft": "초안 불러오기",
++  "Reset": "재설정",
++  "Draft saved.": "초안이 저장되었습니다.",
++  "Draft loaded.": "초안을 불러왔습니다.",
++  "No draft found.": "초안을 찾을 수 없습니다."
+ }
+diff --git a/localization/ru.json b/localization/ru.json
+index c1cf06c..2322e03 100644
+--- a/localization/ru.json
++++ b/localization/ru.json
+@@ -584,5 +584,29 @@
+   "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": "Требуется перезагрузка. Apple Intelligence также зависит от устройства и региона. При этом подготавливается ключ CacheExtra; слот CacheData — отдельное значение.",
+   "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": "Требуется перезагрузка. Apple Intelligence также зависит от устройства и региона. Точная точка входа зависит от устройства и версии ОС. При этом подготавливается ключ CacheExtra; слот CacheData — отдельное значение.",
+   "Live probe: on": "Живой опрос: включено",
+-  "Live probe: off — restart to apply": "Живой опрос: выключено — перезагрузите устройство"
++  "Live probe: off — restart to apply": "Живой опрос: выключено — перезагрузите устройство",
++  "Custom Home Screen Name": "Пользовательское имя на экране «Домой»",
++  "Choose Preview Icon": "Выбрать значок предпросмотра",
++  "App Icon & Name · Preview Only": "Значок и имя приложения · Только предпросмотр",
++  "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": "Только предпросмотр. Установленное приложение, его значок на экране «Домой», SpringBoard и LaunchServices не изменяются.",
++  "Use 1–32 characters without control characters.": "Используйте от 1 до 32 символов без управляющих символов.",
++  "Native write capability: Unknown — not verified": "Возможность нативной записи: неизвестна — не проверено",
++  "This image is empty.": "Это изображение пустое.",
++  "This image is too large. Choose an image under %d MB.": "Это изображение слишком большое. Выберите изображение меньше %d МБ.",
++  "This image format is not supported. Use PNG, JPEG, or HEIC.": "Этот формат изображения не поддерживается. Используйте PNG, JPEG или HEIC.",
++  "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": "Это изображение слишком большое в пикселях. Выберите изображение, у которого самая длинная сторона не больше %d пикселей.",
++  "Image: %@ · %d × %d · %d KB": "Изображение: %@ · %d × %d · %d КБ",
++  "Crop": "Обрезать",
++  "Full": "Полностью",
++  "Square": "Квадрат",
++  "Custom": "Свой",
++  "Crop inset": "Поле обрезки",
++  "Corner radius": "Радиус скругления",
++  "Undo": "Отменить",
++  "Save Draft": "Сохранить черновик",
++  "Load Draft": "Загрузить черновик",
++  "Reset": "Сбросить",
++  "Draft saved.": "Черновик сохранён.",
++  "Draft loaded.": "Черновик загружен.",
++  "No draft found.": "Черновик не найден."
+ }
+diff --git a/localization/vi.json b/localization/vi.json
+index f764437..89d3c7e 100644
+--- a/localization/vi.json
++++ b/localization/vi.json
+@@ -584,5 +584,29 @@
+   "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": "Cần khởi động lại. Apple Intelligence còn phụ thuộc vào thiết bị và khu vực. Thao tác này chuẩn bị khóa CacheExtra; khe CacheData là một giá trị riêng biệt.",
+   "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": "Cần khởi động lại. Apple Intelligence còn phụ thuộc vào thiết bị và khu vực. Điểm vào chính xác phụ thuộc vào thiết bị và phiên bản hệ điều hành. Thao tác này chuẩn bị khóa CacheExtra; khe CacheData là một giá trị riêng biệt.",
+   "Live probe: on": "Đầu dò trực tiếp: bật",
+-  "Live probe: off — restart to apply": "Đầu dò trực tiếp: tắt — khởi động lại để áp dụng"
++  "Live probe: off — restart to apply": "Đầu dò trực tiếp: tắt — khởi động lại để áp dụng",
++  "Custom Home Screen Name": "Tên màn hình chính tùy chỉnh",
++  "Choose Preview Icon": "Chọn biểu tượng xem trước",
++  "App Icon & Name · Preview Only": "Biểu tượng và tên ứng dụng · Chỉ xem trước",
++  "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": "Chỉ xem trước. Thao tác này không thay đổi ứng dụng đã cài đặt, biểu tượng màn hình chính, SpringBoard hay LaunchServices.",
++  "Use 1–32 characters without control characters.": "Dùng 1–32 ký tự, không chứa ký tự điều khiển.",
++  "Native write capability: Unknown — not verified": "Khả năng ghi gốc: Không xác định — chưa được xác minh",
++  "This image is empty.": "Hình ảnh này trống.",
++  "This image is too large. Choose an image under %d MB.": "Hình ảnh này quá lớn. Hãy chọn hình ảnh dưới %d MB.",
++  "This image format is not supported. Use PNG, JPEG, or HEIC.": "Định dạng hình ảnh này không được hỗ trợ. Hãy dùng PNG, JPEG hoặc HEIC.",
++  "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": "Hình ảnh này quá lớn theo số điểm ảnh. Hãy chọn hình ảnh có cạnh dài nhất tối đa %d điểm ảnh.",
++  "Image: %@ · %d × %d · %d KB": "Hình ảnh: %@ · %d × %d · %d KB",
++  "Crop": "Cắt",
++  "Full": "Đầy đủ",
++  "Square": "Hình vuông",
++  "Custom": "Tùy chỉnh",
++  "Crop inset": "Lề cắt",
++  "Corner radius": "Bán kính góc",
++  "Undo": "Hoàn tác",
++  "Save Draft": "Lưu bản nháp",
++  "Load Draft": "Tải bản nháp",
++  "Reset": "Đặt lại",
++  "Draft saved.": "Đã lưu bản nháp.",
++  "Draft loaded.": "Đã tải bản nháp.",
++  "No draft found.": "Không tìm thấy bản nháp."
+ }
+diff --git a/localization/zh-Hant-HK.json b/localization/zh-Hant-HK.json
+index d6ea9ea..9606220 100644
+--- a/localization/zh-Hant-HK.json
++++ b/localization/zh-Hant-HK.json
+@@ -584,5 +584,29 @@
+   "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": "需要重新啟動。Apple 智能還取決於裝置與地區。此操作會暫存 CacheExtra 鍵；CacheData 槽位是另一個獨立值。",
+   "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": "需要重新啟動。Apple 智能還取決於裝置與地區。確切入口取決於裝置與系統版本。此操作會暫存 CacheExtra 鍵；CacheData 槽位是另一個獨立值。",
+   "Live probe: on": "即時探針：開啟",
+-  "Live probe: off — restart to apply": "即時探針：關閉 — 重新啟動後生效"
++  "Live probe: off — restart to apply": "即時探針：關閉 — 重新啟動後生效",
++  "Custom Home Screen Name": "自訂主畫面名稱",
++  "Choose Preview Icon": "選擇預覽圖示",
++  "App Icon & Name · Preview Only": "App 圖示與名稱 · 僅供預覽",
++  "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": "僅供預覽，不會修改已安裝的 App、其主畫面圖示、SpringBoard 或 LaunchServices。",
++  "Use 1–32 characters without control characters.": "請使用 1–32 個字元，且不含控制字元。",
++  "Native write capability: Unknown — not verified": "原生寫入能力：未知 — 未驗證",
++  "This image is empty.": "這張圖片是空的。",
++  "This image is too large. Choose an image under %d MB.": "這張圖片太大了，請選擇小於 %d MB 的圖片。",
++  "This image format is not supported. Use PNG, JPEG, or HEIC.": "不支援這種圖片格式，請使用 PNG、JPEG 或 HEIC。",
++  "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": "這張圖片像素太大了，請選擇最長邊不超過 %d 像素的圖片。",
++  "Image: %@ · %d × %d · %d KB": "圖片：%@ · %d × %d · %d KB",
++  "Crop": "裁剪",
++  "Full": "完整",
++  "Square": "正方形",
++  "Custom": "自訂",
++  "Crop inset": "裁剪邊距",
++  "Corner radius": "圓角半徑",
++  "Undo": "復原",
++  "Save Draft": "儲存草稿",
++  "Load Draft": "讀取草稿",
++  "Reset": "重設",
++  "Draft saved.": "草稿已儲存。",
++  "Draft loaded.": "草稿已讀取。",
++  "No draft found.": "找不到草稿。"
+ }
+diff --git a/localization/zh-Hant-TW.json b/localization/zh-Hant-TW.json
+index 9d977c8..493b7f2 100644
+--- a/localization/zh-Hant-TW.json
++++ b/localization/zh-Hant-TW.json
+@@ -584,5 +584,29 @@
+   "Restart required. Apple Intelligence also depends on device and region. This stages the CacheExtra key; the CacheData slot is a separate value.": "需要重新啟動。Apple 智能還取決於裝置與地區。此操作會暫存 CacheExtra 鍵；CacheData 槽位是另一個獨立值。",
+   "Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.": "需要重新啟動。Apple 智能還取決於裝置與地區。確切入口取決於裝置與系統版本。此操作會暫存 CacheExtra 鍵；CacheData 槽位是另一個獨立值。",
+   "Live probe: on": "即時探針：開啟",
+-  "Live probe: off — restart to apply": "即時探針：關閉 — 重新啟動後生效"
++  "Live probe: off — restart to apply": "即時探針：關閉 — 重新啟動後生效",
++  "Custom Home Screen Name": "自訂主畫面名稱",
++  "Choose Preview Icon": "選擇預覽圖示",
++  "App Icon & Name · Preview Only": "App 圖示與名稱 · 僅供預覽",
++  "Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.": "僅供預覽，不會修改已安裝的 App、其主畫面圖示、SpringBoard 或 LaunchServices。",
++  "Use 1–32 characters without control characters.": "請使用 1–32 個字元，且不含控制字元。",
++  "Native write capability: Unknown — not verified": "原生寫入能力：未知 — 未驗證",
++  "This image is empty.": "這張圖片是空的。",
++  "This image is too large. Choose an image under %d MB.": "這張圖片太大了，請選擇小於 %d MB 的圖片。",
++  "This image format is not supported. Use PNG, JPEG, or HEIC.": "不支援這種圖片格式，請使用 PNG、JPEG 或 HEIC。",
++  "This image is too large in pixels. Choose an image up to %d pixels on its longest side.": "這張圖片像素太大了，請選擇最長邊不超過 %d 像素的圖片。",
++  "Image: %@ · %d × %d · %d KB": "圖片：%@ · %d × %d · %d KB",
++  "Crop": "裁剪",
++  "Full": "完整",
++  "Square": "正方形",
++  "Custom": "自訂",
++  "Crop inset": "裁剪邊距",
++  "Corner radius": "圓角半徑",
++  "Undo": "復原",
++  "Save Draft": "儲存草稿",
++  "Load Draft": "讀取草稿",
++  "Reset": "重設",
++  "Draft saved.": "草稿已儲存。",
++  "Draft loaded.": "草稿已讀取。",
++  "No draft found.": "找不到草稿。"
+ }
+diff --git a/scripts/generate_localization.py b/scripts/generate_localization.py
+index 151029d..83b4411 100644
+--- a/scripts/generate_localization.py
++++ b/scripts/generate_localization.py
+@@ -588,6 +588,30 @@ Restart required. Apple Intelligence also depends on device and region. This sta
+ Restart required. Apple Intelligence also depends on device and region. The exact entry point depends on the device and OS version. This stages the CacheExtra key; the CacheData slot is a separate value.	需要重启。Apple 智能还取决于设备与地区。具体入口取决于设备与系统版本。此操作暂存 CacheExtra 键；CacheData 槽位是另一个独立值。
+ Live probe: on	实时探针：开启
+ Live probe: off — restart to apply	实时探针：关闭 — 重启后生效
++Custom Home Screen Name	自定义桌面名称
++Choose Preview Icon	选择预览图标
++App Icon & Name · Preview Only	应用图标与名称 · 仅预览
++Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.	仅预览，不会修改已安装的 App、其桌面图标、SpringBoard 或 LaunchServices。
++Use 1–32 characters without control characters.	请使用 1–32 个字符，且不含控制字符。
++Native write capability: Unknown — not verified	原生写入能力：未知 — 未验证
++This image is empty.	这张图片是空的。
++This image is too large. Choose an image under %d MB.	这张图片太大了，请选择小于 %d MB 的图片。
++This image format is not supported. Use PNG, JPEG, or HEIC.	不支持这种图片格式，请使用 PNG、JPEG 或 HEIC。
++This image is too large in pixels. Choose an image up to %d pixels on its longest side.	这张图片像素太大了，请选择最长边不超过 %d 像素的图片。
++Image: %@ · %d × %d · %d KB	图片：%@ · %d × %d · %d KB
++Crop	裁剪
++Full	完整
++Square	正方形
++Custom	自定义
++Crop inset	裁剪边距
++Corner radius	圆角半径
++Undo	撤销
++Save Draft	保存草稿
++Load Draft	读取草稿
++Reset	重置
++Draft saved.	草稿已保存。
++Draft loaded.	草稿已读取。
++No draft found.	未找到草稿。
+ '''
+ entries = {}
+ for line in TRANSLATIONS.strip().splitlines():
+diff --git a/tests/LaunchArtworkCatalogTests.swift b/tests/LaunchArtworkCatalogTests.swift
+index b6a6266..0248118 100644
+--- a/tests/LaunchArtworkCatalogTests.swift
++++ b/tests/LaunchArtworkCatalogTests.swift
+@@ -1,4 +1,7 @@
+ import Foundation
++import CoreGraphics
++import ImageIO
++import UniformTypeIdentifiers
+ import XCTest
+ @testable import GestaltX
+ 
+@@ -92,8 +95,254 @@ final class LaunchArtworkCatalogTests: XCTestCase {
+         let invalidID = AppAppearanceProposal(bundleID: "../invalid", currentName: "微信", proposedName: "WX")
+         XCTAssertEqual(invalidID.check, .invalidIdentifier)
+ 
+-        let controls = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX\\nBad")
++        // A real newline is a control character; a literal backslash is not.
++        let controls = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX\nBad")
+         XCTAssertEqual(controls.check, .invalidName)
+     }
+ 
++    // MARK: - App Appearance preview: image validation
++
++    private func makePNG(width: Int, height: Int, red: CGFloat = 1, green: CGFloat = 0, blue: CGFloat = 0) -> Data {
++        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
++                                space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
++        context.setFillColor(CGColor(red: red, green: green, blue: blue, alpha: 1))
++        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
++        let data = NSMutableData()
++        let writer = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)!
++        CGImageDestinationAddImage(writer, context.makeImage()!, nil)
++        XCTAssert(CGImageDestinationFinalize(writer))
++        return data as Data
++    }
++
++    private func makeJPEG(width: Int, height: Int) -> Data {
++        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
++                                space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
++        context.setFillColor(CGColor(red: 0, green: 1, blue: 0, alpha: 1))
++        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
++        let data = NSMutableData()
++        let writer = CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil)!
++        CGImageDestinationAddImage(writer, context.makeImage()!, nil)
++        XCTAssert(CGImageDestinationFinalize(writer))
++        return data as Data
++    }
++
++    private func fakeHEICData() -> Data {
++        var bytes = Data([0, 0, 0, 24])
++        bytes.append(contentsOf: "ftypheic".utf8)
++        bytes.append(contentsOf: [UInt8](repeating: 0, count: 64))
++        return bytes
++    }
++
++    private func decodedSize(of data: Data) -> (width: Int, height: Int)? {
++        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
++              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
++              let width = properties[kCGImagePropertyPixelWidth] as? Int,
++              let height = properties[kCGImagePropertyPixelHeight] as? Int else { return nil }
++        return (width, height)
++    }
++
++    func testAppAppearanceImageFormatDetection() {
++        XCTAssertEqual(AppAppearanceImageFormat.detect(from: makePNG(width: 8, height: 8)), .png)
++        XCTAssertEqual(AppAppearanceImageFormat.detect(from: makeJPEG(width: 8, height: 8)), .jpeg)
++        XCTAssertEqual(AppAppearanceImageFormat.detect(from: fakeHEICData()), .heic)
++        XCTAssertEqual(AppAppearanceImageFormat.detect(from: Data()), .unsupported)
++        XCTAssertEqual(AppAppearanceImageFormat.detect(from: Data("GIF89a".utf8) + Data(repeating: 0, count: 32)), .unsupported)
++        XCTAssertEqual(AppAppearanceImageFormat.detect(from: Data("hello".utf8)), .unsupported)
++    }
++
++    private func validationError(for data: Data) -> AppAppearanceValidatedImage.ValidationError? {
++        switch AppAppearanceValidatedImage.validate(data) {
++        case .success: return nil
++        case .failure(let error): return error
++        }
++    }
++
++    func testAppAppearanceImageValidation() {
++        XCTAssertEqual(validationError(for: Data()), .empty)
++        XCTAssertEqual(validationError(for: Data(count: AppAppearanceValidatedImage.maximumBytes + 1)), .tooLarge)
++        XCTAssertEqual(validationError(for: Data("GIF89a".utf8) + Data(repeating: 0, count: 32)), .unsupportedFormat)
++        // A HEIC brand is recognised as a supported format, but these
++        // bytes are not a real HEIC image, so validation must say
++        // undecodable — never "unsupported format".
++        XCTAssertEqual(validationError(for: fakeHEICData()), .undecodable)
++
++        let png = makePNG(width: 200, height: 100)
++        switch AppAppearanceValidatedImage.validate(png) {
++        case .success(let validated):
++            XCTAssertEqual(validated.format, .png)
++            XCTAssertEqual(validated.width, 200)
++            XCTAssertEqual(validated.height, 100)
++            XCTAssertEqual(validated.byteCount, png.count)
++        case .failure(let error):
++            XCTFail("valid PNG rejected: \(error)")
++        }
++
++        let jpeg = makeJPEG(width: 100, height: 80)
++        switch AppAppearanceValidatedImage.validate(jpeg) {
++        case .success(let validated):
++            XCTAssertEqual(validated.format, .jpeg)
++            XCTAssertEqual(validated.width, 100)
++            XCTAssertEqual(validated.height, 80)
++        case .failure(let error):
++            XCTFail("valid JPEG rejected: \(error)")
++        }
++
++        let huge = makePNG(width: 5000, height: 100)
++        XCTAssertEqual(validationError(for: huge), .dimensionsTooLarge)
++    }
++
++    func testAppAppearanceCropRect() {
++        let full = AppAppearanceCrop()
++        XCTAssertEqual(full.rect(for: CGSize(width: 200, height: 100)), CGRect(x: 0, y: 0, width: 200, height: 100))
++
++        var square = AppAppearanceCrop()
++        square.mode = .square
++        XCTAssertEqual(square.rect(for: CGSize(width: 200, height: 100)), CGRect(x: 50, y: 0, width: 100, height: 100))
++        XCTAssertEqual(square.rect(for: CGSize(width: 100, height: 200)), CGRect(x: 0, y: 50, width: 100, height: 100))
++
++        var custom = AppAppearanceCrop()
++        custom.mode = .custom
++        custom.top = 0.1; custom.leading = 0.2; custom.bottom = 0.1; custom.trailing = 0.2
++        let rect = custom.rect(for: CGSize(width: 200, height: 100))
++        XCTAssertEqual(rect.origin.x, 40, accuracy: 0.001)
++        XCTAssertEqual(rect.origin.y, 10, accuracy: 0.001)
++        XCTAssertEqual(rect.width, 120, accuracy: 0.001)
++        XCTAssertEqual(rect.height, 80, accuracy: 0.001)
++
++        // Insets beyond 0.4 are clamped, and the rect never inverts.
++        var clamped = AppAppearanceCrop()
++        clamped.mode = .custom
++        clamped.leading = 0.9; clamped.trailing = 0.9
++        let clampedRect = clamped.rect(for: CGSize(width: 200, height: 100))
++        XCTAssertEqual(clampedRect.origin.x, 80, accuracy: 0.001)
++        XCTAssertEqual(clampedRect.width, 40, accuracy: 0.001)
++        XCTAssertGreaterThan(clampedRect.width, 0)
++        XCTAssertGreaterThan(clampedRect.height, 0)
++    }
++
++    func testAppAppearanceCroppedThumbnail() throws {
++        let png = makePNG(width: 200, height: 100)
++        var square = AppAppearanceCrop()
++        square.mode = .square
++        let squareThumb = try XCTUnwrap(AppAppearanceValidatedImage.croppedThumbnailPNG(from: png, crop: square))
++        let squareSize = try XCTUnwrap(decodedSize(of: squareThumb))
++        XCTAssertEqual(squareSize.width, 100)
++        XCTAssertEqual(squareSize.height, 100)
++
++        let fullThumb = try XCTUnwrap(AppAppearanceValidatedImage.croppedThumbnailPNG(from: png, crop: AppAppearanceCrop()))
++        let fullSize = try XCTUnwrap(decodedSize(of: fullThumb))
++        XCTAssertEqual(fullSize.width, 200)
++        XCTAssertEqual(fullSize.height, 100)
++
++        var custom = AppAppearanceCrop()
++        custom.mode = .custom
++        custom.top = 0.1; custom.leading = 0.1; custom.bottom = 0.1; custom.trailing = 0.1
++        let customThumb = try XCTUnwrap(AppAppearanceValidatedImage.croppedThumbnailPNG(from: png, crop: custom))
++        let customSize = try XCTUnwrap(decodedSize(of: customThumb))
++        XCTAssertEqual(customSize.width, 160)
++        XCTAssertEqual(customSize.height, 80)
++    }
++
++    func testAppAppearancePreviewHistoryUndo() {
++        var history = AppAppearancePreviewHistory()
++        XCTAssertEqual(history.current, .empty)
++        XCTAssertFalse(history.canUndo)
++        XCTAssertNil(history.undo())
++
++        let first = AppAppearancePreviewState(name: "A")
++        history.push(first)
++        XCTAssertTrue(history.canUndo)
++        XCTAssertEqual(history.current.name, "A")
++        let second = AppAppearancePreviewState(name: "B")
++        history.push(second)
++        XCTAssertEqual(history.current.name, "B")
++        XCTAssertEqual(history.undo()?.name, "A")
++        XCTAssertEqual(history.current.name, "A")
++        XCTAssertEqual(history.undo()?.name, "")
++        XCTAssertFalse(history.canUndo)
++        XCTAssertNil(history.undo())
++
++        // Pushing an identical state does not grow the stack.
++        history.push(.empty)
++        XCTAssertFalse(history.canUndo)
++
++        // An in-place update (typing a name) does not add a history entry.
++        history.push(first)
++        history.updateCurrent { $0.name = "A2" }
++        XCTAssertEqual(history.current.name, "A2")
++        XCTAssertEqual(history.undo()?.name, "")
++        XCTAssertFalse(history.canUndo)
++
++        history.push(first)
++        history.reset()
++        XCTAssertEqual(history.current, .empty)
++        XCTAssertFalse(history.canUndo)
++    }
++
++    func testAppAppearanceDraftSaveLoad() throws {
++        let fm = FileManager.default
++        let dir = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
++        defer { try? fm.removeItem(at: dir) }
++
++        XCTAssertNil(try AppAppearanceDraft.load(bundleID: "com.tencent.xin", from: dir))
++
++        let state = AppAppearancePreviewState(imageData: makePNG(width: 64, height: 64), name: "WX",
++                                             crop: AppAppearanceCrop(), cornerRadius: 12)
++        let draft = AppAppearanceDraft(bundleID: "com.tencent.xin", state: state)
++        try draft.save(to: dir)
++        let loaded = try XCTUnwrap(AppAppearanceDraft.load(bundleID: "com.tencent.xin", from: dir))
++        XCTAssertEqual(loaded.version, 1)
++        XCTAssertEqual(loaded.bundleID, "com.tencent.xin")
++        XCTAssertEqual(loaded.state, draft.state)
++        XCTAssertEqual(loaded.imageDigest, draft.imageDigest)
++        XCTAssertEqual(loaded.state.imageData, state.imageData)
++
++        // A draft saved under another bundle ID is not returned here.
++        XCTAssertNil(try AppAppearanceDraft.load(bundleID: "com.other.app", from: dir))
++
++        // Renaming the file to another bundle ID is refused: the draft
++        // records its own owner and the owner must match the file name.
++        let url = dir.appendingPathComponent("com.tencent.xin.plist")
++        let renamed = dir.appendingPathComponent("com.other.app.plist")
++        try fm.copyItem(at: url, to: renamed)
++        XCTAssertThrowsError(try AppAppearanceDraft.load(bundleID: "com.other.app", from: dir))
++
++        // Garbage bytes are refused instead of shown.
++        try Data("not a plist".utf8).write(to: url)
++        XCTAssertThrowsError(try AppAppearanceDraft.load(bundleID: "com.tencent.xin", from: dir))
++
++        // A valid plist whose image bytes were swapped is refused by the
++        // digest check, even though the plist itself still decodes.
++        try draft.save(to: dir)
++        var tampered = try XCTUnwrap(AppAppearanceDraft.load(bundleID: "com.tencent.xin", from: dir))
++        tampered.state.imageData = makePNG(width: 32, height: 32)
++        try PropertyListEncoder().encode(tampered).write(to: url)
++        XCTAssertThrowsError(try AppAppearanceDraft.load(bundleID: "com.tencent.xin", from: dir))
++    }
++
++    func testAppAppearanceProposalNameEdgeCases() {
++        func check(_ name: String) -> AppAppearanceProposal.Check {
++            AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: name).check
++        }
++        XCTAssertEqual(check(String(repeating: "A", count: 32)), .previewOnly)
++        XCTAssertEqual(check(String(repeating: "A", count: 33)), .invalidName)
++        XCTAssertEqual(check("微信💬"), .previewOnly)
++        XCTAssertEqual(check("WX\nBad"), .invalidName)
++        XCTAssertEqual(check("WX\tBad"), .invalidName)
++        XCTAssertEqual(check(""), .invalidName)
++        XCTAssertEqual(check("  WX  "), .previewOnly)
++        XCTAssertEqual(check("WX Bad"), .previewOnly)
++    }
++
++    func testAppAppearanceCapabilityDefaultsUnknown() {
++        let proposal = AppAppearanceProposal(bundleID: "com.tencent.xin", currentName: "微信", proposedName: "WX")
++        XCTAssertEqual(proposal.capability, .unknown)
++        XCTAssertNotEqual(proposal.capability, .verifiedWritable)
++        XCTAssertEqual(AppAppearanceCapability.defaultCapability, .unknown)
++        XCTAssertFalse(proposal.canApplyNatively, "A preview may never claim native editing succeeded")
++        // The corner radius is clamped, never negative or oversized.
++        XCTAssertEqual(AppAppearancePreviewState(cornerRadius: -5).cornerRadius, 0)
++        XCTAssertEqual(AppAppearancePreviewState(cornerRadius: 99).cornerRadius, AppAppearancePreviewState.maximumCornerRadius)
++    }
++
+ }
