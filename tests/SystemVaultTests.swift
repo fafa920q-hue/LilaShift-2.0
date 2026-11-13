@@ -28,16 +28,16 @@ final class SystemVaultTests: XCTestCase {
 
         // The 4-check gate: matching passes; each single mismatch fails.
         let live = try GestaltDocument(data: fixtureData())
-        XCTAssert(GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(), live: live),
+        XCTAssert(GestaltFileStore.vaultMatchesLive(vaultData: try fixtureData(), live: live),
                    "Matching vault passes all four checks")
         XCTAssert(!GestaltFileStore.vaultMatchesLive(
-                       vaultData: fixtureData(uuid: "BBBBBBBB-1111-2222-3333-123456789ABC"), live: live),
+                       vaultData: try fixtureData(uuid: "BBBBBBBB-1111-2222-3333-123456789ABC"), live: live),
                    "UUID mismatch fails the gate")
-        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(version: "24C5037j"), live: live),
+        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: try fixtureData(version: "24C5037j"), live: live),
                    "CacheVersion mismatch fails the gate")
-        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(productType: "iPhone18,2"), live: live),
+        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: try fixtureData(productType: "iPhone18,2"), live: live),
                    "ProductType mismatch fails the gate")
-        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: fixtureData(cacheBytes: 6471), live: live),
+        XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: try fixtureData(cacheBytes: 6471), live: live),
                    "CacheData length mismatch fails the gate")
         XCTAssert(!GestaltFileStore.vaultMatchesLive(vaultData: Data("not a plist".utf8), live: live),
                    "Unparseable vault fails the gate")

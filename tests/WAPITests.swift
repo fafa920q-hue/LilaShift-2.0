@@ -36,7 +36,7 @@ extension DocumentTests {
         var combined = disabled
         try combined.setCacheOptions(.enabled)
         try DeviceCacheOptions.validateEdit(from: original, to: combined)
-        XCTAssert(!DeviceCacheOptions.wapi(in: combined), "Green-tea and WAPI edits coexist")
+        XCTAssertFalse(try DeviceCacheOptions.wapi(in: combined), "Green-tea and WAPI edits coexist")
         try combined.setCacheOptions(.restricted)
         XCTAssert(combined.matches(disabled), "Restoring green-tea preserves staged WAPI")
         for bad in [offset, offset + 1, layout.validityOffset(for: layout.wapiIndex!)] {
@@ -83,7 +83,7 @@ extension DocumentTests {
                 }
                 let reopened = GestaltFileStore(deviceURL: url, backupDirectory: backups, deviceID: tag, acquire: { 1 }, release: { _ in })
                 let loaded = try await reopened.loadDevice()
-                XCTAssert(loaded.originalWAPI() == initialValue, "Exact original WAPI survives journal recovery/reopen")
+                XCTAssert(try loaded.originalWAPI() == initialValue, "Exact original WAPI survives journal recovery/reopen")
                 var restored = loaded.document; try restored.setWAPI(loaded.originalWAPI())
                 XCTAssert(restored.matches(baseline), "Restoring WAPI preserves all other values")
                 _ = try await reopened.commit(restored, expected: loaded)

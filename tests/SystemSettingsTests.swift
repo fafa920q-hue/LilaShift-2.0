@@ -37,7 +37,8 @@ final class SystemSettingsTests: XCTestCase {
             let reopened = SystemSettingsStore(systemRoot: system, storage: history, deviceID: "fixture", acquire: { _ in 0 }, release: { _ in })
             let current = try await reopened.load()
             let restored = try await reopened.apply([.lockScreenText: .restore], expected: current)
-            XCTAssert(restored.values == before.values && GestaltDocument.valuesEqual(try read(file), original), "Reopening restores exact original type, value or absence")
+            let restoredFile = try read(file)
+            XCTAssert(restored.values == before.values && GestaltDocument.valuesEqual(restoredFile, original), "Reopening restores exact original type, value or absence")
             let foreign = SystemSettingsStore(systemRoot: system, storage: history, deviceID: "another-device", acquire: { _ in 0 }, release: { _ in })
             do { _ = try await foreign.load(); XCTFail("Foreign originals accepted") } catch is GestaltFailure {}
         }
