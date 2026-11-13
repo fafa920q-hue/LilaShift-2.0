@@ -95,7 +95,7 @@ final class ChinaUnlockTests: XCTestCase {
         XCTAssert(manager.isChinaUnlockStaged, "Staged flag is set after one tap")
         XCTAssert(manager.isChinaUnlockedInPreview, "Preview shows the full unlock")
         guard let preview = manager.preview else { throw Failure(message: "Preview exists after staging") }
-        XCTAssert(DeviceCacheOptions.flags(in: preview) == .enabled,
+        XCTAssert(try DeviceCacheOptions.flags(in: preview) == .enabled,
                    "Preview enables eSIM: green-tea false, not-green-tea true")
         let before = original.root["CacheData"] as! Data
         let after = preview.root["CacheData"] as! Data
@@ -144,7 +144,7 @@ final class ChinaUnlockTests: XCTestCase {
         XCTAssert(manager.changeCount == 0, "Restore unstages every change")
         guard let restored = manager.preview else { throw Failure(message: "Preview exists after restore") }
         XCTAssert(restored.matches(original), "Restored preview matches the original document")
-        XCTAssert(DeviceCacheOptions.flags(in: restored) == .restricted,
+        XCTAssert(try DeviceCacheOptions.flags(in: restored) == .restricted,
                    "Restore returns the eSIM flags to restricted")
         XCTAssert(restored.extra[GestaltKeys.regionCode] as? String == "CH",
                    "Restore returns RegionCode to CH")
