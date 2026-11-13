@@ -114,7 +114,7 @@ enum ChangeProvenanceCategory: String, Equatable, Sendable {
 /// One recorded value in a change record. `.absent` means the key did
 /// not exist — restoring it means removing the key, never filling in
 /// a guessed default.
-enum ChangeValue: Equatable, Codable, Sendable {
+enum ChangeValue: Equatable, Codable, Sendable, Hashable {
     case bool(Bool)
     case int(Int)
     case string(String)
