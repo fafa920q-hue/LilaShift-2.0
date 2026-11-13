@@ -6,6 +6,11 @@
 # commits the result to the current branch. Do NOT re-run after the patch is
 # applied: git apply --check fails when the changes are already in the tree,
 # and the run stops before committing.
+# NOTE: GITHUB_TOKEN cannot push a new workflow file (GitHub refuses a
+# GitHub App token without the workflows permission, and workflows is not
+# a valid permissions key), so run-swift-tests.yml is excluded from the
+# pushed commit and uploaded as an artifact instead; it is added to the
+# branch by a human commit afterwards.
 name: Apply test-target delta patch
 on:
   workflow_dispatch:
@@ -33,6 +38,7 @@ jobs:
           git config user.name "fafa920q-hue"
           git config user.email "fafa920q-hue@users.noreply.github.com"
           git add -A
+          git reset -q -- .github/workflows/run-swift-tests.yml
           git status --short
           git commit -m "Add XCTest unit-test target GestaltXTests and run Swift tests in CI
 
@@ -46,6 +52,22 @@ jobs:
           run-swift-tests.yml runs xcodebuild test on iPhone 17 simulator.
           9-item one-tap preset unchanged; #178 decision still pending."
           git push
+
+      - name: Upload run-swift-tests.yml as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-swift-tests-yml
+          path: .github/workflows/run-swift-tests.yml
+
+
+
+
+
+
+
+
+
+
 
 
 
