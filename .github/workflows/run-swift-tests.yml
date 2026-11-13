@@ -1,0 +1,74 @@
+name: Run Swift Tests
+
+## Runs the XCTest unit-test target (GestaltXTests) on the iOS simulator.
+## The P0-era @main test programs were converted to XCTestCase form so CI
+## actually compiles and runs them; a green check here means the Swift
+## tests passed, not just that the app compiles (see the Build IPA
+## workflow for the compile-only gate).
+##
+## The workflow fails when any test fails (xcodebuild test exits non-zero),
+## and it runs on pull requests targeting main (so PR #1 carries it) and
+## on pushes to the P0 branch.
+
+on:
+  push:
+    branches: [main, dev/p0-security-fixes]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: swift-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test \
+            -project GestaltX.xcodeproj \
+            -scheme GestaltX \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -only-testing:GestaltXTests
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
