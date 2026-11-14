@@ -1,27 +1,29 @@
-# Apply the P5 patch (one-shot) — FIXED version for re-transport
+# Apply the P5 patch (one-shot) — SPLIT version for re-transport
 #
 # Manually dispatched once, on feature/lila-p5-20261114: applies
-# lilashift-p5.patch (P5: SwiftUI snapshot tests + SwiftLint +
-# release system) on top of the branch HEAD and commits the result
-# to the current branch. Do NOT re-run after the patch is applied:
-# git apply --check fails when the changes are already in the tree,
-# and the run stops before committing.
+# lilashift-p5.patch (P5 non-workflow files only) on top of the
+# branch HEAD and commits the result to the current branch.
+# Do NOT re-run after the patch is applied: git apply --check
+# fails when the changes are already in the tree, and the run
+# stops before committing.
 #
-# Fixes vs. the original apply-p5.yml (6dd095a):
-# - permissions gains `workflows: write` — the P5 commit adds
-#   .github/workflows/swiftlint.yml + prepare-release.yml and modifies
-#   run-swift-tests.yml, and a GitHub App token cannot create or
-#   update workflow files without it (the first transport failed
-#   on this).
-# - the commit step removes __pycache__ / *.pyc before staging —
-#   PrepareReleaseTests.py generates scripts/__pycache__/ when it
-#   runs, and the first transport accidentally committed the .pyc.
+# SPLIT: the three .github/workflows/* files from P5
+# (swiftlint.yml, prepare-release.yml, run-swift-tests.yml)
+# are created directly on the branch via the web editor FIRST,
+# because the GITHUB_TOKEN cannot push workflow files.
+# This workflow therefore applies only the REDUCED patch
+# (10 non-workflow files) and pushes it with `contents: write`.
+# There is NO `workflows` permission in workflow YAML —
+# GitHub rejects it as an unexpected value.
+#
+# The commit step removes __pycache__ / *.pyc before staging —
+# PrepareReleaseTests.py generates scripts/__pycache__/ when it
+# runs, and the first transport accidentally committed the .pyc.
 name: Apply P5 patch
 on:
   workflow_dispatch:
 permissions:
   contents: write
-  workflows: write
 
 jobs:
   apply:

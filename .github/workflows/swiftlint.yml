@@ -1,0 +1,32 @@
+name: SwiftLint
+
+# Lints the Swift sources with the minimal rule set in .swiftlint.yml.
+# The config enables only rules the current codebase already passes,
+# so this job should stay green; if a rule ever fires on established
+# code, remove that rule from the config instead of reformatting the
+# codebase for the linter.
+#
+# NOTE: pull requests whose base is not `main` do not auto-trigger
+# this workflow (same as Run Swift Tests / Build IPA) — dispatch it
+# manually with the PR branch as the ref.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Lint
+        run: swiftlint lint --reporter github-actions-logging
