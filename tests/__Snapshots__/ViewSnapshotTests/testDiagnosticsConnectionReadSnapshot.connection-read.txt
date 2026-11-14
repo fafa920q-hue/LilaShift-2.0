@@ -1,0 +1,16 @@
+▿ DeviceConnectionStatus
+  ▿ appGroupAvailable: ProfileValue<Bool>
+    - known: true
+  ▿ cacheReadState: CacheReadState
+    ▿ read: (2 elements)
+      - cacheUUID: "7F1DF278-18B7-4E5A-8425-09E8830DE9AF"
+      - byteCount: 6480
+  - lastReadAt: Optional<Date>.none
+  ▿ osBuild: ProfileValue<String>
+    - known: "23A344"
+  ▿ osVersion: ProfileValue<String>
+    - known: "27.0.1"
+  ▿ productType: ProfileValue<String>
+    - known: "iPhone18,1"
+  ▿ regionCode: ProfileValue<String>
+    - known: "LL"
