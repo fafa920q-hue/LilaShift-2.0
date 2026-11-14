@@ -42,6 +42,19 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             -only-testing:GestaltXTests
 
+      - name: Upload snapshot references
+        # The ViewSnapshotTests record their references on the first
+        # run (record: .missing) into tests/__Snapshots__/. Upload
+        # them so they can be downloaded and committed; without this
+        # step the first run's recordings would be lost. Runs even
+        # when the tests fail, so a failure diff is also captured.
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: snapshot-references
+          path: tests/__Snapshots__/
+          if-no-files-found: ignore
+
 
 
 

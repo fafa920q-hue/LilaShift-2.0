@@ -1,0 +1,113 @@
+name: Prepare Draft Release
+
+# Builds the IPA and creates a DRAFT GitHub Release for the version
+# the branch currently has. workflow_dispatch only — a human
+# publishes the draft. It never publishes, never overwrites an
+# existing release or tag, and fails loudly if the tag already exists.
+#
+# Before dispatching:
+#   1. Bump the version on the branch first
+#      (python3 scripts/prepare-release.py --version X.Y.Z
+#      --write-project) and push it, so the IPA and the tag agree.
+#      The workflow reads the version from project.pbxproj and
+#      derives the tag as v<marketing>. It takes NO version input on
+#      purpose, so a draft can never be created for a version the
+#      branch does not have.
+#   2. Collect the PR lines (number|section|title, one per line;
+#      section is added/changed/fixed, an empty number is a manual
+#      item) and paste them into the `prs` input.
+#
+# The draft release carries the IPA, the rendered release notes, and
+# the release manifest (version + IPA SHA-256 + PR list) as assets.
+# Publishing the draft is a human decision, done on GitHub.
+
+on:
+  workflow_dispatch:
+    inputs:
+      prs:
+        description: "PR lines, one per line: number|section|title (section is added/changed/fixed; empty number = manual item)"
+        type: string
+        required: false
+        default: ""
+      notes:
+        description: "Human-editable Notes section (optional)"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Read version and fail if the tag already exists
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(sed -n 's/^[[:space:]]*MARKETING_VERSION = \(.*\);/\1/p' GestaltX.xcodeproj/project.pbxproj | sort -u)"
+          build="$(sed -n 's/^[[:space:]]*CURRENT_PROJECT_VERSION = \(.*\);/\1/p' GestaltX.xcodeproj/project.pbxproj | sort -u)"
+          version_count="$(printf '%s\n' "$version" | grep -c .)"
+          build_count="$(printf '%s\n' "$build" | grep -c .)"
+          if [ "$version_count" != "1" ] || [ "$build_count" != "1" ]; then
+            echo "Error: expected exactly one MARKETING_VERSION and one CURRENT_PROJECT_VERSION, found $version_count / $build_count." >&2
+            echo "Fix project.pbxproj so all build configurations agree, then re-dispatch." >&2
+            exit 1
+          fi
+          tag="v$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if git ls-remote --tags origin "refs/tags/$tag" | grep -q .; then
+            echo "Error: tag $tag already exists — refusing to overwrite it." >&2
+            echo "Bump the version first (scripts/prepare-release.py) and push, then re-dispatch." >&2
+            exit 1
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Error: a release with tag $tag already exists — refusing to overwrite it." >&2
+            exit 1
+          fi
+
+      - name: Build LilaShift IPA
+        id: build
+        run: .github/scripts/build-ipa.sh "$RUNNER_TEMP/ipa"
+
+      - name: Generate release notes and manifest
+        env:
+          PRS: ${{ inputs.prs }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          printf '%s\n' "$PRS" > "$RUNNER_TEMP/prs.txt"
+          printf '%s' "$NOTES" > "$RUNNER_TEMP/notes.md"
+          args=(--prs "$RUNNER_TEMP/prs.txt" --ipa "${{ steps.build.outputs.ipa }}")
+          if [ -n "$NOTES" ]; then
+            args+=(--notes-file "$RUNNER_TEMP/notes.md")
+          fi
+          python3 scripts/prepare-release.py "${args[@]}" \
+            --out "$RUNNER_TEMP/release-notes.md" \
+            --manifest-out "$RUNNER_TEMP/release-manifest.json"
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          gh release create "$TAG" --draft \
+            --title "LilaShift $VERSION (Build $BUILD)" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            "${{ steps.build.outputs.ipa }}" \
+            "$RUNNER_TEMP/release-notes.md" \
+            "$RUNNER_TEMP/release-manifest.json"

@@ -1,0 +1,137 @@
+# Snapshot Testing (UI 回归测试)
+
+The key SwiftUI cards are covered by snapshot tests
+(`tests/ViewSnapshotTests.swift`) using
+[SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing)
+1.19.7 (exact pin, test target only). There is no XCUITest target —
+SnapshotTesting in the existing unit-test target is the right scope:
+it needs a simulator, not a device, and it runs inside the existing
+`xcodebuild test` invocation.
+
+## What is snapshotted
+
+| Card | States | Strategy |
+| --- | --- | --- |
+| Preset catalog card | unread / populated | image |
+| Smart fault diagnosis card | unread / populated | image |
+| Personalization center card | unread / populated | image |
+| System health score card | unread / populated | image |
+| Diagnostics inputs | battery unknown / known, connection not-read / read, cache entries | `.dump` (text) |
+
+Image snapshots use a fixed 390×844 layout, light traits, display
+scale 2, `precision: 1`, `perceptualPrecision: 0.98`. The
+"populated" state uses the fixed `CoreModuleFixtures` snapshot
+(iPhone18,1 / Air A3518, region LL, eSIM on, no AI keys, no recorded
+originals) — no live device read, no clock, no network. The "unread"
+state uses a fresh `GestaltManager` with no snapshot, so every card
+renders its "read the device first" empty state.
+
+## Why `drawHierarchyInKeyWindow: true` is required
+
+Image snapshots pass `drawHierarchyInKeyWindow: true` to
+SnapshotTesting's `.image`. This is not a preference — without it
+the snapshots are blank.
+
+Every card is wrapped in `GlassCard`, which on iOS 26+ applies
+`.glassEffect()` (Liquid Glass). A visual effect is composited by
+the render server, so SnapshotTesting's default render path
+(`view.layer.render(in:)`) captures nothing: the first CI run
+recorded eight identical blank white images (780×1688, a single
+colour) for all eight image tests, while the five `.dump` text
+snapshots were real and distinct. `drawHierarchyInKeyWindow: true`
+renders via `view.drawHierarchy(in:afterScreenUpdates:)` in the
+host app's key window, which forces the effect and the card content
+to draw.
+
+This works because `GestaltXTests` runs with a host application
+(`TEST_HOST = GestaltX.app` in the project). SnapshotTesting
+fatalErrors if there is no key window, so this flag would not work
+in a framework (host-less) test target. Never remove the flag
+without re-checking that the recorded references are non-blank and
+distinct across the eight image tests (see below).
+
+## Why the DiagnosticsExpansionCard has no image snapshot
+
+Its cache section renders the live sizes of the app container
+(Application Support / Caches / Temporary), including the temporary
+directory where other tests write files. Those numbers depend on
+test execution order, so a pixel snapshot of that card would be
+flaky. The card's deterministic inputs are snapshotted as text
+instead (`.dump` of `BatteryStatus`, `DeviceConnectionStatus`, and
+the `AppContainerCacheEntry` list measured from a fixed temporary
+directory). Only the entries are dumped, not the whole report: the
+report carries a `measuredAt` clock value that would make the
+snapshot non-deterministic. This is a deliberate, documented gap —
+not an oversight.
+
+## Where the references live
+
+```
+tests/__Snapshots__/ViewSnapshotTests/
+  testPresetCatalogCardUnreadSnapshot.preset-catalog-unread.png
+  testPresetCatalogCardPopulatedSnapshot.preset-catalog-populated.png
+  ... (8 .png files, one per image test)
+  testDiagnosticsBatteryUnknownSnapshot.battery-unknown.txt
+  ... (5 .txt files, one per dump test)
+```
+
+The file name is `<test function name>.<snapshot name>.<png|txt>`.
+
+## How references are created (first run)
+
+The tests pass `record: .missing`, which means only missing
+references are recorded — an existing reference is compared and
+never overwritten. So:
+
+1. The **first CI run records** the references and passes. The Run
+   Swift Tests workflow uploads `tests/__Snapshots__/` as an
+   artifact (see below).
+2. **Download the artifact and verify the recorded references
+   before committing them.** A blank or identical reference is a
+   defect, not a passing test: check that each of the eight `.png`
+   files is non-blank (more than one distinct colour) and that the
+   eight images are not all identical (compare their SHA-256
+   hashes — eight identical hashes means the render captured
+   nothing). The first CI run failed this check: all eight images
+   were the same blank white PNG, which is why
+   `drawHierarchyInKeyWindow: true` is required (see above). Never
+   commit a blank or identical reference — a test that compares
+   against a blank image passes no matter what the card renders,
+   which is a fake success.
+3. **Commit the verified files** to the branch. Until they are
+   committed, the tests record but do not yet guard against
+   regressions — say so in any report that mentions these tests.
+4. From the second run on, the tests compare against the committed
+   references and fail on any pixel/text difference.
+
+There is no way to generate the references on the coordinator VM
+(no Swift compiler, no simulator), so the first CI run is the
+recording step. Never commit a reference that was not generated by
+a real run, and never edit a reference image by hand.
+
+## When a snapshot legitimately changes
+
+A UI change that is intended will make the snapshot test fail.
+To update the reference:
+
+1. Delete the reference file (`tests/__Snapshots__/ViewSnapshotTests/<file>`).
+2. Re-run the test (locally or in CI). With `record: .missing` it
+   records the new reference and passes.
+3. Commit the new reference file. Review the recorded image (it is
+   in the CI artifact) before committing — a re-record can hide a
+   real regression if it is done blindly.
+
+Alternatively, run once with the environment variable
+`SNAPSHOT_TESTING_RECORD=all`, which re-records every reference.
+Prefer deleting the single file: it makes the change reviewable.
+
+## Debugging a failure
+
+A failing snapshot test attaches the diff image to the test result
+(SnapshotTesting writes a failure diff next to the reference).
+Compare the recorded reference with the new image: if the change
+is a layout shift, a font change, or a simulator-version rendering
+difference, decide whether it is legitimate (re-record) or a real
+regression (fix the code). Pixel snapshots are sensitive to the
+simulator and Xcode version — if CI moves to a new Xcode, expect
+to re-record and review the images.

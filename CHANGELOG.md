@@ -2,6 +2,14 @@
 
 English | [简体中文](CHANGELOG_ZH-CN.md)
 
+## [Unreleased]
+
+### Added
+
+- Add SnapshotTesting UI regression tests for the key SwiftUI cards (preset catalog, smart fault diagnosis, personalization center, system health score — unread and populated states, fixed 390×844 layout, light traits) plus text snapshots of the deterministic data feeding the diagnostics card (battery unknown/known, connection not-read/read, cache entries from a fixed directory). The DiagnosticsExpansionCard itself has no image snapshot on purpose: its cache section renders live container sizes that vary with test execution order. Snapshot references are recorded on the first CI run (`record: .missing`) into `tests/__Snapshots__/ViewSnapshotTests/` and must be committed in a follow-up; see `docs/SNAPSHOT_TESTING.md`.
+- Add SwiftLint with a minimal rule set (`.swiftlint.yml`, only rules the current codebase already passes) and a SwiftLint CI workflow that runs on every PR to `main`.
+- Add the release system: `GestaltX/ReleaseNotes.swift` (version parsing/validation and Markdown rendering), `scripts/prepare-release.py` (validates and optionally bumps the version in the Xcode project, renders release notes from a PR list, verifies the IPA and records its SHA-256), and a `workflow_dispatch`-only Prepare Draft Release workflow that builds the IPA and creates a DRAFT GitHub Release (never published automatically, fails loudly if the tag already exists).
+
 ## [1.0.7] - 2026-11-13 - LilaShift 2.0
 
 Build `11130112`. Full-source LilaShift 2.0 project (this repository), based on upstream GestaltX v1.0.7 plus PR #126.

@@ -1,0 +1,13 @@
+▿ 3 elements
+  ▿ AppContainerCacheEntry
+    - byteCount: 10
+    - fileCount: 1
+    - kind: AppCacheDirectoryKind.applicationSupport
+  ▿ AppContainerCacheEntry
+    - byteCount: 20
+    - fileCount: 1
+    - kind: AppCacheDirectoryKind.caches
+  ▿ AppContainerCacheEntry
+    - byteCount: 30
+    - fileCount: 1
+    - kind: AppCacheDirectoryKind.temporary

@@ -1,0 +1,18 @@
+▿ DeviceConnectionStatus
+  ▿ appGroupAvailable: ProfileValue<Bool>
+    ▿ unknown: (1 element)
+      - reason: "Device not read yet"
+  - cacheReadState: CacheReadState.notRead
+  - lastReadAt: Optional<Date>.none
+  ▿ osBuild: ProfileValue<String>
+    ▿ unknown: (1 element)
+      - reason: "Device not read yet"
+  ▿ osVersion: ProfileValue<String>
+    ▿ unknown: (1 element)
+      - reason: "Device not read yet"
+  ▿ productType: ProfileValue<String>
+    ▿ unknown: (1 element)
+      - reason: "Device not read yet"
+  ▿ regionCode: ProfileValue<String>
+    ▿ unknown: (1 element)
+      - reason: "Device not read yet"

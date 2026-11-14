@@ -1,0 +1,4 @@
+▿ BatteryStatus
+  ▿ level: Optional<Double>
+    - some: 0.8
+  - state: BatteryState.charging
