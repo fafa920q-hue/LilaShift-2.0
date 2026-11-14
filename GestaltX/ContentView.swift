@@ -342,7 +342,10 @@ struct ContentView: View {
 
     private var tools: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            // Lazy so off-screen cards are not built or laid out eagerly:
+            // the tab holds ~16 glass cards and an eager VStack made
+            // scrolling lag. Only visible cards are rendered now.
+            LazyVStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 6) {
                     Text(model.hasDocument ? model.displayedName : UIDevice.current.model)
                         .font(.subheadline.weight(.semibold))
@@ -1053,10 +1056,15 @@ private struct ModifiedValuesCard: View {
                             .foregroundStyle(.primary)
                         VStack(alignment: .leading, spacing: 10) {
                             ForEach(rows) { row in
-                                VStack(alignment: .leading, spacing: 3) {
+                                // One line per row: name on the left, the
+                                // "original → current" value right-aligned,
+                                // so all values line up in a column instead
+                                // of stacking under each name.
+                                HStack(spacing: 8) {
                                     Text(L(row.title))
                                         .font(.subheadline.weight(.medium))
                                         .foregroundStyle(.primary)
+                                    Spacer()
                                     HStack(spacing: 4) {
                                         Text(row.originalText)
                                         Text("→")
@@ -1064,7 +1072,7 @@ private struct ModifiedValuesCard: View {
                                     }
                                     .font(.subheadline.monospaced())
                                     .foregroundStyle(.secondary)
-                                    .lineLimit(2)
+                                    .fixedSize(horizontal: true, vertical: false)
                                 }
                             }
                         }
@@ -1075,6 +1083,11 @@ private struct ModifiedValuesCard: View {
                 }
             }
             .padding(16)
+            // Full width: this card has no full-width button, so without
+            // this the .leading-aligned parent VStack sized it to its
+            // widest text and it rendered noticeably narrower than every
+            // other card on the Tools tab.
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

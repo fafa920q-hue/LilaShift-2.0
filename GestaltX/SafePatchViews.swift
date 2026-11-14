@@ -209,9 +209,14 @@ struct SafePatchCard: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            // Never truncate the status: without this the middle
+            // VStack's long note took the width and the status
+            // ("Not yet" / a failure reason) was clipped at the
+            // card's right edge.
             Text(effectStatusLabel(state.status))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: true, vertical: false)
         }
     }
 

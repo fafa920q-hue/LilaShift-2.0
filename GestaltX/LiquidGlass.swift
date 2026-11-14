@@ -130,9 +130,14 @@ private struct GlassCardModifier: ViewModifier {
                 .background(Color(uiColor: .secondarySystemGroupedBackground),
                             in: RoundedRectangle(cornerRadius: cornerRadius))
         } else if #available(iOS 26.0, *) {
+            // No .shadow() here on purpose: on iOS 26+ the glass effect
+            // already gives the card its depth, and a radius-14 shadow on
+            // every card forced an extra offscreen blur per card while
+            // scrolling, which made the Tools tab lag. The pre-iOS 26
+            // fallback below keeps its shadow (no glass there to carry
+            // the depth).
             content
                 .glassEffect(glassEffect(), in: RoundedRectangle(cornerRadius: cornerRadius))
-                .shadow(color: .black.opacity(GlassTokens.shadowOpacity), radius: 14, y: 5)
         } else {
             content
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
