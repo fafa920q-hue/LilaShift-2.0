@@ -1,0 +1,51 @@
+# Apply the unified perf-fix patch (one-shot)
+#
+# Manually dispatched once, on feature/lila-unified-perf-20261114:
+# applies lilashift-unified-perf.patch (Tools tab scroll lag +
+# card misalignment: LazyVStack, drop the redundant iOS 26+ glass
+# shadow, ModifiedValuesCard full width + tabular rows, SafePatch
+# effectRow status no-truncate) on top of the branch HEAD (which is
+# the unified branch HEAD 93cd253) and commits the result to the
+# current branch. Do NOT re-run after the patch is applied: git
+# apply --check fails when the changes are already in the tree, and
+# the run stops before committing.
+#
+# The patch touches only app source files (no workflow files), so
+# `contents: write` is sufficient. The commit step removes
+# __pycache__ / *.pyc before staging — PrepareReleaseTests.py
+# generates scripts/__pycache__/ when it runs.
+name: Apply unified perf patch
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Apply the perf patch and verify localizations
+        run: |
+          git apply --check lilashift-unified-perf.patch
+          git apply lilashift-unified-perf.patch
+          python3 -X utf8 scripts/generate_localization.py
+          python3 -X utf8 tests/LocalizationTests.py
+          python3 -X utf8 tests/ThirdPartyNoticesTests.py
+          python3 -X utf8 tests/PrepareReleaseTests.py
+
+      - name: Commit the applied patch
+        run: |
+          git config user.name "fafa920q-hue"
+          git config user.email "fafa920q-hue@users.noreply.github.com"
+          find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          find . -name "*.pyc" -delete 2>/dev/null || true
+          git add -A
+          git status --short
+          git commit -m "Fix Tools tab scroll lag and card misalignment"
+          git push
