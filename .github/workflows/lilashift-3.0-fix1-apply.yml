@@ -1,0 +1,50 @@
+# Apply the 3.0 fix1 patch (one-shot)
+#
+# Manually dispatched once, on feature/lilashift-3.0-dashboard:
+# applies lilashift-3.0-fix1.patch (one-line fix: import Combine in
+# HomeDiagnosticsCache.swift — the new file used ObservableObject /
+# @Published without importing Combine, so CI Tests #137 and IPA
+# #138 failed to build on 86e32b4) on top of the branch HEAD and
+# commits the result to the current branch. Do NOT re-run after the
+# patch is applied: git apply --check fails when the changes are
+# already in the tree, and the run stops before committing.
+#
+# The patch touches only app source files (no workflow files), so
+# `contents: write` is sufficient. The commit step removes
+# __pycache__ / *.pyc before staging — PrepareReleaseTests.py
+# generates scripts/__pycache__/ when it runs.
+name: Apply 3.0 fix1 patch
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Apply the fix1 patch and verify localizations
+        run: |
+          git apply --check lilashift-3.0-fix1.patch
+          git apply lilashift-3.0-fix1.patch
+          python3 -X utf8 scripts/generate_localization.py
+          python3 -X utf8 tests/LocalizationTests.py
+          python3 -X utf8 tests/ThirdPartyNoticesTests.py
+          python3 -X utf8 tests/PrepareReleaseTests.py
+
+      - name: Commit the applied patch
+        run: |
+          git config user.name "fafa920q-hue"
+          git config user.email "fafa920q-hue@users.noreply.github.com"
+          find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          find . -name "*.pyc" -delete 2>/dev/null || true
+          git add -A
+          git status --short
+          git commit -m "fix(v3): import Combine in HomeDiagnosticsCache so ObservableObject/@Published resolve (CI build failure on 86e32b4)"
+          git push
