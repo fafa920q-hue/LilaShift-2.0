@@ -193,6 +193,7 @@ private struct LaunchArtworkEditor: View {
                     .disabled(model.state?.canRestore != true)
                 Button { Task { await model.load(app) } } label: { Label(L("Read Again"), systemImage: "arrow.clockwise") }
             }
+            AppAppearancePreviewView(app: app)
             if model.state?.count == 0 {
                 Section { Text(L("No launch images found. Open the app once, close it, then read again.")).foregroundStyle(.secondary) }
             }

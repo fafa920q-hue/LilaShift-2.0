@@ -15,6 +15,39 @@ struct LaunchArtworkState: Sendable {
     let height: Int
 }
 
+/// A strictly local proposal for a Home Screen appearance. This does NOT
+/// mutate a third-party application, SpringBoard, LaunchServices or IconServices.
+/// A launch snapshot is not a Home Screen icon.
+struct AppAppearanceProposal: Equatable, Sendable {
+    enum Check: Equatable, Sendable {
+        case previewOnly
+        case invalidName
+        case invalidIdentifier
+    }
+
+    let bundleID: String
+    let currentName: String
+    let proposedName: String
+
+    var check: Check {
+        guard LaunchArtworkDirectory.validIdentifier(bundleID) else { return .invalidIdentifier }
+        let name = proposedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name.count <= 32,
+              !name.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) })
+        else { return .invalidName }
+        return .previewOnly
+    }
+
+    /// Never represents a successful native icon/name edit. Callers must
+    /// separately probe and validate any future write-capable backend.
+    var canApplyNatively: Bool { false }
+
+    /// The native-write capability is unknown until a real backend probe
+    /// exists. It must never be `.verifiedWritable` without a verified
+    /// write path, and it never defaults to writable.
+    var capability: AppAppearanceCapability { .unknown }
+}
+
 actor LaunchArtworkStore {
     struct Saved: Codable {
         let original: Data

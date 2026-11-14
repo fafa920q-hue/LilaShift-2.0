@@ -1056,6 +1056,30 @@ Unplugged	未充电
 Wallpaper and Launch Images	壁纸与启动图
 Write, restore and guard events are not recorded yet: the only hook points are inside the write path, which this version must not touch.	写入、还原与守卫事件尚未记录：唯一的接入点在写入路径内部，本版本不得触碰。
 iOS offers no public API for an app to change the system wallpaper or another app's launch image. Save an image to Photos and set it manually.	iOS 未提供公开 API 供 App 更改系统壁纸或他 App 的启动图。请把图片保存到相册后手动设置。
+Custom Home Screen Name	自定义桌面名称
+Choose Preview Icon	选择预览图标
+App Icon & Name · Preview Only	应用图标与名称 · 仅预览
+Preview only. This does not change the installed app, its Home Screen icon, SpringBoard, or LaunchServices.	仅预览，不会修改已安装的 App、其桌面图标、SpringBoard 或 LaunchServices。
+Use 1–32 characters without control characters.	请使用 1–32 个字符，且不含控制字符。
+Native write capability: Unknown — not verified	原生写入能力：未知 — 未验证
+This image is empty.	这张图片是空的。
+This image is too large. Choose an image under %d MB.	这张图片太大了，请选择小于 %d MB 的图片。
+This image format is not supported. Use PNG, JPEG, or HEIC.	不支持这种图片格式，请使用 PNG、JPEG 或 HEIC。
+This image is too large in pixels. Choose an image up to %d pixels on its longest side.	这张图片像素太大了，请选择最长边不超过 %d 像素的图片。
+Image: %@ · %d × %d · %d KB	图片：%@ · %d × %d · %d KB
+Crop	裁剪
+Square	正方形
+Custom	自定义
+Crop inset	裁剪边距
+Corner radius	圆角半径
+Undo	撤销
+Save Draft	保存草稿
+Load Draft	读取草稿
+Reset	重置
+Draft saved.	草稿已保存。
+Draft loaded.	草稿已读取。
+No draft found.	未找到草稿。
+Full Image	完整
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():
