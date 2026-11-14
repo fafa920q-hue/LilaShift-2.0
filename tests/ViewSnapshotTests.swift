@@ -5,7 +5,11 @@
 //
 // What is snapshotted (8 image snapshots + 5 text snapshots):
 //   Image (pixel) — `.image` with a fixed 390x844 layout, light traits,
-//   display scale 2, precision 1, perceptualPrecision 0.98:
+//   display scale 2, precision 1, perceptualPrecision 0.98, and
+//   `drawHierarchyInKeyWindow: true` (required — see
+//   `assertCardSnapshot`: the cards use Liquid Glass, which the
+//   default `layer.render` path cannot capture; without the flag the
+//   first CI run recorded eight identical blank white images):
 //     - PresetCatalogCard: unread (empty manager) / populated (fixture snapshot)
 //     - SmartFaultDiagnosisCard: no issues (unread) / with issues (fixture snapshot)
 //     - PersonalizationCenterCard: empty (unread) / populated (fixture snapshot)
@@ -55,6 +59,11 @@
 //     does not set it).
 //   - The snapshot is taken on the main actor with a fixed size and
 //     fixed traits (light, scale 2), so the layout is stable.
+//   - The image is rendered with `drawHierarchyInKeyWindow: true`
+//     (see `assertCardSnapshot`): the cards use Liquid Glass, and
+//     the default `layer.render` path records a blank white image.
+//     The host app's key window exists because GestaltXTests runs
+//     with a host application (`TEST_HOST = GestaltX.app`).
 //
 // All four cards read their GestaltManager from the environment
 // (@EnvironmentObject), so every snapshot wraps the card in
@@ -101,6 +110,21 @@ final class ViewSnapshotTests: XCTestCase {
 
     /// Asserts an image snapshot of a card with the fixed P5 layout:
     /// 390x844 points, light traits, display scale 2.
+    ///
+    /// `drawHierarchyInKeyWindow: true` is REQUIRED, not optional:
+    /// every card is wrapped in `GlassCard`, which on iOS 26+ applies
+    /// `.glassEffect()` (Liquid Glass). A visual effect is composited
+    /// by the render server, so the default render path
+    /// (`layer.render(in:)`) captures nothing — the first CI run
+    /// recorded eight identical blank white images (780x1688, one
+    /// colour) for all eight image tests. `drawHierarchyInKeyWindow`
+    /// renders via `drawHierarchy(in:afterScreenUpdates:)` in the
+    /// host app's key window, which forces the effect and the card
+    /// content to draw. This works because GestaltXTests runs with a
+    /// host application (`TEST_HOST = GestaltX.app`); it would
+    /// fatalError in a framework (host-less) test target. Never
+    /// remove this flag without re-checking that the recorded
+    /// references are non-blank and distinct across the eight tests.
     private func assertCardSnapshot<V: View>(
         _ view: V, named name: String,
         file: StaticString = #filePath,
@@ -110,6 +134,7 @@ final class ViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: view,
             as: .image(
+                drawHierarchyInKeyWindow: true,
                 precision: 1,
                 perceptualPrecision: 0.98,
                 layout: .fixed(width: 390, height: 844),

@@ -21,11 +21,34 @@ it needs a simulator, not a device, and it runs inside the existing
 Image snapshots use a fixed 390×844 layout, light traits, display
 scale 2, `precision: 1`, `perceptualPrecision: 0.98`. The
 "populated" state uses the fixed `CoreModuleFixtures` snapshot
-(iPhone18,1 / Air A3518, region LL, AI on, eSIM on, originals region
-CH with the AI keys absent) — no live device read, no clock, no
-network. The "unread" state uses a fresh `GestaltManager` with no
-snapshot, so every card renders its "read the device first" empty
-state.
+(iPhone18,1 / Air A3518, region LL, eSIM on, no AI keys, no recorded
+originals) — no live device read, no clock, no network. The "unread"
+state uses a fresh `GestaltManager` with no snapshot, so every card
+renders its "read the device first" empty state.
+
+## Why `drawHierarchyInKeyWindow: true` is required
+
+Image snapshots pass `drawHierarchyInKeyWindow: true` to
+SnapshotTesting's `.image`. This is not a preference — without it
+the snapshots are blank.
+
+Every card is wrapped in `GlassCard`, which on iOS 26+ applies
+`.glassEffect()` (Liquid Glass). A visual effect is composited by
+the render server, so SnapshotTesting's default render path
+(`view.layer.render(in:)`) captures nothing: the first CI run
+recorded eight identical blank white images (780×1688, a single
+colour) for all eight image tests, while the five `.dump` text
+snapshots were real and distinct. `drawHierarchyInKeyWindow: true`
+renders via `view.drawHierarchy(in:afterScreenUpdates:)` in the
+host app's key window, which forces the effect and the card content
+to draw.
+
+This works because `GestaltXTests` runs with a host application
+(`TEST_HOST = GestaltX.app` in the project). SnapshotTesting
+fatalErrors if there is no key window, so this flag would not work
+in a framework (host-less) test target. Never remove the flag
+without re-checking that the recorded references are non-blank and
+distinct across the eight image tests (see below).
 
 ## Why the DiagnosticsExpansionCard has no image snapshot
 
@@ -63,11 +86,22 @@ never overwritten. So:
 1. The **first CI run records** the references and passes. The Run
    Swift Tests workflow uploads `tests/__Snapshots__/` as an
    artifact (see below).
-2. **Download the artifact** and commit the recorded files to the
-   branch. Until they are committed, the tests record but do not yet
-   guard against regressions — say so in any report that mentions
-   these tests.
-3. From the second run on, the tests compare against the committed
+2. **Download the artifact and verify the recorded references
+   before committing them.** A blank or identical reference is a
+   defect, not a passing test: check that each of the eight `.png`
+   files is non-blank (more than one distinct colour) and that the
+   eight images are not all identical (compare their SHA-256
+   hashes — eight identical hashes means the render captured
+   nothing). The first CI run failed this check: all eight images
+   were the same blank white PNG, which is why
+   `drawHierarchyInKeyWindow: true` is required (see above). Never
+   commit a blank or identical reference — a test that compares
+   against a blank image passes no matter what the card renders,
+   which is a fake success.
+3. **Commit the verified files** to the branch. Until they are
+   committed, the tests record but do not yet guard against
+   regressions — say so in any report that mentions these tests.
+4. From the second run on, the tests compare against the committed
    references and fail on any pixel/text difference.
 
 There is no way to generate the references on the coordinator VM
