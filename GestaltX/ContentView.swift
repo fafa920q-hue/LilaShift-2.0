@@ -44,7 +44,11 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            NavigationStack { tools }
+            NavigationStack {
+                DashboardV3Home { section in
+                    dashboardDestination(section)
+                }
+            }
                 .tabItem { Label(L("Tools"), systemImage: "square.grid.2x2") }.tag(0)
             NavigationStack { FieldsView() }
                 .tabItem { Label(L("MG Control"), systemImage: "slider.horizontal.3") }.tag(1)
@@ -340,9 +344,67 @@ struct ContentView: View {
         sharesFile = export
     }
 
+    // Version 3 keeps legacy operations reachable while bringing costly
+    // diagnostics onto separate, task-specific navigation destinations.
+    @ViewBuilder
+    private func dashboardDestination(_ section: DashboardV3Destination) -> some View {
+        switch section {
+        case .unlock:
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    ChinaUnlockCard { showsChanges = true }
+                    ChinaAIOnlyCard { showsChanges = true }
+                    ChinaESIMRegionCard { showsChanges = true }
+                    AppleIntelligenceCheckupCard { showsChanges = true }
+                    ModifiedValuesCard()
+                }
+                .padding()
+            }
+            .background(GlassBackground())
+            .navigationTitle(section.title)
+        case .diagnostics:
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    LilaIntelligenceCard()
+                    SmartFaultDiagnosisCard()
+                    SystemHealthScoreCard()
+                    DependencyAnalyzerCard()
+                    DiagnosticsExpansionCard()
+                }
+                .padding()
+            }
+            .background(GlassBackground())
+            .navigationTitle(section.title)
+        case .restore:
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    RestoreIntelligenceCard()
+                    DeviceFingerprintCard()
+                    PostModificationAcceptanceCard()
+                }
+                .padding()
+            }
+            .background(GlassBackground())
+            .navigationTitle(section.title)
+        case .presets:
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    PresetCatalogCard()
+                    PersonalizationCenterCard()
+                    SafePatchCard()
+                }
+                .padding()
+            }
+            .background(GlassBackground())
+            .navigationTitle(section.title)
+        case .advanced:
+            tools
+        }
+    }
+
     private var tools: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 6) {
                     Text(model.hasDocument ? model.displayedName : UIDevice.current.model)
                         .font(.subheadline.weight(.semibold))
