@@ -1,0 +1,48 @@
+# SwiftLint configuration (SwiftLint 配置).
+#
+# Intentionally MINIMAL: this config enables only the rules that were
+# verified (by grep, 2026-11-14) to be clean on the current codebase.
+# SwiftLint cannot run on the coordinator VM (no Swift toolchain), so
+# the config is deliberately conservative — a rule is only enabled
+# here when the existing code already passes it. The CI workflow
+# (.github/workflows/swiftlint.yml) runs `swiftlint lint` on every PR;
+# if it ever fails on a rule that the codebase cannot reasonably
+# satisfy, remove that rule here instead of reformatting the
+# codebase to satisfy a linter.
+#
+# Rules deliberately NOT enabled (they fire on established code):
+#   force_cast            — 35 `as!` (deliberate, incl. MG key casts)
+#   force_unwrapping      — 102 force-unwrap candidates (deliberate,
+#                           incl. `URL(string: url)!`, `changes[path]!`,
+#                           `.first!` in tests)
+#   line_length           — 568 lines > 120 chars, mostly Chinese strings
+#   file_length           — ContentView.swift is 2268 lines
+#   type_body_length      — long view structs (ContentView, cards)
+#   empty_count           — 4 `.count == 0`
+#   redundant_optional_initialization — 61 `Type? = nil`
+#   vertical_whitespace   — 6 occurrences
+#   trailing_semicolon    — 50 `;$` (generated/localization style)
+#   control_statement     — 26 `if (` / `guard (` / `while (`
+#   joined_default_parameter — 3 `.joined()`
+#   empty_string          — 1 `== ""`
+#   sorted_imports        — imports are not alphabetical
+#   implicitly_unwrapped_optional — WKNavigation! delegate params
+#   strict_fileprivate    — `fileprivate` is used deliberately (P3 fix:
+#                           a declaration cannot be more accessible
+#                           than its type; see AGENTS.md)
+only_rules:
+  - force_try
+  - todo
+  - trailing_whitespace
+  - trailing_newline
+  - redundant_void_return
+  - redundant_nil_coalescing
+  - unused_optional_binding
+  - first_where
+  - syntactic_sugar
+  - fallthrough
+  - xctfail_message
+  - contains_over_first_not_nil
+  - discouraged_optional_collection
+  - legacy_random
+  - legacy_constant

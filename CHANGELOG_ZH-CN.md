@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | 简体中文
 
+## [Unreleased]
+
+### 新增
+
+- 新增 SnapshotTesting UI 回归测试，覆盖关键 SwiftUI 卡片（预设目录、智能故障诊断、个性化中心、系统健康评分——未读取与已填充两种状态，固定 390×844 布局、浅色特征），以及诊断卡片的确定性输入数据文本快照（电池未知/已知、连接未读取/已读取、固定目录的缓存条目）。诊断扩展卡片本身特意没有图片快照：其缓存区显示的是实时容器大小，会随测试执行顺序变化。快照参考在首次 CI 运行时录制（`record: .missing`），存入 `tests/__Snapshots__/ViewSnapshotTests/`，须在后续提交中提交；详见 `docs/SNAPSHOT_TESTING.md`。
+- 新增 SwiftLint，采用最小规则集（`.swiftlint.yml`，仅启用当前代码已通过的规则），并新增 SwiftLint CI 工作流，在每个指向 `main` 的 PR 上运行。
+- 新增发布系统：`GestaltX/ReleaseNotes.swift`（版本解析/校验与 Markdown 渲染）、`scripts/prepare-release.py`（校验并可选提升 Xcode 工程中的版本号、根据 PR 列表生成发布说明、验证 IPA 并记录其 SHA-256），以及仅可手动触发的 Prepare Draft Release 工作流（构建 IPA 并创建 DRAFT GitHub Release，绝不自动发布，标签已存在时大声失败）。
+
 ## [1.0.7] - 2026-11-13 - LilaShift 2.0
 
 构建号 `11130112`。完整源码的 LilaShift 2.0 项目（本仓库），基于上游 GestaltX v1.0.7 加 PR #126。
