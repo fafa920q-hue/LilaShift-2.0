@@ -1,4 +1,4 @@
-# Apply the P5 patch (one-shot)
+# Apply the P5 patch (one-shot) — FIXED version for re-transport
 #
 # Manually dispatched once, on feature/lila-p5-20261114: applies
 # lilashift-p5.patch (P5: SwiftUI snapshot tests + SwiftLint +
@@ -6,11 +6,22 @@
 # to the current branch. Do NOT re-run after the patch is applied:
 # git apply --check fails when the changes are already in the tree,
 # and the run stops before committing.
+#
+# Fixes vs. the original apply-p5.yml (6dd095a):
+# - permissions gains `workflows: write` — the P5 commit adds
+#   .github/workflows/swiftlint.yml + prepare-release.yml and modifies
+#   run-swift-tests.yml, and a GitHub App token cannot create or
+#   update workflow files without it (the first transport failed
+#   on this).
+# - the commit step removes __pycache__ / *.pyc before staging —
+#   PrepareReleaseTests.py generates scripts/__pycache__/ when it
+#   runs, and the first transport accidentally committed the .pyc.
 name: Apply P5 patch
 on:
   workflow_dispatch:
 permissions:
   contents: write
+  workflows: write
 
 jobs:
   apply:
@@ -35,6 +46,8 @@ jobs:
         run: |
           git config user.name "fafa920q-hue"
           git config user.email "fafa920q-hue@users.noreply.github.com"
+          find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          find . -name "*.pyc" -delete 2>/dev/null || true
           git add -A
           git status --short
           git commit -m "P5: SwiftUI snapshot tests + SwiftLint + release system"
