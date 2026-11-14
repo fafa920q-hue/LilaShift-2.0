@@ -12,8 +12,10 @@ import SwiftUI
 
 struct LilaIntelligenceCard: View {
     @EnvironmentObject private var model: GestaltManager
+    @Environment(\.homeDiagnosticsCache) private var diagnostics: HomeDiagnosticsCache?
     @Environment(\.colorScheme) private var colorScheme
     @State private var recordCount = 0
+    @State private var records: [RecordedChange] = []
     @State private var showingDetails = false
 
     private var heroTint: Color {
@@ -23,8 +25,14 @@ struct LilaIntelligenceCard: View {
     }
 
     /// The report for the current snapshot, or `nil` when the device
-    /// has not been read yet.
+    /// has not been read yet. Prefers the shared diagnostics cache
+    /// (computed once per input change on a background task) over
+    /// recomputing on every body evaluation; falls back to direct
+    /// computation when no cache is provided (for example the SwiftUI
+    /// snapshot tests, which only supply a GestaltManager), so the
+    /// rendered output is identical either way.
     private var report: LilaDeviceReport? {
+        if let cached = diagnostics?.deviceReport { return cached }
         guard model.snapshot != nil else { return nil }
         return LilaIntelligence.report(
             snapshot: model.snapshot, backups: model.backups,
@@ -32,7 +40,7 @@ struct LilaIntelligenceCard: View {
     }
 
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     GlassIconPedestal(systemImage: "brain", tint: .gestaltAccent, size: 44)
@@ -67,7 +75,7 @@ struct LilaIntelligenceCard: View {
                         .buttonStyle(GlassPrimaryButtonStyle())
                     }
                     if showingDetails {
-                        detailsList(report.evaluations)
+                        detailsList(report.evaluations, profile: report.profile)
                     }
                     Text(L("Recommendations are generated on this device from its own readings. Nothing is sent anywhere."))
                         .font(.footnote)
@@ -80,10 +88,49 @@ struct LilaIntelligenceCard: View {
     }
 
     private func loadRecordCount() {
+        // The shared cache owns the record count when it is present
+        // (it loads the history on a background task); this disk read
+        // is only the fallback for a render without the cache.
+        guard diagnostics == nil else { return }
         guard let deviceID = RestoreIntelligence.installationDeviceID else { return }
         let store = ChangeRecordStore(
             directory: RestoreIntelligence.historyDirectory, deviceID: deviceID)
-        recordCount = (try? store.load().count) ?? 0
+        records = (try? store.load()) ?? []
+        recordCount = records.count
+    }
+
+    /// The records to use for restart-pending status: the cache's
+    /// when present, else this card's own fallback load.
+    private var effectiveRecords: [RecordedChange] {
+        diagnostics?.records ?? records
+    }
+
+    /// Feature ids staged in the working document but not yet
+    /// applied (snapshot vs working diff), and ids applied but not
+    /// yet verified after a restart. Both come from existing data —
+    /// the shared cache when present, else this card's own
+    /// computation; eligibility itself is never recomputed here.
+    private var stagedFeatureIDs: Set<String> {
+        diagnostics?.stagedFeatureIDs ?? CompatibilityStatusResolver.stagedFeatureIDs(
+            snapshot: model.snapshot, working: model.working)
+    }
+
+    private var pendingRestartFeatureIDs: Set<String> {
+        diagnostics?.pendingRestartFeatureIDs ?? CompatibilityStatusResolver.pendingRestartFeatureIDs(records: effectiveRecords)
+    }
+
+    /// The unified compatibility status for one evaluation, from
+    /// the report's own eligibility + reason and the staged /
+    /// restart-pending sets above.
+    private func statusDetail(for evaluation: LilaFeatureEvaluation,
+                              profile: DeviceProfile) -> CompatibilityStatusDetail {
+        CompatibilityStatusResolver.resolve(
+            featureID: evaluation.featureID, eligibility: evaluation.eligibility,
+            reason: evaluation.reason, profile: profile,
+            documentRead: model.snapshot != nil, working: model.working,
+            stagedFeatureIDs: stagedFeatureIDs,
+            pendingRestartFeatureIDs: pendingRestartFeatureIDs,
+            riskLevel: evaluation.riskLevel)
     }
 
     @ViewBuilder
@@ -157,12 +204,20 @@ struct LilaIntelligenceCard: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
-            ForEach(Array(recommendation.blockers.enumerated()), id: \.offset) { _, blocker in
-                Text(blocker.reason)
+            // One line per distinct blocking reason: the same reason
+            // can block several features, and repeating it once per
+            // feature reads as clutter. The per-feature evaluations
+            // below (Show Details) still list every feature with its
+            // own reason, so no evidence is lost.
+            ForEach(deduplicated(recommendation.blockers.map(\.reason)), id: \.self) { reason in
+                Text(reason)
                     .font(.subheadline)
                     .foregroundStyle(.orange)
             }
         }
+        // Full card width: without this the summary sizes to its
+        // widest line and looks narrower than the rest of the card.
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
         .background(Color.gestaltAccent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
     }
@@ -182,26 +237,62 @@ struct LilaIntelligenceCard: View {
         .background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
     }
 
+    /// Per-feature detail rows: the unified compatibility status
+    /// (not the raw eligibility) is the badge, with the evaluator's
+    /// reason, the detection evidence for unverified features, the
+    /// "already supported" note for native capabilities (no modify
+    /// action is offered for them), and the #178 warning where it
+    /// applies. All values come from the report and the staged /
+    /// restart-pending sets; nothing here re-evaluates eligibility.
     @ViewBuilder
-    private func detailsList(_ evaluations: [LilaFeatureEvaluation]) -> some View {
+    private func detailsList(_ evaluations: [LilaFeatureEvaluation], profile: DeviceProfile) -> some View {
         VStack(alignment: .leading, spacing: 10) {
+            Text(L("Compatibility Status"))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
             ForEach(evaluations, id: \.featureID) { evaluation in
+                let detail = statusDetail(for: evaluation, profile: profile)
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(L(evaluation.title))
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(.primary)
                         Spacer()
-                        Text(eligibilityLabel(evaluation.eligibility))
+                        Text(detail.status.title)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(eligibilityColor(evaluation.eligibility))
+                            .foregroundStyle(statusColor(detail.status))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(eligibilityColor(evaluation.eligibility).opacity(0.12), in: Capsule())
+                            .background(statusColor(detail.status).opacity(0.12), in: Capsule())
                     }
-                    Text(evaluation.reason)
+                    Text(detail.reason)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    if detail.status == .unverified {
+                        Text(L("Detection evidence"))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        ForEach(detail.evidence, id: \.self) { line in
+                            Text("• " + line)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if detail.status == .nativeSupported {
+                        Text(L("Already supported on this device — no change needed."))
+                            .font(.subheadline)
+                            .foregroundStyle(.green)
+                    }
+                    if detail.status == .unsupported {
+                        Text(L("Not offered on this device"))
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                    }
+                    if let warning = detail.nativeAIWarning {
+                        Text(warning)
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                    }
                 }
                 .padding(10)
                 .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
@@ -209,25 +300,16 @@ struct LilaIntelligenceCard: View {
         }
     }
 
-    private func eligibilityLabel(_ eligibility: FeatureEligibility) -> String {
-        switch eligibility {
-        case .nativeSupported: return L("Native")
-        case .alreadyConfigured: return L("Configured")
-        case .eligibleToEnable: return L("Eligible")
-        case .unsupported: return L("Unsupported")
-        case .unknown: return L("Unknown")
-        case .conflict: return L("Conflict")
-        }
-    }
-
-    private func eligibilityColor(_ eligibility: FeatureEligibility) -> Color {
-        switch eligibility {
+    private func statusColor(_ status: CompatibilityStatus) -> Color {
+        switch status {
         case .nativeSupported: return .green
-        case .alreadyConfigured: return .teal
-        case .eligibleToEnable: return .gestaltAccent
+        case .modifiable: return .gestaltAccent
+        case .enabled: return .teal
+        case .staged: return .blue
+        case .needsRestart: return .orange
+        case .unverified: return .orange
         case .unsupported: return .secondary
-        case .unknown: return .orange
-        case .conflict: return .red
+        case .readFailed: return .red
         }
     }
 }

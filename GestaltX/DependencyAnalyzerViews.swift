@@ -35,7 +35,7 @@ struct DependencyAnalyzerCard: View {
     }
 
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     GlassIconPedestal(systemImage: "point.3.connected.trianglepath.dotted", tint: .gestaltAccent, size: 44)

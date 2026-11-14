@@ -209,7 +209,7 @@ class ProjectVersionTests(unittest.TestCase):
     def test_read_real_project_version(self):
         self.assertEqual(
             pr.read_project_version(),
-            ("1.0.7", 11130112))
+            ("3.0.0", 30000002))
 
     def test_bump_project_version_updates_all_occurrences(self):
         with tempfile.TemporaryDirectory() as tmp:

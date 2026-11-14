@@ -857,7 +857,7 @@ enum RestoreIntelligence {
             }
         }
 
-        return entries.sorted { $0.date > $1.date }
+        return HomeSorting.sortHistory(entries)
     }
 
     /// A stable UUID for a detected (unrecorded) timeline entry,

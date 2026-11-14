@@ -22,6 +22,51 @@ enum GlassTokens {
     static let barRadius: CGFloat = 22
     static let borderOpacity: Double = 0.35
     static let shadowOpacity: Double = 0.12
+    /// The corner radius of the main diagnostic cards on the home.
+    /// Every full card uses this (not a per-card literal) so the
+    /// radius stays uniform when the design is adjusted.
+    static let cardRadius: CGFloat = 22
+    /// The vertical spacing between sections inside a card.
+    static let cardSpacing: CGFloat = 14
+    /// The inner padding of a card's content (the inset from the
+    /// glass edge to the text). The cards apply this to their outer
+    /// stack; the glass itself adds no padding, so the value lives
+    /// here as the single source of truth.
+    static let cardPadding: CGFloat = 16
+    /// The icon pedestal sizes: full cards use `iconSize`, feature
+    /// rows and progress cards use `iconSizeSmall`, compact apply
+    /// steps use `iconSizeCompact`. One source of truth; callers
+    /// read these, not literals.
+    static let iconSize: CGFloat = 44
+    static let iconSizeSmall: CGFloat = 40
+    static let iconSizeCompact: CGFloat = 36
+    /// Page and section layout: the outer page margin, the spacing
+    /// between home sections, the grid spacing between tiles, and
+    /// the minimum height of a destination tile.
+    static let pageMargin: CGFloat = 16
+    static let sectionSpacing: CGFloat = 20
+    static let gridSpacing: CGFloat = 12
+    static let tileMinHeight: CGFloat = 106
+    /// The inner padding of a category tile's content.
+    static let tilePadding: CGFloat = 12
+    /// Title / subtitle / detail text styles for card headers, as
+    /// one source of truth so card headers do not drift per card.
+    static let cardTitleFont: Font = .headline
+    static let cardSubtitleFont: Font = .subheadline
+    static let cardDetailFont: Font = .caption
+    /// Status colors, as one source of truth: success green,
+    /// warning orange, danger red. A status text and its fill
+    /// always use the same token.
+    static let successColor: Color = .green
+    static let warningColor: Color = .orange
+    static let dangerColor: Color = .red
+    /// Minimum tap height for text buttons in the catalog manager
+    /// (44pt, the platform minimum). The primary glass button keeps
+    /// its own padding-based height and is untouched.
+    static let buttonMinHeight: CGFloat = 44
+    /// Cards and sections are leading-aligned; the value lives here
+    /// so a section that needs centered content says so explicitly.
+    static let cardAlignment: HorizontalAlignment = .leading
 }
 
 extension Color {
@@ -130,9 +175,14 @@ private struct GlassCardModifier: ViewModifier {
                 .background(Color(uiColor: .secondarySystemGroupedBackground),
                             in: RoundedRectangle(cornerRadius: cornerRadius))
         } else if #available(iOS 26.0, *) {
+            // No .shadow() here on purpose: on iOS 26+ the glass effect
+            // already gives the card its depth, and a radius-14 shadow on
+            // every card forced an extra offscreen blur per card while
+            // scrolling, which made the Tools tab lag. The pre-iOS 26
+            // fallback below keeps its shadow (no glass there to carry
+            // the depth).
             content
                 .glassEffect(glassEffect(), in: RoundedRectangle(cornerRadius: cornerRadius))
-                .shadow(color: .black.opacity(GlassTokens.shadowOpacity), radius: 14, y: 5)
         } else {
             content
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
@@ -191,7 +241,7 @@ struct GlassPrimaryButtonStyle: ButtonStyle {
 struct GlassIconPedestal: View {
     let systemImage: String
     let tint: Color
-    var size: CGFloat = 44
+    var size: CGFloat = GlassTokens.iconSize
 
     var body: some View {
         Image(systemName: systemImage)
@@ -241,14 +291,16 @@ struct GlassCategoryTile: View {
                 Text(detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    // No line limit: at large Dynamic Type sizes the
+                    // description wraps instead of truncating (P1.8).
+                    // The tile grows taller; the title stays short.
             }
             Spacer(minLength: 4)
             Image(systemName: "chevron.right")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
-        .padding(12)
+        .padding(GlassTokens.tilePadding)
     }
 }
 
@@ -265,10 +317,10 @@ struct GlassBottomBar<Content: View>: View {
     var body: some View {
         GlassCard(cornerRadius: GlassTokens.barRadius) {
             content
-                .padding(.horizontal, 16)
+                .padding(.horizontal, GlassTokens.pageMargin)
                 .padding(.vertical, 12)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, GlassTokens.pageMargin)
         .padding(.bottom, 8)
     }
 }
@@ -295,7 +347,7 @@ struct GlassFeatureRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            GlassIconPedestal(systemImage: symbol, tint: tint, size: 40)
+            GlassIconPedestal(systemImage: symbol, tint: tint, size: GlassTokens.iconSizeSmall)
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(title)
@@ -311,7 +363,9 @@ struct GlassFeatureRow: View {
                 Text(detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    // No line limit: at large Dynamic Type sizes the
+                    // purpose wraps instead of truncating (P1.8).
+                    // The status badge below is a separate view.
                 if let effectHint {
                     Text(effectHint)
                         .font(.caption)
@@ -351,7 +405,7 @@ struct GlassReadProgressCard: View {
     var body: some View {
         GlassCard(cornerRadius: GlassTokens.smallRadius) {
             HStack(spacing: 12) {
-                GlassIconPedestal(systemImage: "clock.arrow.circlepath", tint: .gestaltAccent, size: 40)
+                GlassIconPedestal(systemImage: "clock.arrow.circlepath", tint: .gestaltAccent, size: GlassTokens.iconSizeSmall)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title)
                         .font(.subheadline.weight(.semibold))
@@ -361,7 +415,7 @@ struct GlassReadProgressCard: View {
                 }
                 Spacer(minLength: 4)
             }
-            .padding(12)
+            .padding(GlassTokens.tilePadding)
         }
     }
 }
@@ -389,7 +443,7 @@ struct GlassApplyProgressCard: View {
         GlassCard(cornerRadius: GlassTokens.smallRadius) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    GlassIconPedestal(systemImage: "checkmark.circle", tint: .gestaltAccent, size: 36)
+                    GlassIconPedestal(systemImage: "checkmark.circle", tint: .gestaltAccent, size: GlassTokens.iconSizeCompact)
                     Text(title)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)

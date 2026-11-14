@@ -12,6 +12,12 @@ struct ContentView: View {
     @StateObject private var systemSettings = SystemSettingsModel()
     @StateObject private var customizations = CustomizationModel()
     @StateObject private var launchCatalog = LaunchArtworkCatalogModel()
+    /// The shared home-diagnostics cache (see HomeDiagnosticsCache):
+    /// it computes the device report, backup verifications, SafePatch
+    /// simulations, health score, fingerprint and live values once per
+    /// input change on a background task, so the home cards read a
+    /// cached value instead of recomputing on every body evaluation.
+    @StateObject private var diagnostics = HomeDiagnosticsCache()
     @Environment(\.scenePhase) private var scenePhase
     @State private var importOffer: PlistImportOffer?
     @State private var showsImportConfirmation = false
@@ -58,6 +64,7 @@ struct ContentView: View {
                 .tabItem { Label(L("About"), systemImage: "info.circle") }.tag(3)
         }
         .environmentObject(model)
+        .environment(\.homeDiagnosticsCache, diagnostics)
         .tint(Color.gestaltAccent)
         #if targetEnvironment(simulator)
         .sheet(item: $previewCategory) { category in
@@ -195,10 +202,23 @@ struct ContentView: View {
         .onChange(of: acceptedWelcome) { _, accepted in
             if accepted && !isPreviewSession { Task { await autoRead(); showShareNoticeIfNeeded() } }
         }
+        // Diagnostics cache invalidation: refresh the shared cache
+        // whenever the inputs it derives from change. The snapshot
+        // data changes on a read, the backup inventory on a backup
+        // reload, the staged-change count on staging/clearing/apply,
+        // and the working-document presence on load/unload. The cache
+        // cancels an in-flight refresh and only publishes changed
+        // values, so these triggers are cheap and never rebuild the
+        // home spuriously.
+        .onChange(of: model.snapshot?.data) { _, _ in refreshDiagnostics() }
+        .onChange(of: model.backups) { _, _ in refreshDiagnostics() }
+        .onChange(of: model.changeCount) { _, _ in refreshDiagnostics() }
+        .onChange(of: model.working != nil) { _, _ in refreshDiagnostics() }
         .task {
             guard !didStart else { return }
             didStart = true
             await model.reloadBackups()
+            refreshDiagnostics()
             #if targetEnvironment(simulator)
             let arguments = ProcessInfo.processInfo.arguments
             if let flag = arguments.firstIndex(of: "--preview-document"), arguments.indices.contains(flag + 1) {
@@ -237,6 +257,16 @@ struct ContentView: View {
         didAutoRead = true
         if await checkSharedImport() || model.hasDocument { return }
         await model.connect(showErrorAlert: false)
+    }
+
+    /// Refreshes the shared home-diagnostics cache for the current
+    /// inputs (snapshot, working document, backup inventory). The
+    /// cache computes on a background task and publishes only changed
+    /// values; calling this often is safe.
+    private func refreshDiagnostics() {
+        diagnostics.refresh(
+            snapshot: model.snapshot, working: model.working,
+            backups: model.backups)
     }
 
     private var canPresentSharedImport: Bool {
@@ -346,8 +376,12 @@ struct ContentView: View {
 
     // Version 3 keeps legacy operations reachable while bringing costly
     // diagnostics onto separate, task-specific navigation destinations.
+    // Internal (not private) on purpose: the Phase H snapshot tests
+    // render each destination through this exact builder, so the
+    // snapshots cover the real navigation targets instead of a copy.
+    // Presentation only — no behaviour lives here.
     @ViewBuilder
-    private func dashboardDestination(_ section: DashboardV3Destination) -> some View {
+    func dashboardDestination(_ section: DashboardV3Destination) -> some View {
         switch section {
         case .unlock:
             ScrollView {
@@ -389,6 +423,11 @@ struct ContentView: View {
         case .presets:
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
+                    // The unified catalog browser (Phase E): search,
+                    // filter, sort, favorites, recent use, hide and
+                    // custom order over the same catalog the home
+                    // sections and the card below are built from.
+                    FeatureCatalogView { section in dashboardDestination(section) }
                     PresetCatalogCard()
                     PersonalizationCenterCard()
                     SafePatchCard()
@@ -404,6 +443,9 @@ struct ContentView: View {
 
     private var tools: some View {
         ScrollView {
+            // Lazy so off-screen cards are not built or laid out eagerly:
+            // the tab holds ~16 glass cards and an eager VStack made
+            // scrolling lag. Only visible cards are rendered now.
             LazyVStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 6) {
                     Text(model.hasDocument ? model.displayedName : UIDevice.current.model)
@@ -437,27 +479,15 @@ struct ContentView: View {
 
                 ModifiedValuesCard()
 
-                LilaIntelligenceCard()
+                // Diagnostics summary + one row per diagnostic area.
+                // The full cards live on secondary pages behind a
+                // NavigationLink (see HomeDiagnosticsSection): the
+                // home used to inline all eleven full cards, which
+                // made it long, duplicated the same summaries, and
+                // forced every card to build at once.
+                DiagnosticsSummaryCard()
 
-                SafePatchCard()
-
-                RestoreIntelligenceCard()
-
-                SystemHealthScoreCard()
-
-                DependencyAnalyzerCard()
-
-                DeviceFingerprintCard()
-
-                PostModificationAcceptanceCard()
-
-                SmartFaultDiagnosisCard()
-
-                PresetCatalogCard()
-
-                PersonalizationCenterCard()
-
-                DiagnosticsExpansionCard()
+                HomeDiagnosticsSection(order: HomeDiagnosticsSectionID.orderedVisibleSections(personalizationSettings))
 
                 if model.isReading {
                     GlassReadProgressCard(title: L("Reading device data…"))
@@ -654,10 +684,10 @@ private struct ChinaUnlockCard: View {
 
     var body: some View {
         let enabledAI = model.chinaUnlockEnabledAICapabilityIDs
-        GlassCard(cornerRadius: 22, tint: heroTint) {
-            VStack(alignment: .leading, spacing: 14) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
+            VStack(alignment: GlassTokens.cardAlignment, spacing: GlassTokens.cardSpacing) {
             HStack(spacing: 12) {
-                GlassIconPedestal(systemImage: "lock.open.fill", tint: .gestaltAccent, size: 44)
+                GlassIconPedestal(systemImage: "lock.open.fill", tint: .gestaltAccent, size: GlassTokens.iconSize)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("China Unlock"))
                         .font(.headline)
@@ -739,7 +769,7 @@ private struct ChinaUnlockCard: View {
                     .foregroundStyle(.secondary)
             }
         }
-            .padding(16)
+            .padding(GlassTokens.cardPadding)
         }
     }
 
@@ -783,10 +813,10 @@ private struct ChinaAIOnlyCard: View {
     }
 
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
-            VStack(alignment: .leading, spacing: 14) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
+            VStack(alignment: GlassTokens.cardAlignment, spacing: GlassTokens.cardSpacing) {
             HStack(spacing: 12) {
-                GlassIconPedestal(systemImage: "sparkles", tint: .gestaltAccent, size: 44)
+                GlassIconPedestal(systemImage: "sparkles", tint: .gestaltAccent, size: GlassTokens.iconSize)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("China AI"))
                         .font(.headline)
@@ -836,7 +866,7 @@ private struct ChinaAIOnlyCard: View {
                     .foregroundStyle(.secondary)
             }
         }
-            .padding(16)
+            .padding(GlassTokens.cardPadding)
         }
     }
 
@@ -875,10 +905,10 @@ private struct ChinaESIMRegionCard: View {
     }
 
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
-            VStack(alignment: .leading, spacing: 14) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
+            VStack(alignment: GlassTokens.cardAlignment, spacing: GlassTokens.cardSpacing) {
             HStack(spacing: 12) {
-                GlassIconPedestal(systemImage: "simcard.fill", tint: .gestaltAccent, size: 44)
+                GlassIconPedestal(systemImage: "simcard.fill", tint: .gestaltAccent, size: GlassTokens.iconSize)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("eSIM & Region"))
                         .font(.headline)
@@ -936,7 +966,7 @@ private struct ChinaESIMRegionCard: View {
                     .foregroundStyle(.secondary)
             }
         }
-            .padding(16)
+            .padding(GlassTokens.cardPadding)
         }
     }
 
@@ -977,10 +1007,10 @@ private struct AppleIntelligenceCheckupCard: View {
     var body: some View {
         Group {
             if let checkup = model.aiReadinessCheckup {
-                GlassCard(cornerRadius: 22) {
+                GlassCard(cornerRadius: GlassTokens.cardRadius) {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 12) {
-                            GlassIconPedestal(systemImage: "sparkles", tint: .gestaltAccent, size: 44)
+                            GlassIconPedestal(systemImage: "sparkles", tint: .gestaltAccent, size: GlassTokens.iconSize)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(L("Apple Intelligence readiness"))
                                     .font(.headline)
@@ -1013,7 +1043,7 @@ private struct AppleIntelligenceCheckupCard: View {
                             .opacity(model.isBusy ? 0.5 : 1)
                         }
                     }
-                    .padding(16)
+                    .padding(GlassTokens.cardPadding)
                 }
                 .onAppear { model.refreshLiveProbe() }
             }
@@ -1072,10 +1102,10 @@ private struct ModifiedValuesCard: View {
     }
 
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
-            VStack(alignment: .leading, spacing: 14) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
+            VStack(alignment: GlassTokens.cardAlignment, spacing: GlassTokens.cardSpacing) {
                 HStack(spacing: 12) {
-                    GlassIconPedestal(systemImage: "list.bullet", tint: .gestaltAccent, size: 44)
+                    GlassIconPedestal(systemImage: "list.bullet", tint: .gestaltAccent, size: GlassTokens.iconSize)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(L("Modified Values"))
                             .font(.headline)
@@ -1115,10 +1145,15 @@ private struct ModifiedValuesCard: View {
                             .foregroundStyle(.primary)
                         VStack(alignment: .leading, spacing: 10) {
                             ForEach(rows) { row in
-                                VStack(alignment: .leading, spacing: 3) {
+                                // One line per row: name on the left, the
+                                // "original → current" value right-aligned,
+                                // so all values line up in a column instead
+                                // of stacking under each name.
+                                HStack(spacing: 8) {
                                     Text(L(row.title))
                                         .font(.subheadline.weight(.medium))
                                         .foregroundStyle(.primary)
+                                    Spacer()
                                     HStack(spacing: 4) {
                                         Text(row.originalText)
                                         Text("→")
@@ -1126,7 +1161,7 @@ private struct ModifiedValuesCard: View {
                                     }
                                     .font(.subheadline.monospaced())
                                     .foregroundStyle(.secondary)
-                                    .lineLimit(2)
+                                    .fixedSize(horizontal: true, vertical: false)
                                 }
                             }
                         }
@@ -1136,7 +1171,12 @@ private struct ModifiedValuesCard: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(16)
+            .padding(GlassTokens.cardPadding)
+            // Full width: this card has no full-width button, so without
+            // this the .leading-aligned parent VStack sized it to its
+            // widest text and it rendered noticeably narrower than every
+            // other card on the Tools tab.
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
