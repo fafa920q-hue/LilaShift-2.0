@@ -121,7 +121,7 @@ enum ModifiedValues {
             || snapshot.wapiOriginal != nil
         guard hasAnyOriginal else { return .noRecordedOriginals }
 
-        rows.sort { $0.key < $1.key }
+        rows = HomeSorting.sortModifiedValues(rows)
         return .compared(rows: rows)
     }
 

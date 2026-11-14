@@ -69,6 +69,30 @@ struct PresetCatalogCard: View {
         return map
     }
 
+    /// The unified compatibility status by feature id, from the same
+    /// report evaluations plus the staged / restart-pending sets.
+    /// Empty when the device has not been read: rows then show the
+    /// plain eligibility badge exactly as before, so the unread
+    /// rendering is unchanged. Group entries have no single feature
+    /// id, so they never get a status — they keep the eligibility
+    /// badge.
+    private var statusDetails: [String: CompatibilityStatusDetail] {
+        guard let report = deviceReport else { return [:] }
+        let staged = CompatibilityStatusResolver.stagedFeatureIDs(
+            snapshot: model.snapshot, working: model.working)
+        let pending = CompatibilityStatusResolver.pendingRestartFeatureIDs(records: records)
+        var map: [String: CompatibilityStatusDetail] = [:]
+        for evaluation in report.evaluations {
+            map[evaluation.featureID] = CompatibilityStatusResolver.resolve(
+                featureID: evaluation.featureID, eligibility: evaluation.eligibility,
+                reason: evaluation.reason, profile: report.profile,
+                documentRead: model.snapshot != nil, working: model.working,
+                stagedFeatureIDs: staged, pendingRestartFeatureIDs: pending,
+                riskLevel: evaluation.riskLevel)
+        }
+        return map
+    }
+
     /// The visible entries: search, then filters, then the user's
     /// persisted catalog sort and favorites-first setting. The sort
     /// and the toggle live in the Personalization Center; this card
@@ -97,7 +121,7 @@ struct PresetCatalogCard: View {
     }
 
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     GlassIconPedestal(systemImage: "books.vertical", tint: .gestaltAccent, size: 44)
@@ -169,6 +193,7 @@ struct PresetCatalogCard: View {
                         PresetEntryRow(
                             entry: entry,
                             eligibility: PresetCatalog.eligibility(of: entry, evaluations: evaluations),
+                            status: entry.kind == .group ? nil : statusDetails[entry.featureID],
                             isFavorite: favoriteIDs.contains(entry.featureID),
                             isExpanded: expandedEntryID == entry.featureID,
                             onToggleFavorite: { toggleFavorite(entry.featureID) },
@@ -384,6 +409,10 @@ struct PresetCatalogCard: View {
 private struct PresetEntryRow: View {
     let entry: PresetEntry
     let eligibility: FeatureEligibility
+    /// The unified compatibility status, or `nil` for group entries
+    /// and when the device has not been read. When `nil` the row
+    /// shows the plain eligibility badge exactly as before.
+    let status: CompatibilityStatusDetail?
     let isFavorite: Bool
     let isExpanded: Bool
     let onToggleFavorite: () -> Void
@@ -406,9 +435,15 @@ private struct PresetEntryRow: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Text(eligibilityTitle(eligibility))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(eligibilityColor(eligibility))
+                if let status {
+                    Text(status.status.title)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(statusColor(status.status))
+                } else {
+                    Text(eligibilityTitle(eligibility))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(eligibilityColor(eligibility))
+                }
                 Text(riskTitle(entry.riskLevel))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(riskColor(entry.riskLevel))
@@ -423,6 +458,9 @@ private struct PresetEntryRow: View {
                     Text(entry.chineseDescription)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    if let status {
+                        statusDetailSection(status)
+                    }
                     detailRow(label: L("Applies to"),
                               value: entry.scope.label + " — " + entry.scopeNote)
                     detailRow(label: L("Minimum system"), value: entry.minSystem.label)
@@ -455,6 +493,59 @@ private struct PresetEntryRow: View {
                     }
                 }
             }
+        }
+    }
+
+    /// The compatibility-status detail block in the expanded row:
+    /// the status reason, the detection evidence for unverified
+    /// features, the "already supported" note for native features
+    /// (no modify action is offered for them), the "not offered"
+    /// note for unsupported features, and the #178 warning where it
+    /// applies. All values come from the device report; nothing
+    /// here re-evaluates eligibility.
+    @ViewBuilder
+    private func statusDetailSection(_ status: CompatibilityStatusDetail) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            detailRow(label: L("Compatibility Status"),
+                      value: status.status.title + " — " + status.reason)
+            if status.status == .unverified {
+                Text(L("Detection evidence"))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+                ForEach(status.evidence, id: \.self) { line in
+                    Text("• " + line)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            if status.status == .nativeSupported {
+                Text(L("Already supported on this device — no change needed."))
+                    .font(.caption)
+                    .foregroundStyle(.green)
+            }
+            if status.status == .unsupported {
+                Text(L("Not offered on this device"))
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+            if let warning = status.nativeAIWarning {
+                Text(warning)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+        }
+    }
+
+    private func statusColor(_ status: CompatibilityStatus) -> Color {
+        switch status {
+        case .nativeSupported: return .green
+        case .modifiable: return .blue
+        case .enabled: return .secondary
+        case .staged: return .blue
+        case .needsRestart: return .orange
+        case .unverified: return .orange
+        case .unsupported: return .orange
+        case .readFailed: return .red
         }
     }
 

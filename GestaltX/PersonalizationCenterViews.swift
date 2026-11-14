@@ -15,6 +15,7 @@ import SwiftUI
 
 struct PersonalizationCenterCard: View {
     @EnvironmentObject private var model: GestaltManager
+    @Environment(\.homeDiagnosticsCache) private var diagnostics: HomeDiagnosticsCache?
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var settings = PersonalizationSettings.defaults
@@ -43,13 +44,25 @@ struct PersonalizationCenterCard: View {
             : Color.lavenderGlass.opacity(0.65)
     }
 
+    /// The records to use: the cache's, when the cache is present
+    /// (it loads the history on a background task), else this card's
+    /// own (loaded on appear, the fallback for a render without the
+    /// cache).
+    private var effectiveRecords: [RecordedChange] {
+        diagnostics?.records ?? records
+    }
+
     /// The per-device report (profile + eligibility evaluations), or
-    /// `nil` when the device has not been read yet.
+    /// `nil` when the device has not been read yet. Prefers the
+    /// shared diagnostics cache over recomputing on every body
+    /// evaluation; falls back to direct computation when no cache is
+    /// provided (for example the SwiftUI snapshot tests).
     private var deviceReport: LilaDeviceReport? {
+        if let cached = diagnostics?.deviceReport { return cached }
         guard model.snapshot != nil else { return nil }
         return LilaIntelligence.report(
             snapshot: model.snapshot, backups: model.backups,
-            changeRecordCount: records.count)
+            changeRecordCount: effectiveRecords.count)
     }
 
     /// The dependency + simulation check for each saved custom
@@ -72,7 +85,7 @@ struct PersonalizationCenterCard: View {
     }
 
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     GlassIconPedestal(systemImage: "paintpalette", tint: .gestaltAccent, size: 44)
@@ -170,7 +183,78 @@ struct PersonalizationCenterCard: View {
                 ))
                 .font(.subheadline)
             }
+
+            Text(L("Home Diagnostics Sections"))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+            Text(L("Reorder and show or hide the diagnostics rows on the Tools home. The order is saved on this device only."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            ForEach(homeSectionRows, id: \.id) { section in
+                HStack(spacing: 8) {
+                    Text(section.title)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                    Spacer(minLength: 8)
+                    Button { moveHomeSection(section, by: -1) } label: {
+                        Image(systemName: "chevron.up")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canMoveHomeSection(section, by: -1))
+                    Button { moveHomeSection(section, by: 1) } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canMoveHomeSection(section, by: 1))
+                    Toggle("", isOn: Binding(
+                        get: { !(settings.hiddenHomeSections ?? []).contains(section.rawValue) },
+                        set: { newValue in
+                            updateSettings { settings in
+                                var hidden = settings.hiddenHomeSections ?? []
+                                if newValue { hidden.remove(section.rawValue) }
+                                else { hidden.insert(section.rawValue) }
+                                settings.hiddenHomeSections = hidden
+                            }
+                        }
+                    ))
+                    .labelsHidden()
+                }
+            }
         }
+    }
+
+    /// The sections shown in the reorder list, in stored order (or
+    /// default order), including hidden ones so a hidden section can
+    /// be re-shown. Missing sections are appended in default order.
+    private var homeSectionRows: [HomeDiagnosticsSectionID] {
+        if let stored = settings.homeSectionOrder {
+            let known = stored.compactMap { HomeDiagnosticsSectionID(rawValue: $0) }
+            let missing = HomeDiagnosticsSectionID.defaultOrder.filter { !known.contains($0) }
+            return known + missing
+        }
+        return HomeDiagnosticsSectionID.defaultOrder
+    }
+
+    /// Moves a section one position in the stored order. The stored
+    /// order is created from the default order on first use.
+    private func moveHomeSection(_ section: HomeDiagnosticsSectionID, by offset: Int) {
+        var order = settings.homeSectionOrder ?? HomeDiagnosticsSectionID.defaultOrder.map(\.rawValue)
+        guard let index = order.firstIndex(of: section.rawValue) else { return }
+        let target = index + offset
+        guard target >= 0 && target < order.count else { return }
+        order.swapAt(index, target)
+        updateSettings { $0.homeSectionOrder = order }
+    }
+
+    private func canMoveHomeSection(_ section: HomeDiagnosticsSectionID, by offset: Int) -> Bool {
+        let order = settings.homeSectionOrder ?? HomeDiagnosticsSectionID.defaultOrder.map(\.rawValue)
+        guard let index = order.firstIndex(of: section.rawValue) else { return false }
+        let target = index + offset
+        return target >= 0 && target < order.count
     }
 
     /// Applies a settings change in memory, persists it, and keeps
@@ -459,6 +543,10 @@ struct PersonalizationCenterCard: View {
     // MARK: - Loading
 
     private func reloadHistory() {
+        // The shared cache owns the history load when it is present
+        // (it reads the store on a background task); this disk read
+        // is only the fallback for a render without the cache.
+        guard diagnostics == nil else { return }
         guard let deviceID = RestoreIntelligence.installationDeviceID else {
             records = []
             return

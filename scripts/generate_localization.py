@@ -1080,6 +1080,70 @@ Draft saved.	草稿已保存。
 Draft loaded.	草稿已读取。
 No draft found.	未找到草稿。
 Full Image	完整
+Diagnostics Summary	诊断摘要
+Health, simulation and recorded changes at a glance. Details are on the pages below.	健康评分、模拟结果与已记录的更改一目了然，详情见下方页面。
+Health Score	健康评分
+Simulation	模拟
+Recorded Changes	已记录的更改
+Passed	通过
+Home Diagnostics Sections	首页诊断分区
+Reorder and show or hide the diagnostics rows on the Tools home. The order is saved on this device only.	在工具首页对诊断行重新排序、显示或隐藏。顺序仅保存在本设备上。
+Read the device first to see the diagnostics summary.	先读取设备，再查看诊断摘要。
+All tools	全部工具
+Device Overview	设备概览
+%d changes	%d 项更改
+Sort	排序
+Device-specific results are available after reading the device.	读取设备后可查看设备专属结果。
+Browse, search and organize every preset.	浏览、搜索并整理全部预设。
+Common Features	常用功能
+Most-used presets at a glance.	常用预设一览。
+Apple Intelligence & eSIM	Apple 智能与 eSIM
+Security Diagnosis	安全诊断
+Backup & Restore	备份与恢复
+Preset Management	预设管理
+More Tools	更多工具
+Smart Unlock	智能解锁
+Modified Records	修改记录
+Advanced Tools	高级工具
+Feature Catalog	功能目录
+Search features…	搜索功能…
+All Categories	全部分类
+Favorites	收藏
+Recent	最近使用
+Hide	隐藏
+Restore Defaults	恢复默认
+Manage	管理
+Custom Order	自定义顺序
+No features match this search.	没有符合此搜索的功能。
+Show	显示
+No favorites yet. The three preset groups are shown instead.	暂无收藏，改为显示三个预设组合。
+Natively supported	原生支持
+Modifiable	可修改
+Enabled	已启用
+Needs restart	需要重启
+Unverified	未验证
+Compatibility Status	兼容性状态
+Detection evidence	检测依据
+Already supported on this device — no change needed.	本设备已原生支持，无需修改。
+Not offered on this device	未向此设备提供
+Audio Intelligence is staged on native Apple Intelligence hardware, but the native slot reads off. Whether to skip it is still undecided — nothing was changed.	音频智能已在原生 Apple 智能设备上暂存，但原生插槽读数为关闭。是否跳过尚未决定——未做任何更改。
+History & Restore	历史与恢复
+Staged value	已暂存的值
+Can restore	可恢复
+Restore this change?	恢复此项更改？
+Confirm Restore	确认恢复
+Device identity	设备身份
+File integrity	文件完整性
+Backup source	备份来源
+System compatibility	系统兼容性
+No verified backup file for this change.	此项更改没有已验证的备份文件。
+Verified backup on file.	已有已验证的备份文件。
+This device	本设备
+Another device	其他设备
+Before / after	修改前 / 修改后
+The whole device file is replaced by the backup.	整个设备文件将被备份替换。
+A check failed. The restore cannot proceed until it is resolved.	有一项检查未通过。在解决之前无法继续恢复。
+Check the preview above, then confirm to restore the whole backup.	请检查上方预览，然后确认以恢复整个备份。
 '''
 entries = {}
 for line in TRANSLATIONS.strip().splitlines():

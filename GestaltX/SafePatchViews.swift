@@ -12,6 +12,7 @@ import SwiftUI
 
 struct SafePatchCard: View {
     @EnvironmentObject private var model: GestaltManager
+    @Environment(\.homeDiagnosticsCache) private var diagnostics: HomeDiagnosticsCache?
     @Environment(\.colorScheme) private var colorScheme
     @State private var selectedProposal: SafePatchProposal = SafePatchProposal.oneTap()
     @State private var showingChecks = false
@@ -23,8 +24,14 @@ struct SafePatchCard: View {
     }
 
     /// The simulation for the selected proposal, or `nil` when the
-    /// device has not been read yet.
+    /// device has not been read yet. Prefers the shared diagnostics
+    /// cache (all three proposals are simulated once per input change
+    /// on a background task) over recomputing on every body
+    /// evaluation; falls back to direct computation when no cache is
+    /// provided (for example the SwiftUI snapshot tests), so the
+    /// rendered output is identical either way.
     private var simulation: SafePatchSimulation? {
+        if let cached = diagnostics?.simulations[selectedProposal] { return cached }
         guard model.working != nil else { return nil }
         return SafePatch.simulate(
             proposal: selectedProposal, snapshot: model.snapshot,
@@ -32,7 +39,7 @@ struct SafePatchCard: View {
     }
 
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     GlassIconPedestal(systemImage: "shield.checkered", tint: .gestaltAccent, size: 44)
@@ -94,15 +101,19 @@ struct SafePatchCard: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
             }
+            // One line per distinct reason: the same reason can be
+            // raised by several pre-checks, and repeating it reads as
+            // clutter. The pre-check list below still shows every
+            // check with its own reason, so no evidence is lost.
             if !simulation.blockers.isEmpty {
-                ForEach(Array(simulation.blockers.enumerated()), id: \.offset) { _, blocker in
+                ForEach(deduplicated(simulation.blockers), id: \.self) { blocker in
                     Text(blocker)
                         .font(.subheadline)
                         .foregroundStyle(.red)
                 }
             }
             if !simulation.warnings.isEmpty {
-                ForEach(Array(simulation.warnings.enumerated()), id: \.offset) { _, warning in
+                ForEach(deduplicated(simulation.warnings), id: \.self) { warning in
                     Text(warning)
                         .font(.subheadline)
                         .foregroundStyle(.orange)
@@ -209,9 +220,14 @@ struct SafePatchCard: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            // Never truncate the status: without this the middle
+            // VStack's long note took the width and the status
+            // ("Not yet" / a failure reason) was clipped at the
+            // card's right edge.
             Text(effectStatusLabel(state.status))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: true, vertical: false)
         }
     }
 

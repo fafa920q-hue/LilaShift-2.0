@@ -12,6 +12,7 @@ import SwiftUI
 
 struct SystemHealthScoreCard: View {
     @EnvironmentObject private var model: GestaltManager
+    @Environment(\.homeDiagnosticsCache) private var diagnostics: HomeDiagnosticsCache?
     @Environment(\.colorScheme) private var colorScheme
     @State private var records: [RecordedChange] = []
     @State private var historyError: String?
@@ -24,8 +25,15 @@ struct SystemHealthScoreCard: View {
     }
 
     /// The report for the current snapshot, or `nil` when the device
-    /// has not been read yet.
+    /// has not been read yet. Prefers the shared diagnostics cache
+    /// (computed once per input change on a background task, including
+    /// the backup verification and the one-tap simulation) over
+    /// recomputing on every body evaluation; falls back to direct
+    /// computation when no cache is provided (for example the SwiftUI
+    /// snapshot tests, which only supply a GestaltManager), so the
+    /// rendered output is identical either way.
     private var healthScore: SystemHealthScore? {
+        if let cached = diagnostics?.healthScore { return cached }
         guard model.snapshot != nil else { return nil }
         let report = LilaIntelligence.report(
             snapshot: model.snapshot, backups: model.backups,
@@ -45,14 +53,23 @@ struct SystemHealthScoreCard: View {
     /// keys this app recorded: what remains was modified outside
     /// this app's records. The match is by key string (rows carry
     /// no layer); the known keys do not collide across layers.
+    /// Prefers the cached count; the direct computation is only the
+    /// fallback for a render without the cache.
     private var externalModificationCount: Int {
+        if let cached = diagnostics?.externalModificationCount { return cached }
         let recordedKeys = Set(records.map(\.key))
         return ModifiedValues.report(for: model.snapshot).rows
             .filter { !recordedKeys.contains($0.key) }.count
     }
 
+    /// The history error to display: the cache's, when the cache is
+    /// present (it owns the history load), else this card's own.
+    private var displayedHistoryError: String? {
+        diagnostics?.historyError ?? historyError
+    }
+
     var body: some View {
-        GlassCard(cornerRadius: 22, tint: heroTint) {
+        GlassCard(cornerRadius: GlassTokens.cardRadius, tint: heroTint) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     GlassIconPedestal(systemImage: "heart.text.square", tint: .gestaltAccent, size: 44)
@@ -136,8 +153,8 @@ struct SystemHealthScoreCard: View {
                         }
                     }
 
-                    if let historyError {
-                        Text(historyError)
+                    if let displayedHistoryError {
+                        Text(displayedHistoryError)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -152,6 +169,10 @@ struct SystemHealthScoreCard: View {
     }
 
     private func reloadHistory() {
+        // The shared cache owns the history load when it is present
+        // (it reads the store on a background task); this disk read
+        // is only the fallback for a render without the cache.
+        guard diagnostics == nil else { return }
         guard let deviceID = RestoreIntelligence.installationDeviceID else {
             historyError = L("History is unavailable: no installation ID has been recorded yet.")
             records = []

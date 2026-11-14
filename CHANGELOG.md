@@ -4,6 +4,20 @@ English | [简体中文](CHANGELOG_ZH-CN.md)
 
 ## [Unreleased]
 
+## [3.0.0] - Development preview (not released)
+
+### Added
+- Lightweight 3.0 home showing real device read and staged-change status.
+- Task-specific navigation for unlock, diagnostics, restore and presets; legacy tools remain accessible.
+- Native reorderable dashboard shortcuts with persisted and sanitized order.
+- XCTest coverage for dashboard ordering and automatic preview branch CI.
+
+### To verify
+- GitHub Actions compilation and on-device performance are not yet verified.
+- Shared diagnostic caching and off-main-thread file work remain follow-up performance tasks.
+
+
+
 ### Added
 
 - Add SnapshotTesting UI regression tests for the key SwiftUI cards (preset catalog, smart fault diagnosis, personalization center, system health score — unread and populated states, fixed 390×844 layout, light traits) plus text snapshots of the deterministic data feeding the diagnostics card (battery unknown/known, connection not-read/read, cache entries from a fixed directory). The DiagnosticsExpansionCard itself has no image snapshot on purpose: its cache section renders live container sizes that vary with test execution order. Snapshot references are recorded on the first CI run (`record: .missing`) into `tests/__Snapshots__/ViewSnapshotTests/` and must be committed in a follow-up; see `docs/SNAPSHOT_TESTING.md`.

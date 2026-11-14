@@ -67,7 +67,11 @@ enum CatalogSort: String, Codable, CaseIterable, Equatable, Hashable, Sendable {
 /// The user's personalization settings. All three settings take
 /// effect in the UI: `catalogSort` and `favoritesFirst` order the
 /// catalog card's visible entries; `visibleToolCards` filters the
-/// Tools page category grid in ContentView.
+/// Tools page category grid in ContentView. `homeSectionOrder` and
+/// `hiddenHomeSections` order and filter the Tools home diagnostics
+/// sections (see `HomeDiagnosticsSectionID`); both are optional so
+/// a settings file written before they existed still decodes — nil
+/// means the default order with nothing hidden.
 struct PersonalizationSettings: Codable, Equatable, Sendable {
     var catalogSort: CatalogSort
     var favoritesFirst: Bool
@@ -76,16 +80,31 @@ struct PersonalizationSettings: Codable, Equatable, Sendable {
     /// "intelligenceRegion", "chargingButtons", "ipadMultitasking",
     /// "personalization"). Unknown ids are ignored by the UI.
     var visibleToolCards: Set<String>
+    /// Home diagnostics section ids in the user's preferred order
+    /// (`HomeDiagnosticsSectionID` raw values). `nil` means the
+    /// default order. Unknown ids are ignored; sections missing
+    /// from a stored order are appended in default order, so a
+    /// section added in a later version still appears.
+    var homeSectionOrder: [String]?
+    /// Home diagnostics section ids the user hid
+    /// (`HomeDiagnosticsSectionID` raw values). `nil` means nothing
+    /// hidden. Unknown ids are ignored.
+    var hiddenHomeSections: Set<String>?
 
     static let defaults = PersonalizationSettings(
         catalogSort: .byCategory, favoritesFirst: false,
-        visibleToolCards: Set(PersonalizationCenter.allToolCardIDs))
+        visibleToolCards: Set(PersonalizationCenter.allToolCardIDs),
+        homeSectionOrder: nil, hiddenHomeSections: nil)
 
     init(catalogSort: CatalogSort = .byCategory, favoritesFirst: Bool = false,
-         visibleToolCards: Set<String> = Set(PersonalizationCenter.allToolCardIDs)) {
+         visibleToolCards: Set<String> = Set(PersonalizationCenter.allToolCardIDs),
+         homeSectionOrder: [String]? = nil,
+         hiddenHomeSections: Set<String>? = nil) {
         self.catalogSort = catalogSort
         self.favoritesFirst = favoritesFirst
         self.visibleToolCards = visibleToolCards
+        self.homeSectionOrder = homeSectionOrder
+        self.hiddenHomeSections = hiddenHomeSections
     }
 }
 
@@ -381,41 +400,9 @@ enum PersonalizationCenter {
 
     private static func stableSorted(_ entries: [PresetEntry], by sort: CatalogSort) -> [PresetEntry] {
         entries.enumerated().sorted { left, right in
-            let comparison = compare(left.element, right.element, by: sort)
+            let comparison = HomeSorting.compare(left.element, right.element, by: sort)
             if comparison != .orderedSame { return comparison == .orderedAscending }
             return left.offset < right.offset
         }.map { enumerated in enumerated.element }
-    }
-
-    private static func compare(_ left: PresetEntry, _ right: PresetEntry, by sort: CatalogSort) -> ComparisonResult {
-        switch sort {
-        case .byName:
-            let nameComparison = left.chineseName.localizedStandardCompare(right.chineseName)
-            if nameComparison != .orderedSame { return nameComparison }
-            return left.featureID.localizedStandardCompare(right.featureID)
-        case .byRisk:
-            if left.riskLevel != right.riskLevel {
-                return riskOrder(left.riskLevel) < riskOrder(right.riskLevel)
-                    ? .orderedAscending : .orderedDescending
-            }
-            return .orderedSame
-        case .byCategory:
-            let leftIndex = PresetCategory.allCases.firstIndex(of: left.category) ?? PresetCategory.allCases.count
-            let rightIndex = PresetCategory.allCases.firstIndex(of: right.category) ?? PresetCategory.allCases.count
-            if leftIndex != rightIndex {
-                return leftIndex < rightIndex ? .orderedAscending : .orderedDescending
-            }
-            return .orderedSame
-        }
-    }
-
-    /// Risk order for sorting: high first, then medium, then low —
-    /// the entries that need the most attention come first.
-    private static func riskOrder(_ risk: CapabilityRiskLevel) -> Int {
-        switch risk {
-        case .high: return 0
-        case .medium: return 1
-        case .low: return 2
-        }
     }
 }
