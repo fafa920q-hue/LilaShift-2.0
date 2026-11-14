@@ -49,6 +49,7 @@
 // the detached task moves the disk reads off the main thread. The
 // live-probe values are also read on the detached task: the live
 // Gestalt query can be slow, and it must never block scrolling.
+import Combine
 import SwiftUI
 
 /// The result of one background diagnostics computation. Every field
